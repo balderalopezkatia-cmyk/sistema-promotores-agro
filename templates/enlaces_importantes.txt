@@ -1,0 +1,5 @@
+=== ENLACES Y ACCESOS - PROMOTORES DEL AGRO ===
+- Web en Vivo (Render): https://sistema-promotores-agro.onrender.com
+- Panel de Render (Hosting): https://dashboard.render.com
+- Repositorio GitHub: https://github.com/balderalopezkatia-cmyk/sistema-promotores-agro
+- Base de Datos (Clever Cloud): bbdxmfpaqjvnaoqv46uu
