@@ -1,0 +1,14 @@
+@app.route('/login', methods=['POST'])
+def login():
+    perfil = request.form.get('perrol')
+    
+    if perfil == 'gerente':
+        password = request.form.get('password', '')
+        if password == 'Tubandera2714':  
+            session['rol'] = 'gerente'
+            return redirect(url_for('dashboard'))
+        else:
+            return "Contraseña incorrecta de Gerencia. <a href='/login_gerencia'>Volver</a>"
+    else:
+        session['rol'] = 'empleado'
+        return redirect(url_for('ventas'))

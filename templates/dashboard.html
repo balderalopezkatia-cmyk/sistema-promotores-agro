@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Promotores del Agro</title>
+    <!-- Enlace al archivo de estilos global -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { padding: 16px; }
+        .main-content { width: 100%; max-width: 1400px; margin: 0 auto; }
+        
+        /* Ajuste de la barra superior para acomodar el logo grande y el eslogan debajo */
+        .top-navbar {
+            padding: 14px 20px;
+        }
+
+        /* Estilo para el logo gigante y el eslogan en cursiva abajo */
+        .logo-container-top {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+        .logo-container-top img {
+            height: 75px; /* Logo grande e imponente como pediste */
+            width: auto;
+            object-fit: contain;
+        }
+        .logo-slogan-italic {
+            font-size: 10px;
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-left: 2px;
+            letter-spacing: 0.3px;
+        }
+
+        .card-box { background: var(--bg-card); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); margin-bottom: 25px; overflow: hidden; border: 1px solid var(--border-color); }
+        .card-header { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--green-primary); padding: 16px 20px; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .card-body { padding: 20px; }
+
+        .seccion-titulo { font-size: 13px; font-weight: bold; color: var(--green-primary); text-transform: uppercase; margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px; }
+        
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
+
+        .metric-card { background: var(--bg-main); border-radius: 10px; padding: 15px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid var(--green-primary); }
+        .metric-card.warning { border-left-color: var(--orange-avatar); }
+        .metric-card.info { border-left-color: var(--blue-tag); }
+        .metric-card.danger { border-left-color: var(--red-alert); }
+
+        .metric-title { font-size: 11px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
+        .metric-value { font-size: 20px; font-weight: bold; color: var(--text-white); margin-bottom: 4px; }
+        .metric-desc { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
+
+        .grid-acciones { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        .action-card { background-color: var(--bg-main); border: 1px solid var(--border-color); color: white; padding: 18px 10px; border-radius: 8px; text-align: center; text-decoration: none; font-weight: bold; font-size: 13px; text-transform: uppercase; transition: 0.2s; display: flex; flex-direction: column; gap: 5px; cursor: pointer; }
+        .action-card:hover { border-color: var(--green-primary); transform: translateY(-2px); background: #1a2a3a; }
+        .action-card span { font-size: 10px; font-weight: normal; color: var(--text-secondary); text-transform: uppercase; }
+
+        /* Modal Gigante */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-card { background: var(--bg-card); padding: 35px; border-radius: 12px; max-width: 950px; width: 95%; height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary); position: absolute; }
+        .modal-card h3 { color: var(--green-primary); font-size: 18px; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; text-transform: uppercase; font-weight: bold; }
+        .modal-card p { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; }
+        
+        .search-box-container { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; background: #1a2a3a; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .search-box-container label { font-weight: bold; font-size: 13px; color: var(--green-primary); text-transform: uppercase; }
+        .search-box-container input { background: var(--bg-main); color: #fff; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; outline: none; }
+        .search-box-container input:focus { border-color: var(--green-primary); }
+
+        .table-container { margin: 5px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow-y: auto; flex: 1; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; color: #fff; }
+        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 11px 14px; font-weight: bold; border-bottom: 1px solid var(--border-color); font-size: 12px; text-transform: uppercase; position: sticky; top: 0; }
+        td { padding: 11px 14px; border-bottom: 1px solid var(--border-color); color: #fff; text-transform: uppercase; }
+
+        .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-modal-close:hover { background: #35f5aa; }
+
+        .btn-add-notif { background: #2ec4b6; color: #0f172a; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; text-transform: uppercase; transition: 0.2s; }
+        .btn-add-notif:hover { background: #35f5aa; }
+        
+        .link-action { color: var(--blue-tag); text-decoration: none; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-right: 8px; }
+        .link-action:hover { text-decoration: underline; }
+
+        .link-back { background: var(--border-color); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .link-back:hover { background: #2c3e50; }
+
+        .link-danger { color: var(--red-alert); font-weight: bold; cursor: pointer; text-decoration: none; }
+        .link-danger:hover { text-decoration: underline; }
+        
+        .text-green { color: var(--green-primary); font-weight: bold; }
+        .text-red { color: var(--red-alert); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior con la campanita interactiva y botón K universal -->
+    <div class="top-navbar">
+        <div class="nav-left">
+            <div class="logo-container-top">
+                <img src="/static/logo.png" alt="Promotores del Agro" onerror="this.style.display='none'">
+                <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
+            </div>
+            <div class="nav-menu" style="margin-left: 20px; align-self: center;">
+                <a href="/dashboard" class="nav-link active">PANEL</a>
+                <a href="/stock" class="nav-link">STOCK</a>
+                <a href="/ventas" class="nav-link">VENTAS</a>
+                <a href="/gastos" class="nav-link">GASTOS</a>
+                <a href="/amortizaciones" class="nav-link">AMORTIZACIONES</a>
+                <a href="/compras" class="nav-link">COMPRAS</a>
+                <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
+            </div>
+        </div>
+        <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
+            <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
+            
+            <!-- Campanita interactiva con punto rojo de notificaciones -->
+            <div class="icon-btn" id="btn-abrir-notificaciones" title="Centro de Notificaciones y Pagos" style="cursor: pointer; position: relative;">
+                🔔
+                <span class="notification-dot" id="punto-alerta-campana" style="display: block;"></span>
+            </div>
+
+            <!-- Botón K universal para cerrar sesión -->
+            <button class="user-avatar" title="Cerrar Sesión / Cambiar Perfil" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+
+        <!-- Caja Principal / Cabecera -->
+        <div class="card-box">
+            <div class="card-header">FLUJO DE CAJA</div>
+            <div class="card-body" style="padding-top: 5px;">
+
+                <!-- Resumen del Día -->
+                <div class="seccion-titulo">• Resumen del Día</div>
+                <div class="grid-4">
+                    <div class="metric-card">
+                        <div class="metric-title">Ventas del Día</div>
+                        <div class="metric-value" id="val-ventas-dia">S/ 0.00</div>
+                        <div class="metric-desc">↑ Ingreso total</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Ganancia del Día</div>
+                        <div class="metric-value" id="val-ganancia-dia">S/ 0.00</div>
+                        <div class="metric-desc">↑ Utilidad neta</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Gastos Operativos (Día)</div>
+                        <div class="metric-value" id="val-gastos-dia">S/ 0.00</div>
+                        <div class="metric-desc">Egresos diarios</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Amortizaciones Hoy</div>
+                        <div class="metric-value" id="val-amortizaciones-dia">S/ 0.00</div>
+                        <div class="metric-desc">↑ Suma de cobros hoy</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="metric-card">
+                        <div class="metric-title">Caja Física (Efectivo Neto Hoy)</div>
+                        <div class="metric-value" id="val-caja-fisica">S/ 0.00</div>
+                        <div class="metric-desc">Ventas + Abonos (Efectivo) - Gastos (Efectivo)</div>
+                    </div>
+                    <div class="metric-card info">
+                        <div class="metric-title">Medios de Pago Digitales (Hoy)</div>
+                        <div class="metric-value" id="val-pagos-digitales">S/ 0.00</div>
+                        <div class="metric-desc">Yape / Plin / Transferencias</div>
+                    </div>
+                </div>
+
+                <!-- Resumen del Mes -->
+                <div class="seccion-titulo">• Resumen del Mes</div>
+                <div class="grid-4">
+                    <div class="metric-card">
+                        <div class="metric-title">Ventas del Mes</div>
+                        <div class="metric-value" id="val-ventas-mes">S/ 0.00</div>
+                        <div class="metric-desc">↑ Total ingresos del mes</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Ganancia del Mes</div>
+                        <div class="metric-value" id="val-ganancia-mes">S/ 0.00</div>
+                        <div class="metric-desc">↑ Utilidad neta del mes</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Gastos Operativos (Mes)</div>
+                        <div class="metric-value" id="val-gastos-mes">S/ 0.00</div>
+                        <div class="metric-desc">Egresos mensuales</div>
+                    </div>
+                    <div class="metric-card danger">
+                        <div class="metric-title">Deudas Totales por Cobrar</div>
+                        <div class="metric-value" id="val-deudas-cobrar">S/ 0.00</div>
+                        <div class="metric-desc">↑ Créditos a clientes</div>
+                    </div>
+                </div>
+
+                <!-- Proyección y Distribución Financiera -->
+                <div class="seccion-titulo">• Proyección y Distribución Financiera (Utilidad del Mes)</div>
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-title">Reinversión Empresa (50%)</div>
+                        <div class="metric-value" id="val-reinversion">S/ 0.00</div>
+                        <div class="metric-desc">Fondo para recompra de mercadería y stock</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-title">Reserva Futuro Empleado (20%)</div>
+                        <div class="metric-value" id="val-reserva-empleado">S/ 0.00</div>
+                        <div class="metric-desc">Provisión para planilla o sueldo del personal</div>
+                    </div>
+                    <div class="metric-card warning" style="border-left-color: #ffb703;">
+                        <div class="metric-title">Reserva Gastos Operativos (30%)</div>
+                        <div class="metric-value" id="val-reserva-gastos">S/ 0.00</div>
+                        <div class="metric-desc">Colchón para imprevistos y servicios fijos</div>
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas -->
+                <div class="seccion-titulo">• Acciones Rápidas</div>
+                <div class="grid-acciones">
+                    <a href="/ventas" class="action-card">
+                        Nueva Venta
+                        <span>Registrar nueva venta</span>
+                    </a>
+                    <a href="/gastos" class="action-card">
+                        Registrar Gasto
+                        <span>Agregar gasto operativo</span>
+                    </a>
+                    <a href="/amortizaciones" class="action-card">
+                        Movimientos de Caja
+                        <span>Registrar ingreso/egreso</span>
+                    </a>
+                    <button type="button" class="action-card" id="btn-abrir-historial-ventas">
+                        Historial de Ventas
+                        <span>Notas de venta por día</span>
+                    </button>
+                    <a href="/configuracion" class="action-card">
+                        Ver Reportes
+                        <span>Análisis y reportes</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Emergente Gigante: Historial de Ventas -->
+    <div id="modal-historial-ventas" class="modal-overlay">
+        <div class="modal-card">
+            <h3 id="modal-titulo-historial">HISTORIAL DE VENTAS</h3>
+            <p id="modal-subtitulo-historial">INGRESE O SELECCIONE LA FECHA DE COMPRA Y PRESIONE BUSCAR O ENTER:</p>
+            
+            <div class="search-box-container" id="seccion-busqueda-fecha">
+                <label for="input-fecha-busqueda">FECHA DE COMPRA:</label>
+                <input type="date" id="input-fecha-busqueda" placeholder="Seleccione fecha...">
+                <button type="button" class="btn-modal-close" id="btn-buscar-fecha" style="padding: 8px 18px; font-size: 12px;">BUSCAR</button>
+            </div>
+
+            <div id="contenedor-resultados" class="table-container">
+                <p style="text-align:center; padding: 50px; font-weight: bold; color: var(--text-secondary);">INGRESE UNA FECHA DE COMPRA Y PRESIONE "BUSCAR" PARA VISUALIZAR LOS COMPROBANTES.</p>
+            </div>
+
+            <div id="contenedor-detalle-boleta" class="table-container" style="display: none; padding: 5px;">
+                <!-- Dinámico -->
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <button type="button" class="link-back" id="btn-regresar-fechas" style="display: none;">← Volver al Listado</button>
+                <div style="margin-left: auto;">
+                    <button type="button" class="btn-modal-close" id="btn-cerrar-historial-ventas">CERRAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FLOTANTE: CENTRO DE RECORDATORIOS Y PAGOS (CAMPANITA) -->
+    <div id="modal-notificaciones" class="modal-overlay">
+        <div class="modal-card" id="card-modal-notif" style="max-width: 750px; height: auto;">
+            <div id="header-modal-notif" style="cursor: move; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; color: var(--green-primary);">🔔 CENTRO DE RECORDATORIOS Y PAGOS</h3>
+                <span style="font-size: 10px; color: var(--text-secondary);">(Mover ventana)</span>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px; text-transform: uppercase;">Alarmas automáticas y pagos programados del mes:</p>
+            
+            <!-- Formulario para agregar nuevo pago o alarma -->
+            <div style="background: #1a2a3a; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex: 2;">
+                    <label style="font-size: 10px; font-weight: bold; color: var(--green-primary); display: block; margin-bottom: 4px; text-transform: uppercase;">Descripción del Pago / Recordatorio:</label>
+                    <input type="text" id="nueva-notif-desc" placeholder="Ej. Pago de proveedor..." style="width: 100%; padding: 8px; background: var(--bg-main); color: white; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; text-transform: uppercase; box-sizing: border-box;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 10px; font-weight: bold; color: var(--green-primary); display: block; margin-bottom: 4px; text-transform: uppercase;">Día del Mes (1-31):</label>
+                    <input type="number" id="nueva-notif-dia" min="1" max="31" placeholder="Día" style="width: 100%; padding: 8px; background: var(--bg-main); color: white; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <button type="button" class="btn-add-notif" id="btn-guardar-notif">+ Agregar</button>
+                </div>
+            </div>
+
+            <div class="table-container" style="max-height: 250px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Día Programado</th>
+                            <th>Concepto / Pago</th>
+                            <th>Estado</th>
+                            <th style="text-align: right;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-cuerpo-notificaciones">
+                        <!-- Dinámico -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <button type="button" class="btn-modal-close" id="btn-cerrar-modal-notif">CERRAR VENTANA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MOVIBLE DE CONFIRMACIÓN / ALERTA AUTOMÁTICA -->
+    <div id="modal-accion-confirmacion" class="modal-overlay">
+        <div class="modal-card" id="card-modal-confirm" style="max-width: 420px; height: auto;">
+            <div id="header-modal-confirm" style="cursor: move; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="conf-titulo" style="margin: 0; color: var(--green-primary); font-size: 15px;">CONFIRMACIÓN</h3>
+                <span style="font-size: 10px; color: var(--text-secondary);">(Mover)</span>
+            </div>
+            <p id="conf-mensaje" style="font-size: 13px; color: #fff; margin-bottom: 15px; font-weight: bold; line-height: 1.4;"></p>
+            
+            <div id="conf-seccion-editar" style="display: none; margin-bottom: 15px;">
+                <label style="font-size: 10px; font-weight: bold; color: var(--green-primary); display: block; margin-bottom: 4px; text-transform: uppercase;">Nuevo Concepto:</label>
+                <input type="text" id="edit-input-desc" style="width: 100%; padding: 8px; background: var(--bg-main); color: white; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; text-transform: uppercase; box-sizing: border-box; margin-bottom: 8px;">
+                <label style="font-size: 10px; font-weight: bold; color: var(--green-primary); display: block; margin-bottom: 4px; text-transform: uppercase;">Nuevo Día (1-31):</label>
+                <input type="number" id="edit-input-dia" min="1" max="31" style="width: 100%; padding: 8px; background: var(--bg-main); color: white; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <button type="button" class="btn-modal-close" id="conf-btn-cancelar" style="background: var(--border-color); color: white;">Cancelar</button>
+                <button type="button" class="btn-modal-close" id="conf-btn-aceptar">Sí, Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para hacer las ventanas flotantes arrastrables con el mouse
+        function hacerMovible(cardId, headerId) {
+            const card = document.getElementById(cardId);
+            const header = document.getElementById(headerId);
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            header.onmousedown = function(e) {
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = cerrarArrastre;
+                document.onmousemove = elementoArrastrandose;
+            };
+
+            function elementoArrastrandose(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                card.style.position = "absolute";
+                card.style.top = (card.offsetTop - pos2) + "px";
+                card.style.left = (card.offsetLeft - pos1) + "px";
+            }
+
+            function cerrarArrastre() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        hacerMovible('card-modal-notif', 'header-modal-notif');
+        hacerMovible('card-modal-confirm', 'header-modal-confirm');
+
+        let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
+
+        function formatearFecha(fechaStr) {
+            if (!fechaStr || fechaStr.indexOf('-') === -1) return fechaStr;
+            let partes = fechaStr.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        const modalHistorial = document.getElementById('modal-historial-ventas');
+        const inputFechaBusqueda = document.getElementById('input-fecha-busqueda');
+        const seccionBusqueda = document.getElementById('seccion-busqueda-fecha');
+        const divResultados = document.getElementById('contenedor-resultados');
+        const divDetalle = document.getElementById('contenedor-detalle-boleta');
+        const btnRegresar = document.getElementById('btn-regresar-fechas');
+        const tituloHistorial = document.getElementById('modal-titulo-historial');
+        const subtituloHistorial = document.getElementById('modal-subtitulo-historial');
+
+        document.getElementById('btn-abrir-historial-ventas').addEventListener('click', function() {
+            mostrarVistaBusqueda();
+            modalHistorial.style.display = 'flex';
+        });
+
+        function mostrarVistaBusqueda() {
+            tituloHistorial.innerText = "HISTORIAL DE VENTAS";
+            subtituloHistorial.innerText = "INGRESE O SELECCIONE LA FECHA DE COMPRA Y PRESIONE BUSCAR O ENTER:";
+            seccionBusqueda.style.display = 'flex';
+            divDetalle.style.display = 'none';
+            divResultados.style.display = 'block';
+            btnRegresar.style.display = 'none';
+            inputFechaBusqueda.value = '';
+            inputFechaBusqueda.focus();
+
+            divResultados.innerHTML = `<p style="text-align:center; padding: 50px; font-weight: bold; color: var(--text-secondary);">INGRESE UNA FECHA DE COMPRA Y PRESIONE "BUSCAR" PARA VISUALIZAR LOS COMPROBANTES.</p>`;
+        }
+
+        inputFechaBusqueda.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                buscarPorFechaIngresada();
+            }
+        });
+
+        document.getElementById('btn-buscar-fecha').addEventListener('click', function() {
+            buscarPorFechaIngresada();
+        });
+
+        function buscarPorFechaIngresada() {
+            let fechaSeleccionada = inputFechaBusqueda.value;
+            if (!fechaSeleccionada) {
+                divResultados.innerHTML = `<p style="text-align:center; padding: 40px; font-weight: bold; color: var(--red-alert);">POR FAVOR SELECCIONE UNA FECHA VÁLIDA.</p>`;
+                return;
+            }
+
+            let filtrados = historialVentas.filter(v => v.fecha === fechaSeleccionada);
+            
+            tituloHistorial.innerText = `COMPROBANTES DEL DÍA: ${formatearFecha(fechaSeleccionada)}`;
+            subtituloHistorial.innerText = `RESULTADOS ENCONTRADOS (${filtrados.length}):`;
+
+            divResultados.innerHTML = '';
+
+            if (filtrados.length === 0) {
+                divResultados.innerHTML = `<p style="text-align:center; padding: 40px; font-weight: bold; color: var(--red-alert);">NO HAY COMPROBANTES REGISTRADOS PARA LA FECHA ${formatearFecha(fechaSeleccionada)}.</p>`;
+                return;
+            }
+
+            let tablaHTML = `<table>
+                <thead>
+                    <tr>
+                        <th>FECHA DE COMPRA</th>
+                        <th>N° COMPROBANTE</th>
+                        <th>CLIENTE</th>
+                        <th>MEDIO PAGO</th>
+                        <th>TOTAL</th>
+                        <th style="text-align: right;">ACCIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            filtrados.forEach((v) => {
+                let realIndex = historialVentas.indexOf(v);
+                tablaHTML += `<tr>
+                    <td><strong>${formatearFecha(v.fecha)}</strong></td>
+                    <td><strong>${v.comprobante}</strong></td>
+                    <td>${v.cliente}</td>
+                    <td>${v.medio}</td>
+                    <td>S/ ${v.total.toFixed(2)}</td>
+                    <td style="text-align: right;"><a class="link-action" onclick="verDetalleBoleta(${realIndex}, '${fechaSeleccionada}')">VER DESCRIPCIÓN</a></td>
+                </tr>`;
+            });
+
+            tablaHTML += `</tbody></table>`;
+            divResultados.innerHTML = tablaHTML;
+        }
+
+        window.verDetalleBoleta = function(index, fechaBusq) {
+            let v = historialVentas[index];
+            tituloHistorial.innerText = `NOTA DE VENTA N° ${v.comprobante}`;
+            subtituloHistorial.innerText = `DETALLE Y DESCRIPCIÓN DEL COMPROBANTE`;
+            seccionBusqueda.style.display = 'none';
+            divResultados.style.display = 'none';
+            divDetalle.style.display = 'block';
+            btnRegresar.style.display = 'inline-block';
+
+            let detalleHTML = `
+                <div style="background: var(--bg-main); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 2px solid var(--green-primary); padding-bottom: 12px; margin-bottom: 15px;">
+                        <div>
+                            <strong style="font-size: 16px; color: var(--green-primary);">PROMOTORES DEL AGRO JK E.I.R.L.</strong><br>
+                            <span style="font-size: 12px; color: var(--text-secondary);">RUC: 20611525304</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong style="font-size: 15px; color: var(--green-primary);">NOTA DE VENTA</strong><br>
+                            <span style="font-size: 14px; font-weight: bold; color: var(--red-alert);">N° ${v.comprobante}</span>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 13px; background: #1a2a3a; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <div><strong>CLIENTE / EMPRESA:</strong> ${v.cliente}</div>
+                        <div><strong>DNI / RUC:</strong> ${v.doc || '---'}</div>
+                        <div><strong>FECHA DE OPERACIÓN:</strong> ${formatearFecha(v.fecha)}</div>
+                        <div><strong>MEDIO DE PAGO:</strong> ${v.medio}</div>
+                    </div>
+
+                    <p style="font-weight: bold; margin-bottom: 8px; color: var(--green-primary); font-size: 13px;">PRODUCTOS ADQUIRIDOS:</p>
+                    <div style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; margin-bottom: 15px;">
+                        <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #1a2a3a;">
+                                    <th style="padding: 8px; text-align: left;">CANT</th>
+                                    <th style="padding: 8px; text-align: left;">DESCRIPCIÓN / PRODUCTO</th>
+                                    <th style="padding: 8px; text-align: right;">P. UNIT</th>
+                                    <th style="padding: 8px; text-align: right;">SUBTOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+            v.items.forEach(i => {
+                detalleHTML += `
+                    <tr>
+                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color);">${i.cantidad}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color);"><strong>${i.producto}</strong> <br><small style="color:var(--text-secondary);">Cód: ${i.codigo}</small></td>
+                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right;">S/ ${i.precio.toFixed(2)}</td>
+                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: bold;">S/ ${i.subtotal.toFixed(2)}</td>
+                    </tr>`;
+            });
+
+            detalleHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end;">
+                        <div style="width: 280px; background: #1a2a3a; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>TOTAL A PAGAR:</span>
+                                <strong>S/ ${v.total.toFixed(2)}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>MONTO ABONADO:</span>
+                                <strong>S/ ${v.abonado.toFixed(2)}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 5px; margin-top: 5px;">
+                                <span>SALDO PENDIENTE:</span>
+                                <strong class="${v.saldo > 0 ? 'text-red' : 'text-green'}">S/ ${v.saldo.toFixed(2)}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            divDetalle.innerHTML = detalleHTML;
+
+            btnRegresar.onclick = function() {
+                divDetalle.style.display = 'none';
+                divResultados.style.display = 'block';
+                seccionBusqueda.style.display = 'flex';
+                buscarPorFechaIngresada();
+            };
+        };
+
+        btnRegresar.addEventListener('click', function() {
+            mostrarVistaBusqueda();
+        });
+
+        document.getElementById('btn-cerrar-historial-ventas').addEventListener('click', function() {
+            modalHistorial.style.display = 'none';
+        });
+
+        // ==========================================
+        // LÓGICA DE LA CAMPANITA DE NOTIFICACIONES Y PAGOS
+        // ==========================================
+        let recordatoriosDefault = [
+            { id: 1, dia: 10, concepto: "Pagar el alquiler de local" },
+            { id: 2, dia: 10, concepto: "Pagar el recibo de luz y agua" },
+            { id: 3, dia: 14, concepto: "Pagar mi RPC de celular" },
+            { id: 4, dia: 25, concepto: "Pagar el internet" }
+        ];
+
+        let misNotificaciones = JSON.parse(localStorage.getItem('notificaciones_agro_jk')) || recordatoriosDefault;
+
+        const modalNotif = document.getElementById('modal-notificaciones');
+        const btnAbrirNotif = document.getElementById('btn-abrir-notificaciones');
+        const btnCerrarNotif = document.getElementById('btn-cerrar-modal-notif');
+        const tablaCuerpoNotif = document.getElementById('tabla-cuerpo-notificaciones');
+        const puntoCampana = document.getElementById('punto-alerta-campana');
+
+        // Modal de confirmación dinámico y movible
+        const modalAccion = document.getElementById('modal-accion-confirmacion');
+        const confTitulo = document.getElementById('conf-titulo');
+        const confMensaje = document.getElementById('conf-mensaje');
+        const confBtnAceptar = document.getElementById('conf-btn-aceptar');
+        const confBtnCancelar = document.getElementById('conf-btn-cancelar');
+        const confSeccionEditar = document.getElementById('conf-seccion-editar');
+        let accionCallback = null;
+
+        function abrirConfirmacion(titulo, mensaje, textoBoton, esEdicion, callback, ocultarCancelar = false) {
+            confTitulo.innerText = titulo;
+            confMensaje.innerHTML = mensaje;
+            confBtnAceptar.innerText = textoBoton;
+            accionCallback = callback;
+
+            if (esEdicion) {
+                confSeccionEditar.style.display = 'block';
+            } else {
+                confSeccionEditar.style.display = 'none';
+            }
+
+            if (ocultarCancelar) {
+                confBtnCancelar.style.display = 'none';
+            } else {
+                confBtnCancelar.style.display = 'inline-block';
+            }
+
+            modalAccion.style.display = 'flex';
+        }
+
+        confBtnCancelar.addEventListener('click', function() {
+            modalAccion.style.display = 'none';
+            accionCallback = null;
+        });
+
+        confBtnAceptar.addEventListener('click', function() {
+            modalAccion.style.display = 'none';
+            if (typeof accionCallback === 'function') {
+                accionCallback();
+            }
+            accionCallback = null;
+        });
+
+        btnAbrirNotif.addEventListener('click', function() {
+            renderizarNotificaciones();
+            modalNotif.style.display = 'flex';
+        });
+
+        btnCerrarNotif.addEventListener('click', function() {
+            abrirConfirmacion(
+                "CERRAR VENTANA",
+                "¿ESTÁ SEGURO DE QUE DESEA CERRAR EL CENTRO DE RECORDATORIOS?",
+                "SÍ, CERRAR",
+                false,
+                function() {
+                    modalNotif.style.display = 'none';
+                }
+            );
+        });
+
+        function renderizarNotificaciones() {
+            tablaCuerpoNotif.innerHTML = '';
+            let hoy = new Date();
+            let diaActual = hoy.getDate();
+
+            if (misNotificaciones.length === 0) {
+                tablaCuerpoNotif.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-secondary);">No hay pagos ni recordatorios programados.</td></tr>`;
+                puntoCampana.style.display = 'none';
+                return;
+            }
+
+            let hayPendientesCercanos = false;
+
+            misNotificaciones.forEach((notif, index) => {
+                let esHoy = notif.dia === diaActual;
+                let badgeEstado = esHoy ? 
+                    `<span style="background: var(--red-alert); color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">¡HOY TOCA PAGAR! 🚨</span>` : 
+                    `<span style="color: var(--green-primary); font-weight: bold;">Programado (Día ${notif.dia})</span>`;
+
+                if (esHoy) hayPendientesCercanos = true;
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>Día ${notif.dia} de cada mes</strong></td>
+                    <td>${notif.concepto}</td>
+                    <td>${badgeEstado}</td>
+                    <td style="text-align: right;">
+                        <a class="link-action" onclick="pedirEditarNotificacion(${index})">Editar</a>
+                        <a class="link-danger" onclick="pedirEliminarNotificacion(${index})">Eliminar</a>
+                    </td>
+                `;
+                tablaCuerpoNotif.appendChild(tr);
+            });
+
+            if (hayPendientesCercanos) {
+                puntoCampana.style.display = 'block';
+            } else {
+                puntoCampana.style.display = 'none';
+            }
+        }
+
+        document.getElementById('btn-guardar-notif').addEventListener('click', function() {
+            let desc = document.getElementById('nueva-notif-desc').value.trim().toUpperCase();
+            let dia = parseInt(document.getElementById('nueva-notif-dia').value);
+
+            if (!desc || isNaN(dia) || dia < 1 || dia > 31) {
+                abrirConfirmacion(
+                    "⚠️ ADVERTENCIA DE DATOS",
+                    "POR FAVOR INGRESE UN CONCEPTO VÁLIDO Y UN DÍA DEL MES VÁLIDO (ENTRE 1 Y 31).",
+                    "ENTENDIDO",
+                    false,
+                    function() {},
+                    true
+                );
+                return;
+            }
+
+            misNotificaciones.push({ id: Date.now(), dia: dia, concepto: desc });
+            localStorage.setItem('notificaciones_agro_jk', JSON.stringify(misNotificaciones));
+
+            document.getElementById('nueva-notif-desc').value = '';
+            document.getElementById('nueva-notif-dia').value = '';
+
+            renderizarNotificaciones();
+        });
+
+        window.pedirEditarNotificacion = function(index) {
+            let n = misNotificaciones[index];
+            document.getElementById('edit-input-desc').value = n.concepto;
+            document.getElementById('edit-input-dia').value = n.dia;
+
+            abrirConfirmacion(
+                "EDITAR RECORDATORIO",
+                `MODIFIQUE LOS DATOS PARA: "${n.concepto}"`,
+                "GUARDAR CAMBIOS",
+                true,
+                function() {
+                    let nuevoDesc = document.getElementById('edit-input-desc').value.trim().toUpperCase();
+                    let nuevoDia = parseInt(document.getElementById('edit-input-dia').value);
+
+                    if (!nuevoDesc || isNaN(nuevoDia) || nuevoDia < 1 || nuevoDia > 31) {
+                        abrirConfirmacion(
+                            "⚠️ ADVERTENCIA DE DATOS",
+                            "LOS DATOS INGRESADOS NO SON VÁLIDOS.",
+                            "ENTENDIDO",
+                            false,
+                            function() {},
+                            true
+                        );
+                        return;
+                    }
+
+                    misNotificaciones[index].concepto = nuevoDesc;
+                    misNotificaciones[index].dia = nuevoDia;
+                    localStorage.setItem('notificaciones_agro_jk', JSON.stringify(misNotificaciones));
+                    renderizarNotificaciones();
+                }
+            );
+        };
+
+        window.pedirEliminarNotificacion = function(index) {
+            let n = misNotificaciones[index];
+            abrirConfirmacion(
+                "ELIMINAR RECORDATORIO",
+                `¿ESTÁ SEGURO DE ELIMINAR EL PAGO: "${n.concepto}"?`,
+                "SÍ, ELIMINAR",
+                false,
+                function() {
+                    misNotificaciones.splice(index, 1);
+                    localStorage.setItem('notificaciones_agro_jk', JSON.stringify(misNotificaciones));
+                    renderizarNotificaciones();
+                }
+            );
+        };
+
+        // ==========================================
+        // CARGAR DATOS DINÁMICOS DEL DASHBOARD DESDE LA API
+        // ==========================================
+        function cargarResumenDashboard() {
+            fetch('/api/dashboard/resumen')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) return;
+
+                    // Actualizar valores del día y mes en pantalla
+                    document.getElementById('val-ventas-dia').innerText = `S/ ${(data.ventas_dia || 0).toFixed(2)}`;
+                    document.getElementById('val-ventas-mes').innerText = `S/ ${(data.ventas_mes || 0).toFixed(2)}`;
+                    document.getElementById('val-deudas-cobrar').innerText = `S/ ${(data.deudas_cobrar || 0).toFixed(2)}`;
+                    
+                    // Ganancias y proyecciones basadas en ventas del mes
+                    let ventasMes = data.ventas_mes || 0;
+                    let gananciaMes = ventasMes * 0.15; // Estimación estándar de ganancia
+                    let reinversion = gananciaMes * 0.50;
+                    let reservaEmpleado = gananciaMes * 0.20;
+                    let reservaGastos = gananciaMes * 0.30;
+
+                    document.getElementById('val-ganancia-mes').innerText = `S/ ${gananciaMes.toFixed(2)}`;
+                    document.getElementById('val-reinversion').innerText = `S/ ${reinversion.toFixed(2)}`;
+                    document.getElementById('val-reserva-empleado').innerText = `S/ ${reservaEmpleado.toFixed(2)}`;
+                    document.getElementById('val-reserva-gastos').innerText = `S/ ${reservaGastos.toFixed(2)}`;
+                })
+                .catch(error => console.error("Error al actualizar el dashboard:", error));
+        }
+
+        // ==========================================
+        // ALERTA AUTOMÁTICA AL ABRIR LA PÁGINA (ESTILO MENSAJE DE TEXTO)
+        // ==========================================
+        function verificarAlertasDelDia() {
+            let hoy = new Date();
+            let diaActual = hoy.getDate();
+
+            let pagosHoy = misNotificaciones.filter(n => n.dia === diaActual);
+
+            if (pagosHoy.length > 0) {
+                let conceptosTexto = pagosHoy.map(p => `• <strong>${p.concepto}</strong>`).join('<br>');
+                let mensajeSMS = `¡Hola! Tienes pagos pendientes programados para hoy (Día ${diaActual}):<br><br>${conceptosTexto}<br><br>Realiza hoy el pago para evitar cortes o retrasos. 🚨`;
+
+                setTimeout(function() {
+                    abrirConfirmacion(
+                        "📱 ALERTA DE PAGO PENDIENTE",
+                        mensajeSMS,
+                        "ENTENDIDO",
+                        false,
+                        function() {},
+                        true
+                    );
+                }, 800);
+            }
+        }
+
+        // Ejecutar al cargar la página
+        renderizarNotificaciones();
+        verificarAlertasDelDia();
+        cargarResumenDashboard();
+    </script>
+
+</body>
+</html>

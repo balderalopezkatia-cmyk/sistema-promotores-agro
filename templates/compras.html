@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Compras - Promotores del Agro</title>
+    <!-- Enlace al archivo de estilos global -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { padding: 16px; }
+        .main-content { width: 100%; max-width: 1400px; margin: 0 auto; overflow-x: hidden; }
+        
+        /* Ajuste de la barra superior para acomodar el logo grande y el eslogan debajo */
+        .top-navbar { padding: 14px 20px; }
+        .logo-container-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .logo-container-top img { height: 75px; width: auto; object-fit: contain; }
+        .logo-slogan-italic { font-size: 10px; font-style: italic; color: var(--text-secondary); margin-left: 2px; letter-spacing: 0.3px; }
+
+        /* Cajas Principales */
+        .card-box { background: var(--bg-card); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); margin-bottom: 25px; overflow: hidden; border: 1px solid var(--border-color); }
+        .card-header { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--green-primary); padding: 16px 20px; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .card-body { padding: 20px; }
+
+        /* Formularios y Grids */
+        .form-row { display: grid; gap: 15px; margin-bottom: 15px; align-items: end; }
+        .row-3 { grid-template-columns: 2fr 2fr 1fr; }
+        .row-5 { grid-template-columns: 2fr 2fr 1fr 1fr 1fr auto; }
+        .row-5-filtros { grid-template-columns: 2fr 2fr auto; }
+        .row-5-totales { grid-template-columns: 1fr 1fr 1fr 1fr 1fr; }
+
+        .form-group { display: flex; flex-direction: column; position: relative; }
+        .form-group label { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; }
+        .form-group input, .form-group select { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 9px 12px; border-radius: 8px; font-size: 14px; outline: none; text-transform: uppercase; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); }
+
+        /* Lista de Autocompletado */
+        .autocomplete-list {
+            position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card);
+            border: 1px solid var(--green-primary); border-top: none; border-radius: 0 0 8px 8px; z-index: 99; max-height: 200px;
+            overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: none;
+        }
+        .autocomplete-item {
+            padding: 9px 12px; font-size: 13px; cursor: pointer; text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color); font-weight: 500; color: var(--text-white);
+        }
+        .autocomplete-item:hover { background-color: #1a2a3a; color: var(--green-primary); }
+
+        /* Botones */
+        .btn-add { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 22px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-add:hover { background-color: #35f5aa; }
+        
+        .btn-edit-item { background-color: var(--blue-tag); color: var(--bg-main); border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; margin-right: 5px; }
+        .btn-edit-item:hover { opacity: 0.85; }
+        
+        .btn-delete-item { background-color: var(--red-alert); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .btn-delete-item:hover { opacity: 0.85; }
+
+        /* Tablas */
+        .table-container { margin: 15px 0 10px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; color: var(--text-white); }
+        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 10px 12px; font-weight: bold; border-bottom: 1px solid var(--border-color); text-transform: uppercase; font-size: 12px; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-white); text-transform: uppercase; }
+        
+        .link-factura { color: var(--blue-tag); text-decoration: none; font-weight: bold; cursor: pointer; }
+        .link-factura:hover { text-decoration: underline; }
+        .link-action { color: var(--blue-tag); text-decoration: none; font-weight: bold; cursor: pointer; margin-right: 12px; text-transform: uppercase; }
+        .link-action:hover { text-decoration: underline; }
+        .link-danger { color: var(--red-alert); text-decoration: none; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .link-danger:hover { text-decoration: underline; }
+
+        /* Ventanas Flotantes Movibles (Modales) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        
+        .modal-card { 
+            background: var(--bg-card); padding: 30px; border-radius: 12px; max-width: 480px; width: 90%; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; 
+            position: absolute; cursor: default;
+        }
+        .modal-card h3 { 
+            color: var(--green-primary); font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; 
+            text-transform: uppercase; font-weight: bold; cursor: move; background: #1a2a3a; padding: 8px; border-radius: 6px; user-select: none;
+        }
+        .modal-card p { font-size: 13px; color: var(--text-white); margin-bottom: 25px; line-height: 1.5; text-transform: uppercase; font-weight: 600; }
+
+        /* Modal Detalle Amplio */
+        .modal-detalle-card { 
+            background: var(--bg-card); padding: 35px; border-radius: 12px; max-width: 900px; width: 90%; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary); max-height: 90vh; overflow-y: auto; text-align: left; 
+            position: absolute; cursor: default;
+        }
+        .modal-detalle-card h3 { 
+            color: var(--green-primary); font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; 
+            text-transform: uppercase; font-weight: bold; cursor: move; background: #1a2a3a; padding: 10px; border-radius: 6px; user-select: none;
+        }
+        
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #1a2a3a; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; color: var(--text-white); }
+        .modal-grid p { font-size: 13px; color: var(--text-white); margin-bottom: 8px; text-transform: uppercase; font-weight: 600; }
+
+        /* Botones Modales */
+        .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 11px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-modal-close:hover { background: #35f5aa; }
+        .btn-modal-cancel { background: var(--border-color); color: white; border: none; padding: 11px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; margin-right: 10px; }
+        .btn-modal-cancel:hover { background: #2c3e50; }
+        .btn-modal-confirm-danger { background: var(--red-alert); color: white; border: none; padding: 11px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; }
+        .btn-modal-confirm-danger:hover { background: #ef233c; }
+
+        .text-green { color: var(--green-primary); font-weight: bold; }
+        .text-red { color: var(--red-alert); font-weight: bold; }
+        .section-subtitle { font-weight: bold; font-size: 13px; color: var(--green-primary); margin-top: 20px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior con Logo Grande, Eslogan y Menú Unificado -->
+    <div class="top-navbar">
+        <div class="nav-left">
+            <div class="logo-container-top">
+                <img src="/static/logo.png" alt="Promotores del Agro" onerror="this.style.display='none'">
+                <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
+            </div>
+            <div class="nav-menu" style="margin-left: 20px; align-self: center;">
+                <a href="/dashboard" class="nav-link">PANEL</a>
+                <a href="/stock" class="nav-link">STOCK</a>
+                <a href="/ventas" class="nav-link">VENTAS</a>
+                <a href="/gastos" class="nav-link">GASTOS</a>
+                <a href="/amortizaciones" class="nav-link">AMORTIZACIONES</a>
+                <a href="/compras" class="nav-link active">COMPRAS</a>
+                <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
+            </div>
+        </div>
+        <div class="nav-right" style="align-self: center;">
+            <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
+            <div class="icon-btn" title="Notificaciones">
+                🔔
+                <span class="notification-dot"></span>
+            </div>
+            <button class="user-avatar" title="Katia Baldera López (Gerente)">K</button>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+
+        <!-- MÓDULO: REGISTRO DE COMPRAS -->
+        <div class="card-box">
+            <div class="card-header" id="titulo-form-compra">REGISTRO DE COMPRAS - INGRESA FACTURAS, CONDICIÓN DE PAGO Y AMORTIZACIONES</div>
+            <div class="card-body">
+                
+                <div class="form-row row-3">
+                    <div class="form-group">
+                        <label>Proveedor / Empresa:</label>
+                        <input type="text" id="compra-proveedor" placeholder="Ej. Agrobaldera">
+                    </div>
+                    <div class="form-group">
+                        <label>N° de Factura / Boleta:</label>
+                        <input type="text" id="compra-factura" placeholder="Ej. F001 - XXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Compra:</label>
+                        <input type="date" id="compra-fecha">
+                    </div>
+                </div>
+
+                <div class="form-row row-5">
+                    <div class="form-group" style="position: relative;">
+                        <label>Producto:</label>
+                        <input type="text" id="item-producto" placeholder="Ej. Kieto x 100gr" autocomplete="off">
+                        <div id="lista-sugerencias-producto" class="autocomplete-list"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Laboratorio:</label>
+                        <input type="text" id="item-laboratorio" placeholder="Ej. Stoller">
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad:</label>
+                        <input type="number" id="item-cantidad" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>P. Costo Unit (S/):</label>
+                        <input type="number" id="item-costo" value="0.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Precio Sugerido (S/):</label>
+                        <input type="number" id="item-sugerido" value="0.00" step="0.01">
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="button" class="btn-add" id="btn-agregar-item">+ AGREGAR</button>
+                    </div>
+                </div>
+
+                <!-- Tabla Temporal de Productos Agregados -->
+                <div class="table-container">
+                    <table id="tabla-items-compra">
+                        <thead>
+                            <tr>
+                                <th>Cantidad</th>
+                                <th>Producto</th>
+                                <th>Laboratorio</th>
+                                <th>P. Costo Unit</th>
+                                <th>P. Sugerido</th>
+                                <th>Subtotal</th>
+                                <th style="text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">Ningún producto agregado todavía.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-row row-5-totales" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Monto Total (S/):</label>
+                        <input type="text" id="compra-monto-total" value="S/ 0.00" readonly style="font-weight: bold; background: #1a2a3a;">
+                    </div>
+                    <div class="form-group">
+                        <label>Medio de Pago:</label>
+                        <select id="compra-medio">
+                            <option value="YAPE">YAPE</option>
+                            <option value="EFECTIVO">EFECTIVO</option>
+                            <option value="PLIN">PLIN</option>
+                            <option value="TRANSFERENCIA BANCARIA">TRANSFERENCIA BANCARIA</option>
+                            <option value="CREDITO">CRÉDITO</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monto Amortizado / Inicial (S/):</label>
+                        <input type="number" id="compra-amortizado" value="0.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Amortización:</label>
+                        <input type="date" id="compra-fecha-abono">
+                    </div>
+                    <div class="form-group">
+                        <label>Saldo Restante (S/):</label>
+                        <input type="text" id="compra-saldo" value="S/ 0.00" readonly style="font-weight: bold; background: #1a2a3a; color: var(--red-alert);">
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button type="button" class="btn-add" id="btn-registrar-compra">REGISTRAR COMPRA</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- MÓDULO: HISTORIAL DE COMPRAS -->
+        <div class="card-box">
+            <div class="card-header">CONSULTA DE HISTORIAL DE COMPRAS POR PROVEEDOR / BOLETA / FACTURA</div>
+            <div class="card-body">
+                
+                <div class="form-row row-5-filtros" style="margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label>Buscar por Proveedor / Empresa:</label>
+                        <select id="filtro-proveedor">
+                            <option value="">-- Seleccionar Proveedor --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Filtrar por N° Factura / Boleta:</label>
+                        <select id="filtro-factura">
+                            <option value="">-- Seleccionar N° Comprobante --</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="justify-content: flex-end;">
+                        <button type="button" class="btn-add" id="btn-consultar-compras">CONSULTAR HISTORIAL</button>
+                    </div>
+                </div>
+
+                <div class="table-container" id="seccion-tabla-historial" style="display: none;">
+                    <table id="tabla-historial-compras">
+                        <thead>
+                            <tr>
+                                <th>Fecha Compra</th>
+                                <th>Proveedor</th>
+                                <th>N° Factura</th>
+                                <th>Monto Total</th>
+                                <th>Monto Abonado</th>
+                                <th>Saldo Pendiente</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Cargado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL DETALLE DE COMPRA -->
+    <div id="modal-detalle-compra" class="modal-overlay">
+        <div class="modal-detalle-card" id="card-detalle-compra">
+            <h3 id="modal-titulo-factura">DETALLE DE FACTURA / COMPROBANTE</h3>
+            <div id="contenido-modal-compra-completo"></div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn-modal-close" id="btn-cerrar-modal-detalle">CERRAR VENTANA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN -->
+    <div id="modal-confirmacion" class="modal-overlay">
+        <div class="modal-card" id="card-confirmacion">
+            <h3 id="confirmacion-titulo">CONFIRMACIÓN</h3>
+            <p id="confirmacion-mensaje"></p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button type="button" class="btn-modal-cancel" id="btn-confirmar-cancelar">CANCELAR</button>
+                <button type="button" class="btn-modal-confirm-danger" id="btn-confirmar-aceptar">SÍ, PROCEDER</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ALERTA SIMPLE -->
+    <div id="modal-alerta" class="modal-overlay">
+        <div class="modal-card" id="card-alerta" style="max-width: 450px;">
+            <h3 style="cursor: move;">PROMOTORES DEL AGRO</h3>
+            <p id="modal-mensaje" style="margin: 15px 0; font-size: 13px; text-transform: none; color: var(--text-white);"></p>
+            <div style="text-align: right;">
+                <button type="button" class="btn-modal-close" id="btn-cerrar-alerta">ACEPTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('compra-fecha').valueAsDate = new Date();
+        document.getElementById('compra-fecha-abono').valueAsDate = new Date();
+
+        let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
+        let itemsCompraActual = [];
+        let indiceEditando = null;
+        let itemIndexEditando = null;
+        let accionPendiente = null;
+
+        function hacerMovible(cardId, headerSelector) {
+            const card = document.getElementById(cardId);
+            const header = card.querySelector(headerSelector) || card.querySelector('h3');
+            
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            header.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = card.getBoundingClientRect();
+                card.style.position = 'absolute';
+                card.style.left = rect.left + 'px';
+                card.style.top = rect.top + 'px';
+                card.style.transform = 'none';
+
+                initialX = rect.left;
+                initialY = rect.top;
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                let dx = e.clientX - startX;
+                let dy = e.clientY - startY;
+                card.style.left = (initialX + dx) + 'px';
+                card.style.top = (initialY + dy) + 'px';
+            }
+
+            function onMouseUp() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        hacerMovible('card-detalle-compra', 'h3');
+        hacerMovible('card-confirmacion', 'h3');
+        hacerMovible('card-alerta', 'h3');
+
+        function mostrarAlerta(msj) {
+            document.getElementById('modal-mensaje').innerText = msj;
+            document.getElementById('modal-alerta').style.display = 'flex';
+        }
+
+        document.getElementById('btn-cerrar-alerta').addEventListener('click', function() {
+            document.getElementById('modal-alerta').style.display = 'none';
+        });
+
+        function abrirModalConfirmacion(titulo, mensaje, callback) {
+            document.getElementById('confirmacion-titulo').innerText = titulo;
+            document.getElementById('confirmacion-mensaje').innerText = mensaje;
+            accionPendiente = callback;
+            document.getElementById('modal-confirmacion').style.display = 'flex';
+        }
+
+        document.getElementById('btn-confirmar-cancelar').addEventListener('click', function() {
+            document.getElementById('modal-confirmacion').style.display = 'none';
+            accionPendiente = null;
+        });
+
+        document.getElementById('btn-confirmar-aceptar').addEventListener('click', function() {
+            document.getElementById('modal-confirmacion').style.display = 'none';
+            if (typeof accionPendiente === 'function') accionPendiente();
+            accionPendiente = null;
+        });
+
+        function verificarYAsignarCorrelativoCompra() {
+            let campoFactura = document.getElementById('compra-factura');
+            if (historialCompras.length === 0) {
+                campoFactura.value = "F001-01";
+            } else {
+                let nums = historialCompras.map(c => {
+                    let partes = c.factura.split('-');
+                    return partes.length > 1 ? parseInt(partes[1]) : parseInt(c.factura);
+                }).filter(n => !isNaN(n));
+
+                if (nums.length === 0) {
+                    campoFactura.value = "F001-01";
+                } else {
+                    let siguiente = Math.max(...nums) + 1;
+                    campoFactura.value = "F001-" + (siguiente < 10 ? "0" + siguiente : siguiente);
+                }
+            }
+        }
+        verificarYAsignarCorrelativoCompra();
+
+        const inputProducto = document.getElementById('item-producto');
+        const listaSugerencias = document.getElementById('lista-sugerencias-producto');
+
+        function obtenerCatalogoCompletoStock() {
+            let mapaCatalogo = {};
+
+            historialCompras.forEach(compra => {
+                if (compra.items) {
+                    compra.items.forEach(item => {
+                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                        if (nombre) {
+                            mapaCatalogo[nombre] = {
+                                producto: nombre,
+                                laboratorio: item.laboratorio ? item.laboratorio.trim().toUpperCase() : '',
+                                costo: parseFloat(item.costo) || 0,
+                                sugerido: parseFloat(item.sugerido) || 0
+                            };
+                        }
+                    });
+                }
+            });
+
+            let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
+            historialVentas.forEach(venta => {
+                if (venta.items) {
+                    venta.items.forEach(item => {
+                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                        if (nombre && !mapaCatalogo[nombre]) {
+                            mapaCatalogo[nombre] = {
+                                producto: nombre,
+                                laboratorio: item.laboratorio ? item.laboratorio.trim().toUpperCase() : '',
+                                costo: parseFloat(item.costo) || 0,
+                                sugerido: parseFloat(item.sugerido) || 0
+                            };
+                        }
+                    });
+                }
+            });
+
+            return Object.values(mapaCatalogo);
+        }
+
+        inputProducto.addEventListener('input', function() {
+            let texto = this.value.trim().toUpperCase();
+            listaSugerencias.innerHTML = '';
+            
+            if (texto.length === 0) {
+                listaSugerencias.style.display = 'none';
+                return;
+            }
+
+            let catalogo = obtenerCatalogoCompletoStock();
+            let filtrados = catalogo.filter(p => p.producto.includes(texto));
+
+            if (filtrados.length === 0) {
+                listaSugerencias.style.display = 'none';
+                return;
+            }
+
+            filtrados.forEach(p => {
+                let div = document.createElement('div');
+                div.className = 'autocomplete-item';
+                div.innerHTML = `${p.producto} <span style="font-size:11px; color:var(--text-secondary); float:right;">(P. Costo: S/ ${p.costo.toFixed(2)})</span>`;
+                div.addEventListener('click', function() {
+                    inputProducto.value = p.producto;
+                    document.getElementById('item-laboratorio').value = p.laboratorio;
+                    document.getElementById('item-costo').value = p.costo.toFixed(2);
+                    document.getElementById('item-sugerido').value = p.sugerido.toFixed(2);
+                    listaSugerencias.style.display = 'none';
+                });
+                listaSugerencias.appendChild(div);
+            });
+
+            listaSugerencias.style.display = 'block';
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!inputProducto.contains(e.target) && !listaSugerencias.contains(e.target)) {
+                listaSugerencias.style.display = 'none';
+            }
+        });
+
+        document.getElementById('btn-agregar-item').addEventListener('click', function() {
+            let producto = document.getElementById('item-producto').value.trim().toUpperCase();
+            let laboratorio = document.getElementById('item-laboratorio').value.trim().toUpperCase();
+            let cantidad = parseInt(document.getElementById('item-cantidad').value) || 0;
+            let costo = parseFloat(document.getElementById('item-costo').value) || 0;
+            let sugerido = parseFloat(document.getElementById('item-sugerido').value) || 0;
+
+            if (!producto) {
+                mostrarAlerta('INGRESE EL NOMBRE DEL PRODUCTO.');
+                return;
+            }
+            if (cantidad <= 0 || costo <= 0) {
+                mostrarAlerta('LA CANTIDAD Y EL COSTO UNITARIO DEBEN SER MAYORES A CERO.');
+                return;
+            }
+
+            let subtotal = cantidad * costo;
+
+            if (itemIndexEditando !== null) {
+                itemsCompraActual[itemIndexEditando] = { producto, laboratorio, cantidad, costo, sugerido, subtotal };
+                itemIndexEditando = null;
+                document.getElementById('btn-agregar-item').innerText = "+ AGREGAR";
+            } else {
+                itemsCompraActual.push({ producto, laboratorio, cantidad, costo, sugerido, subtotal });
+            }
+
+            document.getElementById('item-producto').value = '';
+            document.getElementById('item-laboratorio').value = '';
+            document.getElementById('item-cantidad').value = '1';
+            document.getElementById('item-costo').value = '0.00';
+            document.getElementById('item-sugerido').value = '0.00';
+
+            renderizarTablaItemsActual();
+            calcularTotalesCompra();
+        });
+
+        function renderizarTablaItemsActual() {
+            let tbody = document.querySelector('#tabla-items-compra tbody');
+            tbody.innerHTML = '';
+
+            if (itemsCompraActual.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">Ningún producto agregado todavía.</td></tr>`;
+                return;
+            }
+
+            itemsCompraActual.forEach((item, idx) => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.cantidad}</td>
+                    <td><strong>${item.producto}</strong></td>
+                    <td>${item.laboratorio || '-'}</td>
+                    <td>S/ ${item.costo.toFixed(2)}</td>
+                    <td>S/ ${item.sugerido.toFixed(2)}</td>
+                    <td style="font-weight: bold;">S/ ${item.subtotal.toFixed(2)}</td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-edit-item" onclick="confirmarEditarItem(${idx})">EDITAR</button>
+                        <button type="button" class="btn-delete-item" onclick="confirmarEliminarItem(${idx})">ELIMINAR</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.confirmarEditarItem = function(idx) {
+            abrirModalConfirmacion(
+                "¿DESEA EDITAR ESTE PRODUCTO?",
+                "¿Está seguro de modificar los datos de este producto? Se cargarán en las casillas superiores.",
+                function() {
+                    let item = itemsCompraActual[idx];
+                    itemIndexEditando = idx;
+
+                    document.getElementById('item-producto').value = item.producto;
+                    document.getElementById('item-laboratorio').value = item.laboratorio;
+                    document.getElementById('item-cantidad').value = item.cantidad;
+                    document.getElementById('item-costo').value = item.costo;
+                    document.getElementById('item-sugerido').value = item.sugerido;
+
+                    document.getElementById('btn-agregar-item').innerText = "ACTUALIZAR";
+                    document.getElementById('item-producto').focus();
+                }
+            );
+        };
+
+        window.confirmarEliminarItem = function(idx) {
+            abrirModalConfirmacion(
+                "¿DESEA ELIMINAR ESTE PRODUCTO?",
+                "¿Está seguro de quitar este producto de la lista temporal de la compra?",
+                function() {
+                    itemsCompraActual.splice(idx, 1);
+                    renderizarTablaItemsActual();
+                    calcularTotalesCompra();
+                    mostrarAlerta('PRODUCTO QUITADO DE LA LISTA.');
+                }
+            );
+        };
+
+        const inputAmortizado = document.getElementById('compra-amortizado');
+        const inputMontoTotal = document.getElementById('compra-monto-total');
+        const inputSaldo = document.getElementById('compra-saldo');
+
+        function calcularTotalesCompra() {
+            let total = itemsCompraActual.reduce((acc, i) => acc + i.subtotal, 0);
+            inputMontoTotal.value = "S/ " + total.toFixed(2);
+            
+            let amort = parseFloat(inputAmortizado.value) || 0;
+            let saldo = total - amort;
+            if (saldo < 0) saldo = 0;
+            inputSaldo.value = "S/ " + saldo.toFixed(2);
+        }
+
+        inputAmortizado.addEventListener('input', calcularTotalesCompra);
+
+        document.getElementById('btn-registrar-compra').addEventListener('click', function() {
+            let proveedor = document.getElementById('compra-proveedor').value.trim().toUpperCase();
+            let factura = document.getElementById('compra-factura').value.trim().toUpperCase();
+            let fecha = document.getElementById('compra-fecha').value;
+            let medio = document.getElementById('compra-medio').value;
+            let fechaAbono = document.getElementById('compra-fecha-abono').value;
+            let amortizado = parseFloat(inputAmortizado.value) || 0;
+            let montoTotal = itemsCompraActual.reduce((acc, i) => acc + i.subtotal, 0);
+
+            if (!proveedor) {
+                mostrarAlerta('INGRESE EL NOMBRE DEL PROVEEDOR.');
+                return;
+            }
+            if (!factura) {
+                mostrarAlerta('INGRESE EL N° DE FACTURA O BOLETA.');
+                return;
+            }
+            if (itemsCompraActual.length === 0) {
+                mostrarAlerta('AGREGUE AL MENOS UN PRODUCTO A LA COMPRA.');
+                return;
+            }
+            if (montoTotal <= 0) {
+                mostrarAlerta('EL MONTO TOTAL DEBE SER MAYOR A CERO.');
+                return;
+            }
+
+            let saldo = montoTotal - amortizado;
+            if (saldo < 0) saldo = 0;
+
+            let abonosIniciales = [];
+            if (amortizado > 0) {
+                abonosIniciales.push({
+                    fecha: fechaAbono,
+                    nombre: proveedor,
+                    comprobante: factura,
+                    monto: amortizado,
+                    medio: medio,
+                    saldoQuedante: saldo,
+                    tipo: 'COMPRA'
+                });
+            }
+
+            if (indiceEditando !== null) {
+                historialCompras[indiceEditando] = {
+                    fecha, proveedor, factura, items: itemsCompraActual, montoTotal, amortizado, saldo, medio, abonos: abonosIniciales
+                };
+                indiceEditando = null;
+                document.getElementById('btn-registrar-compra').innerText = "REGISTRAR COMPRA";
+                document.getElementById('titulo-form-compra').innerText = "REGISTRO DE COMPRAS - INGRESA FACTURAS, CONDICIÓN DE PAGO Y AMORTIZACIONES";
+            } else {
+                historialCompras.push({
+                    fecha, proveedor, factura, items: itemsCompraActual, montoTotal, amortizado, saldo, medio, abonos: abonosIniciales
+                });
+            }
+
+            localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
+            
+            document.getElementById('compra-proveedor').value = '';
+            document.getElementById('compra-amortizado').value = '0.00';
+            itemsCompraActual = [];
+            renderizarTablaItemsActual();
+            inputMontoTotal.value = 'S/ 0.00';
+            inputSaldo.value = 'S/ 0.00';
+            document.getElementById('compra-fecha').valueAsDate = new Date();
+            document.getElementById('compra-fecha-abono').valueAsDate = new Date();
+            
+            verificarYAsignarCorrelativoCompra();
+            actualizarSelectsFiltros();
+
+            mostrarAlerta('COMPRA REGISTRADA EXITOSAMENTE.');
+        });
+
+        function actualizarSelectsFiltros() {
+            let selectProv = document.getElementById('filtro-proveedor');
+            let selectFac = document.getElementById('filtro-factura');
+            
+            let provActual = selectProv.value;
+            let facActual = selectFac.value;
+
+            selectProv.innerHTML = '<option value="">-- Seleccionar Proveedor --</option>';
+
+            let proveedoresUnicos = [...new Set(historialCompras.map(c => c.proveedor))];
+            proveedoresUnicos.forEach(p => {
+                let opt = document.createElement('option');
+                opt.value = p;
+                opt.innerText = p;
+                selectProv.appendChild(opt);
+            });
+
+            selectProv.value = provActual;
+            actualizarComprobantesFiltro();
+        }
+
+        function actualizarComprobantesFiltro() {
+            let selectProv = document.getElementById('filtro-proveedor');
+            let selectFac = document.getElementById('filtro-factura');
+            let provSeleccionado = selectProv.value;
+            let facActual = selectFac.value;
+
+            selectFac.innerHTML = '<option value="">-- Seleccionar N° Comprobante --</option>';
+
+            let comprasFiltradas = provSeleccionado === "" 
+                ? historialCompras 
+                : historialCompras.filter(c => c.proveedor === provSeleccionado);
+
+            comprasFiltradas.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c.factura;
+                opt.innerText = c.factura + ' (' + c.proveedor + ')';
+                selectFac.appendChild(opt);
+            });
+
+            selectFac.value = comprasFiltradas.some(c => c.factura === facActual) ? facActual : "";
+        }
+
+        document.getElementById('filtro-proveedor').addEventListener('change', actualizarComprobantesFiltro);
+        actualizarSelectsFiltros();
+
+        document.getElementById('btn-consultar-compras').addEventListener('click', function() {
+            let provFiltro = document.getElementById('filtro-proveedor').value;
+            let facFiltro = document.getElementById('filtro-factura').value;
+
+            if (provFiltro === "" && facFiltro === "") {
+                document.getElementById('seccion-tabla-historial').style.display = 'none';
+                mostrarAlerta('SELECCIONE AL MENOS UN FILTRO DE BÚSQUEDA.');
+                return;
+            }
+
+            document.getElementById('seccion-tabla-historial').style.display = 'block';
+            let tbody = document.querySelector('#tabla-historial-compras tbody');
+            tbody.innerHTML = '';
+
+            let filtrados = historialCompras.filter(c => {
+                let matchProv = provFiltro === "" || c.proveedor === provFiltro;
+                let matchFac = facFiltro === "" || c.factura === facFiltro;
+                return matchProv && matchFac;
+            });
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">No se encontraron compras con esos criterios.</td></tr>`;
+                return;
+            }
+
+            filtrados.forEach((c) => {
+                let realIdx = historialCompras.indexOf(c);
+                let fechaForm = formatearFecha(c.fecha);
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${fechaForm}</td>
+                    <td><strong>${c.proveedor}</strong></td>
+                    <td><a class="link-factura" onclick="verDetalleCompra(${realIdx})">${c.factura}</a></td>
+                    <td>S/ ${c.montoTotal.toFixed(2)}</td>
+                    <td class="text-green" style="font-weight: bold;">S/ ${c.amortizado.toFixed(2)} (${c.medio})</td>
+                    <td class="${c.saldo > 0 ? 'text-red' : 'text-green'}" style="font-weight: bold;">S/ ${c.saldo.toFixed(2)}</td>
+                    <td>
+                        <a class="link-action" onclick="confirmarEditarCompra(${realIdx})">Editar</a>
+                        <a class="link-danger" onclick="confirmarEliminarCompra(${realIdx})">Eliminar</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+
+        function formatearFecha(fechaStr) {
+            if (!fechaStr || fechaStr.indexOf('-') === -1) return fechaStr;
+            let p = fechaStr.split('-');
+            return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+
+        window.verDetalleCompra = function(idx) {
+            let c = historialCompras[idx];
+            document.getElementById('modal-titulo-factura').innerText = `FACTURA N° ${c.factura}`;
+
+            let contenedor = document.getElementById('contenido-modal-compra-completo');
+            let fechaForm = formatearFecha(c.fecha);
+            
+            let productosFilas = '';
+            c.items.forEach(i => {
+                productosFilas += `
+                    <tr>
+                        <td>${i.cantidad}</td>
+                        <td><strong>${i.producto}</strong></td>
+                        <td>${i.laboratorio || '-'}</td>
+                        <td>S/ ${i.costo.toFixed(2)}</td>
+                        <td>S/ ${i.sugerido.toFixed(2)}</td>
+                        <td style="font-weight: bold;">S/ ${i.subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            let abonosFilas = '';
+            if (c.abonos && c.abonos.length > 0) {
+                c.abonos.forEach(a => {
+                    abonosFilas += `
+                        <tr>
+                            <td>${formatearFecha(a.fecha)}</td>
+                            <td class="text-green" style="font-weight: bold;">S/ ${a.monto.toFixed(2)}</td>
+                            <td>${a.medio}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                abonosFilas = `<tr><td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 12px;">Sin amortizaciones registradas aún.</td></tr>`;
+            }
+
+            contenedor.innerHTML = `
+                <div class="modal-grid">
+                    <p><strong>FECHA DE COMPRA:</strong> ${fechaForm}</p>
+                    <p><strong>PROVEEDOR:</strong> ${c.proveedor}</p>
+                    <p><strong>MEDIO DE PAGO INICIAL:</strong> ${c.medio}</p>
+                    <p><strong>MONTO TOTAL COMPRA:</strong> S/ ${c.montoTotal.toFixed(2)}</p>
+                    <p><strong>TOTAL AMORTIZADO:</strong> <span class="text-green">S/ ${c.amortizado.toFixed(2)}</span></p>
+                    <p><strong>SALDO PENDIENTE ACTUAL:</strong> <span class="${c.saldo > 0 ? 'text-red' : 'text-green'}">S/ ${c.saldo.toFixed(2)}</span></p>
+                </div>
+
+                <div class="section-subtitle">1. PRODUCTOS ADQUIRIDOS:</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CANT.</th>
+                                <th>PRODUCTO</th>
+                                <th>LABORATORIO</th>
+                                <th>P. COSTO</th>
+                                <th>P. SUGERIDO</th>
+                                <th>SUBTOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productosFilas}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section-subtitle">2. HISTORIAL DE AMORTIZACIONES / ABONOS REALIZADOS:</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>FECHA AMORTIZACIÓN</th>
+                                <th>MONTO ABONADO</th>
+                                <th>MEDIO DE PAGO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${abonosFilas}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('modal-detalle-compra').style.display = 'flex';
+        };
+
+        document.getElementById('btn-cerrar-modal-detalle').addEventListener('click', function() {
+            document.getElementById('modal-detalle-compra').style.display = 'none';
+        });
+
+        window.confirmarEditarCompra = function(idx) {
+            abrirModalConfirmacion(
+                "¿DESEA EDITAR ESTA COMPRA COMPLETA?",
+                "¿Está seguro de que desea cargar toda esta factura en el formulario superior para modificarla?",
+                function() {
+                    let c = historialCompras[idx];
+                    indiceEditando = idx;
+                    document.getElementById('compra-proveedor').value = c.proveedor;
+                    document.getElementById('compra-factura').value = c.factura;
+                    document.getElementById('compra-fecha').value = c.fecha;
+                    document.getElementById('compra-medio').value = c.medio;
+                    document.getElementById('compra-amortizado').value = c.amortizado;
+                    
+                    itemsCompraActual = [...c.items];
+                    renderizarTablaItemsActual();
+                    calcularTotalesCompra();
+
+                    document.getElementById('btn-registrar-compra').innerText = "ACTUALIZAR COMPRA";
+                    document.getElementById('titulo-form-compra').innerText = "REGISTRO DE COMPRAS - EDITANDO FACTURA EXISTENTE";
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            );
+        };
+
+        window.confirmarEliminarCompra = function(idx) {
+            abrirModalConfirmacion(
+                "¿DESEA ELIMINAR ESTA COMPRA COMPLETA?",
+                "¿Está totalmente seguro de eliminar este registro de compra de la base de datos? Esta acción no se puede deshacer.",
+                function() {
+                    historialCompras.splice(idx, 1);
+                    localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
+                    actualizarSelectsFiltros();
+                    document.getElementById('btn-consultar-compras').click();
+                    verificarYAsignarCorrelativoCompra();
+                    mostrarAlerta('COMPRA ELIMINADA EXITOSAMENTE.');
+                }
+            );
+        };
+    </script>
+
+</body>
+</html>

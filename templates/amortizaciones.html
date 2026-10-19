@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Amortizaciones - Promotores del Agro</title>
+    <!-- Enlace al archivo de estilos global -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { padding: 16px; }
+        .main-content { width: 100%; max-width: 1400px; margin: 0 auto; overflow-x: hidden; }
+        
+        /* Ajuste de la barra superior para acomodar el logo grande y el eslogan debajo */
+        .top-navbar { padding: 14px 20px; }
+        .logo-container-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .logo-container-top img { height: 75px; width: auto; object-fit: contain; }
+        .logo-slogan-italic { font-size: 10px; font-style: italic; color: var(--text-secondary); margin-left: 2px; letter-spacing: 0.3px; }
+
+        /* Cajas Principales */
+        .card-box { background: var(--bg-card); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); margin-bottom: 25px; overflow: hidden; border: 1px solid var(--border-color); }
+        .card-header { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--green-primary); padding: 16px 20px; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .card-body { padding: 20px; }
+
+        /* Formularios y Grids */
+        .form-row { display: grid; gap: 15px; margin-bottom: 15px; align-items: end; }
+        .row-2 { grid-template-columns: 1fr 1fr; }
+        .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .row-search-historial { grid-template-columns: 1fr auto; align-items: center; }
+
+        .form-group { display: flex; flex-direction: column; position: relative; }
+        .form-group label { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 5px; text-transform: uppercase; }
+        .form-group input, .form-group select { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 9px 12px; border-radius: 8px; font-size: 14px; outline: none; text-transform: uppercase; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); }
+
+        /* Botones */
+        .btn-add { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 22px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-add:hover { background-color: #35f5aa; }
+
+        /* Caja de Deuda */
+        .deuda-box-short { background-color: rgba(255, 14, 85, 0.1); border: 1px solid var(--red-alert); color: var(--red-alert); padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; text-align: center; text-transform: uppercase; display: inline-block; min-width: 180px; }
+
+        /* Tablas */
+        .table-container { margin: 10px 0 10px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; color: var(--text-white); }
+        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 10px 12px; font-weight: bold; border-bottom: 1px solid var(--border-color); text-transform: uppercase; font-size: 12px; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-white); text-transform: uppercase; }
+        
+        .link-boleta { color: var(--blue-tag); text-decoration: none; font-weight: bold; cursor: pointer; }
+        .link-boleta:hover { text-decoration: underline; }
+        .link-action { color: var(--blue-tag); text-decoration: none; font-weight: bold; cursor: pointer; margin-right: 12px; text-transform: uppercase; }
+        .link-action:hover { text-decoration: underline; }
+        .link-danger { color: var(--red-alert); text-decoration: none; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .link-danger:hover { text-decoration: underline; }
+
+        /* Modales */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-card { background: var(--bg-card); padding: 35px; border-radius: 12px; max-width: 900px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary); max-height: 92vh; overflow-y: auto; position: absolute; }
+        .modal-card h3 { color: var(--green-primary); font-size: 18px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+        
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #1a2a3a; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; color: var(--text-white); }
+        .modal-grid-full { grid-column: span 2; }
+        .modal-grid p { font-size: 13px; color: var(--text-white); margin-bottom: 8px; text-transform: uppercase; font-weight: 600; line-height: 1.5; }
+
+        .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 11px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-modal-close:hover { background: #35f5aa; }
+
+        .btn-modal-cancel { background: var(--border-color); color: white; border: none; padding: 11px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; margin-right: 10px; transition: 0.2s; }
+        .btn-modal-cancel:hover { background: #2c3e50; }
+
+        .btn-modal-confirm-danger { background: var(--red-alert); color: white; border: none; padding: 11px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-modal-confirm-danger:hover { background: #ef233c; }
+        
+        .text-green { color: var(--green-primary); font-weight: bold; }
+        .text-red { color: var(--red-alert); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior con el botón K universal para cerrar sesión -->
+    <div class="top-navbar">
+        <div class="nav-left">
+            <div class="logo-container-top">
+                <img src="/static/logo.png" alt="Promotores del Agro" onerror="this.style.display='none'">
+                <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
+            </div>
+            <div class="nav-menu" style="margin-left: 20px; align-self: center;">
+                <a href="/dashboard" class="nav-link">PANEL</a>
+                <a href="/stock" class="nav-link">STOCK</a>
+                <a href="/ventas" class="nav-link">VENTAS</a>
+                <a href="/gastos" class="nav-link">GASTOS</a>
+                <a href="/amortizaciones" class="nav-link active">AMORTIZACIONES</a>
+                <a href="/compras" class="nav-link">COMPRAS</a>
+                <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
+            </div>
+        </div>
+        <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
+            <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
+            <div class="icon-btn" title="Notificaciones">
+                🔔
+                <span class="notification-dot"></span>
+            </div>
+            <!-- Botón K universal para cerrar sesión -->
+            <button class="user-avatar" title="Cerrar Sesión / Cambiar Perfil" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+
+        <!-- TÍTULO PRINCIPAL Y CONFIGURACIÓN DE TIPO DE CRÉDITO -->
+        <div class="card-box">
+            <div class="card-header">GESTIÓN UNIFICADA DE CRÉDITOS Y AMORTIZACIONES POR BOLETA / COMPROBANTE</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Tipo de Crédito a Amortizar:</label>
+                    <select id="tipo-credito">
+                        <option value="VENTA">CRÉDITO POR VENTA (CLIENTE / AGRICULTOR)</option>
+                        <option value="COMPRA">CRÉDITO POR COMPRA (PROVEEDORES)</option>
+                        <option value="GASTO">CRÉDITO POR GASTO / SERVICIOS</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN 1: CRÉDITOS PENDIENTES -->
+        <div class="card-box">
+            <div class="card-header" id="titulo-seccion-creditos">1. CRÉDITOS DE CLIENTES / AGRICULTORES</div>
+            <div class="card-body">
+                
+                <div class="form-row row-2">
+                    <div class="form-group">
+                        <label id="label-buscar-entidad">Buscar Nombre de Cliente / Agricultor:</label>
+                        <input type="text" id="input-buscar-entidad" placeholder="Ej. José Ventura">
+                    </div>
+                    <div class="form-group">
+                        <label>Desplegar Boleta / Comprobante / Factura (Solo con Deuda):</label>
+                        <select id="select-comprobante-credito">
+                            <option value="">-- Seleccionar Comprobante --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="tabla-info-credito">
+                        <thead>
+                            <tr>
+                                <th>Fecha Emisión</th>
+                                <th>Nombre / Entidad</th>
+                                <th>Productos / Detalle</th>
+                                <th>Cantidad Total</th>
+                                <th>Total Crédito</th>
+                                <th>Saldo Pendiente</th>
+                                <th>Ver Boleta</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">Seleccione un comprobante para ver el detalle.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECCIÓN 2: AGREGAR AMORTIZACIÓN -->
+        <div class="card-box" id="seccion-agregar-abono" style="opacity: 0.6; pointer-events: none;">
+            <div class="card-header" id="titulo-seccion-abono">AGREGAR AMORTIZACIÓN A CLIENTE</div>
+            <div class="card-body">
+                
+                <div class="form-row row-4">
+                    <div class="form-group">
+                        <label>Fecha Amortización (Día/Mes/Año):</label>
+                        <input type="date" id="abono-fecha">
+                    </div>
+                    <div class="form-group">
+                        <label>Monto A Bonar (S/):</label>
+                        <input type="number" id="abono-monto" value="0.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Medio de Pago:</label>
+                        <select id="abono-medio">
+                            <option value="YAPE">YAPE</option>
+                            <option value="EFECTIVO">EFECTIVO (CAJA FÍSICA)</option>
+                            <option value="PLIN">PLIN</option>
+                            <option value="TRANSFERENCIA BANCARIA">TRANSFERENCIA BANCARIA</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Saldo Restante:</label>
+                        <input type="text" id="abono-saldo-restante" value="S/ 0.00" readonly style="font-weight: bold; background: #1a2a3a; color: var(--red-alert);">
+                    </div>
+                </div>
+
+                <button type="button" class="btn-add" id="btn-registrar-amortizacion">REGISTRAR AMORTIZACIÓN</button>
+
+            </div>
+        </div>
+
+        <!-- SECCIÓN 3: RESUMEN GENERAL DE BOLETAS Y AMORTIZACIONES -->
+        <div class="card-box">
+            <div class="card-header">RESUMEN GENERAL DE BOLETAS Y AMORTIZACIONES</div>
+            <div class="card-body">
+                
+                <div class="form-row row-search-historial" style="margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label id="label-filtro-nombre">Filtrar por Nombre (Cliente / Proveedor):</label>
+                        <input type="text" id="filtro-historial-nombre" placeholder="Ej. Juan Pérez">
+                    </div>
+                    <div style="text-align: right;">
+                        <div id="contenedor-saldo-deuda" style="display: none;">
+                            <label style="font-size: 10px; font-weight: bold; margin-bottom: 3px; display: block; text-align: left; text-transform: uppercase; color: var(--text-secondary);">Deuda Total:</label>
+                            <div class="deuda-box-short">
+                                SALDO TOTAL: <span id="deuda-total-entidad">S/ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row row-2" style="margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label>Filtrar por N° Boleta / Factura / Recibo:</label>
+                        <input type="text" id="filtro-historial-comprobante" placeholder="Ej. F001-45 o 01">
+                    </div>
+                    <div class="form-group">
+                        <label>Filtrar por Fecha de Registro:</label>
+                        <input type="date" id="filtro-historial-fecha">
+                    </div>
+                </div>
+
+                <div class="table-container" id="seccion-tabla-resumen" style="display: none;">
+                    <table id="tabla-historial-abonos">
+                        <thead>
+                            <tr>
+                                <th>N° Comprobante</th>
+                                <th>Nombre / Entidad / Descripción</th>
+                                <th>Monto Total</th>
+                                <th>Total Abonado</th>
+                                <th>Saldo Pendiente Actual</th>
+                                <th>N° Abonos</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Abonos cargados dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Detalle Comprobante -->
+    <div id="modal-detalle-comprobante" class="modal-overlay">
+        <div class="modal-card">
+            <h3>HISTORIAL Y DETALLE DE BOLETA / AMORTIZACIONES</h3>
+            <div id="contenido-modal-comprobante">
+                <!-- Contenido Dinámico -->
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn-modal-close" id="btn-cerrar-modal-detalle">CERRAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación -->
+    <div id="modal-confirmacion" class="modal-overlay">
+        <div class="modal-card" style="max-width: 480px; text-align: center; padding: 30px;">
+            <h3 id="confirmacion-titulo" style="color: var(--green-primary); margin-bottom: 15px;">CONFIRMACIÓN</h3>
+            <p id="confirmacion-mensaje" style="font-size: 13px; margin-bottom: 25px; font-weight: 600; text-transform: none; color: var(--text-white);"></p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button type="button" class="btn-modal-cancel" id="btn-confirmar-cancelar">CANCELAR</button>
+                <button type="button" class="btn-modal-confirm-danger" id="btn-confirmar-aceptar">SÍ, PROCEDER</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alerta Simple -->
+    <div id="modal-alerta" class="modal-overlay">
+        <div class="modal-card" style="max-width: 450px;">
+            <h3>PROMOTORES DEL AGRO</h3>
+            <p id="modal-mensaje" style="margin: 15px 0; font-size: 13px; text-transform: none; color: var(--text-white);"></p>
+            <div style="text-align: right;">
+                <button type="button" class="btn-modal-close" id="btn-cerrar-alerta">ACEPTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('abono-fecha').valueAsDate = new Date();
+        
+        let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
+        let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
+        let historialGastos = JSON.parse(localStorage.getItem('historial_gastos_agro')) || [];
+
+        let registroSeleccionado = null;
+        let tipoActual = 'VENTA';
+        let accionPendiente = null;
+
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return '-';
+            let partes = fechaStr.split('-');
+            if (partes.length === 3) {
+                return `${partes[2]}/${partes[1]}/${partes[0]}`;
+            }
+            return fechaStr;
+        }
+
+        function obtenerNombreEntidad(item) {
+            if (!item) return 'SIN NOMBRE';
+            if (tipoActual === 'GASTO') {
+                return item.detalle || item.categoria || item.recibo || 'SIN DESCRIPCIÓN';
+            }
+            return item.cliente || item.proveedor || item.recibo || item.nombre || item.categoria || 'SIN NOMBRE';
+        }
+
+        function obtenerNumeroComprobante(item) {
+            if (!item) return '01';
+            return item.comprobante || item.factura || item.recibo || item.boleta || '01';
+        }
+
+        function mostrarAlerta(msj) {
+            document.getElementById('modal-mensaje').innerText = msj;
+            document.getElementById('modal-alerta').style.display = 'flex';
+        }
+
+        document.getElementById('btn-cerrar-alerta').addEventListener('click', function() {
+            document.getElementById('modal-alerta').style.display = 'none';
+        });
+
+        function abrirModalConfirmacion(titulo, mensaje, callbackAccion) {
+            document.getElementById('confirmacion-titulo').innerText = titulo;
+            document.getElementById('confirmacion-mensaje').innerText = mensaje;
+            accionPendiente = callbackAccion;
+            document.getElementById('modal-confirmacion').style.display = 'flex';
+        }
+
+        document.getElementById('btn-confirmar-cancelar').addEventListener('click', function() {
+            document.getElementById('modal-confirmacion').style.display = 'none';
+            accionPendiente = null;
+        });
+
+        document.getElementById('btn-confirmar-aceptar').addEventListener('click', function() {
+            document.getElementById('modal-confirmacion').style.display = 'none';
+            if (typeof accionPendiente === 'function') {
+                accionPendiente();
+            }
+            accionPendiente = null;
+        });
+
+        const selectTipoCredito = document.getElementById('tipo-credito');
+        const tituloSeccionCreditos = document.getElementById('titulo-seccion-creditos');
+        const tituloSeccionAbono = document.getElementById('titulo-seccion-abono');
+        const labelBuscarEntidad = document.getElementById('label-buscar-entidad');
+        const labelFiltroNombre = document.getElementById('label-filtro-nombre');
+        const inputBuscarEntidad = document.getElementById('input-buscar-entidad');
+        const selectComprobante = document.getElementById('select-comprobante-credito');
+        const seccionTablaResumen = document.getElementById('seccion-tabla-resumen');
+        const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
+
+        selectTipoCredito.addEventListener('change', function() {
+            tipoActual = this.value;
+            registroSeleccionado = null;
+            inputBuscarEntidad.value = '';
+            selectComprobante.innerHTML = '<option value="">-- Seleccionar Comprobante --</option>';
+
+            document.getElementById('seccion-agregar-abono').style.opacity = '0.6';
+            document.getElementById('seccion-agregar-abono').style.pointerEvents = 'none';
+            limpiarVistaDetalle();
+
+            if (tipoActual === 'VENTA') {
+                tituloSeccionCreditos.innerText = '1. CRÉDITOS DE CLIENTES / AGRICULTORES';
+                tituloSeccionAbono.innerText = 'AGREGAR AMORTIZACIÓN A CLIENTE';
+                labelBuscarEntidad.innerText = 'Buscar Nombre de Cliente / Agricultor:';
+                labelFiltroNombre.innerText = 'Filtrar por Nombre (Cliente):';
+            } else if (tipoActual === 'COMPRA') {
+                tituloSeccionCreditos.innerText = '1. CRÉDITOS DE PROVEEDORES';
+                tituloSeccionAbono.innerText = 'AGREGAR AMORTIZACIÓN A PROVEEDOR';
+                labelBuscarEntidad.innerText = 'Buscar Nombre de Proveedor:';
+                labelFiltroNombre.innerText = 'Filtrar por Proveedor:';
+            } else if (tipoActual === 'GASTO') {
+                tituloSeccionCreditos.innerText = '1. CRÉDITOS DE GASTOS / SERVICIOS';
+                tituloSeccionAbono.innerText = 'AGREGAR AMORTIZACIÓN A GASTO';
+                labelBuscarEntidad.innerText = 'Buscar por Descripción del Gasto / Servicio:';
+                labelFiltroNombre.innerText = 'Filtrar por Descripción / Categoría:';
+            }
+
+            document.getElementById('filtro-historial-nombre').value = '';
+            document.getElementById('filtro-historial-comprobante').value = '';
+            document.getElementById('filtro-historial-fecha').value = '';
+            seccionTablaResumen.style.display = 'none';
+            contenedorSaldoDeuda.style.display = 'none';
+        });
+
+        inputBuscarEntidad.addEventListener('input', function() {
+            let texto = this.value.trim().toUpperCase();
+            selectComprobante.innerHTML = '<option value="">-- Seleccionar Comprobante --</option>';
+
+            if (texto === "") return;
+
+            let lista = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
+
+            lista.forEach((item, index) => {
+                let identificador = obtenerNombreEntidad(item);
+                let numComp = obtenerNumeroComprobante(item);
+                let saldo = item.saldo !== undefined ? item.saldo : (item.total || item.montoTotal || 0);
+
+                if (identificador && identificador.toUpperCase().includes(texto) && saldo > 0) {
+                    let opt = document.createElement('option');
+                    opt.value = index;
+                    if (tipoActual === 'GASTO') {
+                        opt.innerText = `Recibo N° ${numComp} - ${identificador} (Deuda: S/ ${saldo.toFixed(2)})`;
+                    } else {
+                        opt.innerText = `N° ${numComp} - ${identificador} (Deuda: S/ ${saldo.toFixed(2)})`;
+                    }
+                    selectComprobante.appendChild(opt);
+                }
+            });
+        });
+
+        selectComprobante.addEventListener('change', function() {
+            let index = this.value;
+            if (index === "") {
+                registroSeleccionado = null;
+                document.getElementById('seccion-agregar-abono').style.opacity = '0.6';
+                document.getElementById('seccion-agregar-abono').style.pointerEvents = 'none';
+                limpiarVistaDetalle();
+                return;
+            }
+
+            let lista = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
+            registroSeleccionado = { item: lista[index], globalIndex: parseInt(index) };
+
+            document.getElementById('seccion-agregar-abono').style.opacity = '1';
+            document.getElementById('seccion-agregar-abono').style.pointerEvents = 'auto';
+
+            renderizarDetalleCredito(registroSeleccionado.item);
+            calcularSaldoRestanteAbono();
+        });
+
+        function renderizarDetalleCredito(item) {
+            let tbody = document.querySelector('#tabla-info-credito tbody');
+            let fechaFormateada = formatearFecha(item.fecha);
+            let nombre = obtenerNombreEntidad(item);
+            let numComp = obtenerNumeroComprobante(item);
+            let detalle = item.items ? item.items.map(i => `${i.cantidad}x ${i.producto}`).join(', ') : (tipoActual === 'GASTO' ? `${item.categoria} - ${item.detalle}` : (item.detalle || '-'));
+            let cantidadTotal = item.items ? item.items.reduce((acc, i) => acc + parseInt(i.cantidad), 0) : 1;
+            let total = item.total || item.montoTotal || 0;
+            let saldo = item.saldo || 0;
+
+            tbody.innerHTML = `
+                <tr>
+                    <td>${fechaFormateada}</td>
+                    <td><strong>${nombre}</strong></td>
+                    <td>${detalle}</td>
+                    <td>${cantidadTotal}</td>
+                    <td>S/ ${total.toFixed(2)}</td>
+                    <td class="text-red" style="font-weight: bold;">S/ ${saldo.toFixed(2)}</td>
+                    <td>
+                        <a class="link-boleta" onclick="verModalDetalleComprobante('${numComp}')">N° ${numComp}</a>
+                    </td>
+                </tr>
+            `;
+        }
+
+        const inputMontoAbonar = document.getElementById('abono-monto');
+        const inputSaldoRestante = document.getElementById('abono-saldo-restante');
+
+        inputMontoAbonar.addEventListener('input', calcularSaldoRestanteAbono);
+
+        function calcularSaldoRestanteAbono() {
+            if (!registroSeleccionado) return;
+            let item = registroSeleccionado.item;
+            let montoAbonar = parseFloat(inputMontoAbonar.value) || 0;
+            let restante = (item.saldo || 0) - montoAbonar;
+            if (restante < 0) restante = 0;
+            inputSaldoRestante.value = "S/ " + restante.toFixed(2);
+        }
+
+        document.getElementById('btn-registrar-amortizacion').addEventListener('click', function() {
+            if (!registroSeleccionado) {
+                mostrarAlerta('POR FAVOR SELECCIONE UN COMPROBANTE.');
+                return;
+            }
+
+            let montoAbonar = parseFloat(inputMontoAbonar.value) || 0;
+            if (montoAbonar <= 0) {
+                mostrarAlerta('EL MONTO A BONAR DEBE SER MAYOR A CERO.');
+                return;
+            }
+
+            let item = registroSeleccionado.item;
+            if (montoAbonar > item.saldo) {
+                mostrarAlerta('EL MONTO A BONAR NO PUEDE SER MAYOR AL SALDO PENDIENTE.');
+                return;
+            }
+
+            let fechaAbono = document.getElementById('abono-fecha').value;
+            let medioPago = document.getElementById('abono-medio').value;
+
+            item.saldo -= montoAbonar;
+            item.amortizado = (item.amortizado || item.abonado || 0) + montoAbonar;
+
+            if (!item.abonos) item.abonos = [];
+            let nombreEntidad = obtenerNombreEntidad(item);
+            let numComp = obtenerNumeroComprobante(item);
+
+            item.abonos.push({
+                fecha: fechaAbono,
+                nombre: nombreEntidad,
+                comprobante: numComp,
+                monto: montoAbonar,
+                medio: medioPago,
+                saldoQuedante: item.saldo,
+                tipo: tipoActual
+            });
+
+            if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+            else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
+            else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+
+            verificarYRenderizarResumen();
+
+            registroSeleccionado = null;
+            inputBuscarEntidad.value = '';
+            selectComprobante.innerHTML = '<option value="">-- Seleccionar Comprobante --</option>';
+            document.getElementById('seccion-agregar-abono').style.opacity = '0.6';
+            document.getElementById('seccion-agregar-abono').style.pointerEvents = 'none';
+            inputMontoAbonar.value = '0.00';
+            inputSaldoRestante.value = 'S/ 0.00';
+            document.getElementById('abono-fecha').valueAsDate = new Date();
+            limpiarVistaDetalle();
+
+            mostrarAlerta('AMORTIZACIÓN REGISTRADA EXITOSAMENTE EN LA BOLETA SELECCIONADA.');
+        });
+
+        function verificarYRenderizarResumen() {
+            let filtroNombre = document.getElementById('filtro-historial-nombre').value.trim();
+            let filtroComp = document.getElementById('filtro-historial-comprobante').value.trim();
+            let filtroFecha = document.getElementById('filtro-historial-fecha').value;
+
+            if (filtroNombre === "" && filtroComp === "" && filtroFecha === "") {
+                seccionTablaResumen.style.display = 'none';
+                contenedorSaldoDeuda.style.display = 'none';
+                return;
+            }
+
+            seccionTablaResumen.style.display = 'block';
+            contenedorSaldoDeuda.style.display = 'block';
+            
+            let tbody = document.querySelector('#tabla-historial-abonos tbody');
+            tbody.innerHTML = '';
+
+            let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
+
+            let filtrados = dataset.filter(item => {
+                let nombre = obtenerNombreEntidad(item).toUpperCase();
+                let comp = obtenerNumeroComprobante(item).toUpperCase();
+                let fecha = item.fecha;
+
+                let matchNombre = filtroNombre === "" || nombre.includes(filtroNombre.toUpperCase());
+                let matchComp = filtroComp === "" || comp.includes(filtroComp.toUpperCase());
+                let matchFecha = filtroFecha === "" || fecha === filtroFecha;
+
+                return matchNombre && matchComp && matchFecha;
+            });
+
+            let deudaTotalFiltro = 0;
+            filtrados.forEach(item => {
+                let total = item.total || item.montoTotal || 0;
+                let abonado = item.amortizado || item.abonado || 0;
+                let saldo = item.saldo !== undefined ? item.saldo : total - abonado;
+                deudaTotalFiltro += saldo;
+            });
+
+            document.getElementById('deuda-total-entidad').innerText = "S/ " + deudaTotalFiltro.toFixed(2);
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">No se encontraron comprobantes o amortizaciones con esos criterios.</td></tr>`;
+                return;
+            }
+
+            filtrados.forEach((item) => {
+                let parentIdx = dataset.indexOf(item);
+                let nombre = obtenerNombreEntidad(item);
+                let comp = obtenerNumeroComprobante(item);
+                let total = item.total || item.montoTotal || 0;
+                let totalAbonado = item.amortizado || item.abonado || 0;
+                let saldoPendiente = item.saldo !== undefined ? item.saldo : total - totalAbonado;
+                let numAbonos = item.abonos ? item.abonos.length : 0;
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><a class="link-boleta" onclick="verModalDetalleComprobante('${comp}')">N° ${comp}</a></td>
+                    <td><strong>${nombre}</strong></td>
+                    <td>S/ ${total.toFixed(2)}</td>
+                    <td style="font-weight: bold; color: var(--green-primary);">S/ ${totalAbonado.toFixed(2)}</td>
+                    <td style="font-weight: bold; color: ${saldoPendiente > 0 ? 'var(--red-alert)' : 'var(--green-primary)'};">S/ ${saldoPendiente.toFixed(2)}</td>
+                    <td>${numAbonos} abono(s)</td>
+                    <td>
+                        <a class="link-action" onclick="verModalDetalleComprobante('${comp}')">Ver / Historial</a>
+                        <a class="link-danger" onclick="confirmarEliminarComprobante(${parentIdx})">Eliminar</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('filtro-historial-nombre').addEventListener('input', verificarYRenderizarResumen);
+        document.getElementById('filtro-historial-comprobante').addEventListener('input', verificarYRenderizarResumen);
+        document.getElementById('filtro-historial-fecha').addEventListener('change', verificarYRenderizarResumen);
+
+        window.verModalDetalleComprobante = function(numComp) {
+            let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
+            let item = dataset.find(x => (obtenerNumeroComprobante(x) === numComp));
+
+            if (!item) {
+                mostrarAlerta('NO SE ENCONTRÓ INFORMACIÓN DE ESTE COMPROBANTE.');
+                return;
+            }
+
+            let parentIdx = dataset.indexOf(item);
+            let contenedor = document.getElementById('contenido-modal-comprobante');
+            let nombre = obtenerNombreEntidad(item);
+            let fechaEmisionFormateada = formatearFecha(item.fecha);
+            let total = item.total || item.montoTotal || 0;
+            let detalleStr = item.items ? item.items.map(i => `• ${i.cantidad}x ${i.producto} (S/ ${i.precio.toFixed(2)})`).join('<br>') : (tipoActual === 'GASTO' ? `Categoría: ${item.categoria}<br>Detalle: ${item.detalle}` : (item.detalle || 'SIN DETALLE'));
+
+            let abonosTabla = `
+                <div class="table-container" style="margin-top: 10px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha Abono</th>
+                                <th>Monto Abonado</th>
+                                <th>Medio de Pago</th>
+                                <th>Saldo Después</th>
+                                <th style="text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            if (item.abonos && item.abonos.length > 0) {
+                item.abonos.forEach((a, abIdx) => {
+                    let fechaAbonoFormateada = formatearFecha(a.fecha);
+                    abonosTabla += `
+                        <tr>
+                            <td>${fechaAbonoFormateada}</td>
+                            <td class="text-green" style="font-weight: bold;">S/ ${a.monto.toFixed(2)}</td>
+                            <td>${a.medio}</td>
+                            <td style="font-weight: bold;">S/ ${a.saldoQuedante !== undefined ? a.saldoQuedante.toFixed(2) : '-'}</td>
+                            <td style="text-align: center;">
+                                <a class="link-action" onclick="confirmarEditarAbono(${parentIdx}, ${abIdx})">Editar</a>
+                                <a class="link-danger" onclick="confirmarEliminarAbono(${parentIdx}, ${abIdx})">Eliminar</a>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } else {
+                abonosTabla += `<tr><td colspan="5" style="text-align:center; padding: 15px; color:var(--text-secondary);">Sin abonos registrados aún en esta boleta.</td></tr>`;
+            }
+
+            abonosTabla += `</tbody></table></div>`;
+
+            contenedor.innerHTML = `
+                <div class="modal-grid">
+                    <p><strong>N° Comprobante:</strong> ${numComp}</p>
+                    <p><strong>Tipo de Crédito:</strong> ${tipoActual.toUpperCase()}</p>
+                    <p><strong>Nombre / Descripción:</strong> ${nombre}</p>
+                    <p><strong>Fecha Emisión:</strong> ${fechaEmisionFormateada}</p>
+                    <p class="modal-grid-full"><strong>Detalle / Ítems:</strong><br>${detalleStr}</p>
+                    <p><strong>Monto Total Crédito:</strong> S/ ${total.toFixed(2)}</p>
+                    <p><strong>Total Abonado:</strong> S/ ${(item.amortizado || item.abonado || 0).toFixed(2)}</p>
+                    <p class="modal-grid-full"><strong>Saldo Pendiente Actual:</strong> <span class="${item.saldo > 0 ? 'text-red' : 'text-green'}">S/ ${item.saldo.toFixed(2)}</span></p>
+                </div>
+                <p style="font-weight: bold; font-size: 13px; color: var(--green-primary); margin-bottom: 5px; text-transform: uppercase;">Cronología de Abonos Específicos para la Boleta N° ${numComp}:</p>
+                ${abonosTabla}
+            `;
+
+            document.getElementById('modal-detalle-comprobante').style.display = 'flex';
+        };
+
+        window.confirmarEditarAbono = function(parentIdx, abIdx) {
+            abrirModalConfirmacion(
+                "¿DESEA EDITAR ESTE ABONO?",
+                "¿Está seguro de que desea editar esta amortización? El monto se reintegrará temporalmente para que pueda modificarlo en el formulario superior.",
+                function() {
+                    document.getElementById('modal-detalle-comprobante').style.display = 'none';
+                    editarAbonoGeneral(parentIdx, abIdx);
+                }
+            );
+        };
+
+        window.editarAbonoGeneral = function(parentIdx, abIdx) {
+            let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
+            let item = dataset[parentIdx];
+            let abono = item.abonos[abIdx];
+
+            registroSeleccionado = { item: item, globalIndex: parentIdx };
+            selectComprobante.innerHTML = `<option value="${parentIdx}">N° ${obtenerNumeroComprobante(item)} - ${obtenerNombreEntidad(item)} (Deuda: S/ ${item.saldo.toFixed(2)})</option>`;
+            selectComprobante.value = parentIdx;
+
+            document.getElementById('seccion-agregar-abono').style.opacity = '1';
+            document.getElementById('seccion-agregar-abono').style.pointerEvents = 'auto';
+
+            document.getElementById('abono-fecha').value = abono.fecha;
+            document.getElementById('abono-monto').value = abono.monto;
+            document.getElementById('abono-medio').value = abono.medio;
+
+            item.saldo += abono.monto;
+            item.amortizado = (item.amortizado || item.abonado || 0) - abono.monto;
+            item.abonos.splice(abIdx, 1);
+
+            if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+            else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
+            else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+
+            renderizarDetalleCredito(item);
+            calcularSaldoRestanteAbono();
+            verificarYRenderizarResumen();
+
+            document.getElementById('abono-monto').focus();
+        };
+
+        window.confirmarEliminarAbono = function(parentIdx, abIdx) {
+            abrirModalConfirmacion(
+                "¿DESEA ELIMINAR ESTE ABONO?",
+                "¿Está totalmente seguro de eliminar este registro de amortización? Esta acción no se puede deshacer y el saldo pendiente aumentará.",
+                function() {
+                    eliminarAbonoIndividualModal(parentIdx, abIdx);
+                }
+            );
+        };
+
+        window.eliminarAbonoIndividualModal = function(parentIdx, abIdx) {
+            let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
+            let item = dataset[parentIdx];
+            let abonoEliminado = item.abonos[abIdx];
+
+            item.saldo += abonoEliminado.monto;
+            item.amortizado = (item.amortizado || item.abonado || 0) - abonoEliminado.monto;
+
+            item.abonos.splice(abIdx, 1);
+
+            if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+            else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
+            else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+
+            let numComp = obtenerNumeroComprobante(item);
+            verModalDetalleComprobante(numComp);
+            verificarYRenderizarResumen();
+
+            if (registroSeleccionado && registroSeleccionado.globalIndex === parentIdx) {
+                renderizarDetalleCredito(item);
+                calcularSaldoRestanteAbono();
+            }
+
+            mostrarAlerta('ABONO ELIMINADO EXITOSAMENTE.');
+        };
+
+        window.confirmarEliminarComprobante = function(parentIdx) {
+            abrirModalConfirmacion(
+                "¿DESEA ELIMINAR ESTE COMPROBANTE?",
+                "¿Está seguro de eliminar todo este registro de crédito de la base de datos? Esta acción es irreversible.",
+                function() {
+                    let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
+                    dataset.splice(parentIdx, 1);
+
+                    if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+                    else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
+                    else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+
+                    verificarYRenderizarResumen();
+                    limpiarVistaDetalle();
+                    mostrarAlerta('COMPROBANTE ELIMINADO EXITOSAMENTE.');
+                }
+            );
+        };
+
+        document.getElementById('btn-cerrar-modal-detalle').addEventListener('click', function() {
+            document.getElementById('modal-detalle-comprobante').style.display = 'none';
+        });
+
+        function limpiarVistaDetalle() {
+            document.querySelector('#tabla-info-credito tbody').innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">Seleccione un comprobante para ver el detalle.</td></tr>`;
+        }
+    </script>
+
+</body>
+</html>

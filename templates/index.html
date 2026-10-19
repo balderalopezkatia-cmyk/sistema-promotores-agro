@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Bienvenido - Promotores del Agro</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #0f172a; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        .login-card { 
+            background: #1e293b; 
+            border: 1px solid #334155; 
+            border-top: 6px solid #2ec4b6; 
+            padding: 35px 30px; 
+            border-radius: 14px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
+            width: 400px; 
+            text-align: center; 
+            position: relative;
+        }
+        .logo-img {
+            height: 120px;
+            width: auto;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+        .sub-bienvenido { color: #2ec4b6; font-size: 18px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; }
+        .slogan-italic { color: #cbd5e1; font-size: 13px; font-style: italic; margin-bottom: 20px; display: block; font-weight: 500; }
+        
+        .form-group { margin-bottom: 18px; text-align: left; }
+        label { display: block; font-weight: bold; margin-bottom: 6px; color: #2ec4b6; font-size: 11px; text-transform: uppercase; }
+        select, input { width: 100%; padding: 11px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; box-sizing: border-box; outline: none; font-size: 13px; text-transform: uppercase; }
+        select:focus, input:focus { border-color: #2ec4b6; }
+        
+        button { background-color: #2ec4b6; color: #0f172a; border: none; padding: 12px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 6px; text-transform: uppercase; transition: 0.2s; font-size: 13px; margin-top: 5px; }
+        button:hover { background-color: #35f5aa; }
+        
+        .alert-error { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 10px; border-radius: 6px; font-size: 11px; margin-bottom: 15px; font-weight: bold; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div>
+            <img src="/static/logo.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+        </div>
+        <div class="sub-bienvenido">¡BIENVENIDO AL SISTEMA!</div>
+        <span class="slogan-italic">Asegura tus buenas cosechas</span>
+        
+        <!-- Este aviso solo aparece si Flask detecta error=True al fallar la clave -->
+        {% if error %}
+        <div class="alert-error">
+            ⚠️ CONTRASEÑA INCORRECTA DE GERENCIA
+        </div>
+        {% endif %}
+
+        <p style="color: #94a3b8; font-size: 11px; text-transform: uppercase; margin-bottom: 18px;">Seleccione su perfil para ingresar</p>
+        
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label>PERFIL DE ACCESO:</label>
+                <select name="perrol" id="perrol" onchange="togglePassword()">
+                    <option value="empleado">Empleado (Ventas y Amortizaciones)</option>
+                    <option value="gerente">Gerencia (Acceso Total)</option>
+                </select>
+            </div>
+            <div class="form-group" id="div-password" style="display: none;">
+                <label>CONTRASEÑA DE GERENCIA:</label>
+                <input type="password" name="password" placeholder="Ingrese contraseña...">
+            </div>
+            <button type="submit">INGRESAR</button>
+        </form>
+    </div>
+
+    <script>
+        function togglePassword() {
+            var rol = document.getElementById("perrol").value;
+            var divPass = document.getElementById("div-password");
+            if (rol === "gerente") {
+                divPass.style.display = "block";
+            } else {
+                divPass.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>
