@@ -7,13 +7,17 @@ app = Flask(__name__)
 app.secret_key = "clave_secura_agro_jk"
 
 def obtener_conexion():
-    conexion = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",          
-        database="agro_nuevo_db"
-    )
-    return conexion
+    try:
+        conexion = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",          
+            database="agro_nuevo_db"
+        )
+        return conexion
+    except Exception as e:
+        print("Aviso de conexión local en la nube:", e)
+        return None
 
 # Función para inyectar automáticamente el título, limpiar iconos y forzar la actualización en Chrome
 def render_template_con_branding(template_name, **kwargs):
@@ -92,6 +96,9 @@ def api_dashboard_resumen():
     
     try:
         conexion = obtener_conexion()
+        if not conexion:
+            return jsonify({'ventas_dia': 0.0, 'ventas_mes': 0.0, 'deudas_cobrar': 0.0})
+            
         cursor = conexion.cursor(dictionary=True)
         
         # Si la tabla está vaciada, estas consultas devolverán 0.0 de forma automática y limpia
@@ -159,4 +166,5 @@ def configuracion():
     return render_template_con_branding('configuracion.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(host='0.0.0.0', port=port)
