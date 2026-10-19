@@ -9,14 +9,15 @@ app.secret_key = "clave_secura_agro_jk"
 def obtener_conexion():
     try:
         conexion = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",          
-            database="agro_nuevo_db"
+            host="bbdxmfpaqjvnaoqv46uu-mysql.services.clever-cloud.com",
+            user="ukq046fffz9ikj3j",
+            password="SEP21cGpyJ2X5lW8FEIM",          
+            database="bbdxmfpaqjvnaoqv46uu",
+            port=3306
         )
         return conexion
     except Exception as e:
-        print("Aviso de conexión local en la nube:", e)
+        print("Aviso de conexión a la base de datos en la nube:", e)
         return None
 
 # Función para inyectar automáticamente el título, limpiar iconos y forzar la actualización en Chrome
