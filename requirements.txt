@@ -1,2 +1,6 @@
 Flask
 mysql-connector-python
+beautifulsoup4
+gunicorn
+requests
+werkzeug
