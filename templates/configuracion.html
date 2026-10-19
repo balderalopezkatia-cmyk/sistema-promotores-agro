@@ -23,6 +23,7 @@
         /* Formularios y Grids */
         .form-row { display: grid; gap: 20px; margin-bottom: 20px; }
         .row-2 { grid-template-columns: 1fr 1fr; }
+        .row-3 { grid-template-columns: 1fr 1fr 1fr; }
 
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
@@ -33,13 +34,34 @@
         .btn-save { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 12px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 14px; text-transform: uppercase; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-save:hover { background-color: #35f5aa; }
 
-        /* Modal Alerta Simple */
+        .btn-add-custom { background-color: var(--blue-tag); color: var(--bg-main); border: none; padding: 11px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-add-custom:hover { opacity: 0.85; }
+
+        .btn-delete-item { background-color: var(--red-alert); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .btn-delete-item:hover { opacity: 0.85; }
+
+        /* Tabla de Datos Personalizados */
+        .table-container { margin: 15px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; color: var(--text-white); }
+        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 10px 12px; font-weight: bold; border-bottom: 1px solid var(--border-color); text-transform: uppercase; font-size: 12px; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-white); text-transform: uppercase; }
+
+        /* Ventanas Flotantes Movibles (Modales) */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-card { background: var(--bg-card); padding: 30px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; position: absolute; }
-        .modal-card h3 { color: var(--green-primary); font-size: 18px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; text-transform: uppercase; font-weight: bold; }
-        .modal-card p { font-size: 13px; color: var(--text-white); margin-bottom: 20px; line-height: 1.4; text-transform: uppercase; }
+        .modal-card { 
+            background: var(--bg-card); padding: 30px; border-radius: 12px; max-width: 450px; width: 90%; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; 
+            position: absolute; cursor: default;
+        }
+        .modal-card h3 { 
+            color: var(--green-primary); font-size: 18px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; 
+            text-transform: uppercase; font-weight: bold; cursor: move; background: #1a2a3a; padding: 8px; border-radius: 6px; user-select: none;
+        }
+        .modal-card p { font-size: 13px; color: var(--text-white); margin-bottom: 20px; line-height: 1.4; text-transform: uppercase; font-weight: 600; }
+        
         .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; }
         .btn-modal-close:hover { background: #35f5aa; }
+        .btn-modal-cancel { background: var(--border-color); color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; text-transform: uppercase; margin-right: 8px; }
     </style>
 </head>
 <body>
@@ -74,9 +96,9 @@
     <!-- Contenido Principal -->
     <div class="main-content">
         <div class="card-box">
-            <div class="card-header">CONFIGURACIÓN DEL SISTEMA - DATOS DE LA EMPRESA</div>
+            <div class="card-header">CONFIGURACIÓN DEL SISTEMA - DATOS DE LA EMPRESA Y CONTACTO</div>
             <div class="card-body">
-                <form action="/guardar_configuracion" method="POST" id="form-configuracion">
+                <form id="form-configuracion">
                     <div class="form-row row-2">
                         <div class="form-group">
                             <label>Razón Social:</label>
@@ -87,38 +109,230 @@
                             <input type="text" id="cfg-ruc" value="20611525304" required>
                         </div>
                     </div>
-                    <div style="margin-top: 10px;">
+
+                    <div class="form-row row-3">
+                        <div class="form-group">
+                            <label>Correo Electrónico:</label>
+                            <input type="text" id="cfg-correo" value="promotoresdelagrojk@gmail.com" style="text-transform: lowercase;">
+                        </div>
+                        <div class="form-group">
+                            <label>Celular / Teléfono:</label>
+                            <input type="text" id="cfg-celular" value="922 388208">
+                        </div>
+                        <div class="form-group">
+                            <label>Dirección / Calle:</label>
+                            <input type="text" id="cfg-calle" value="San Martin N° 687 Mochumi - Mochumi - Lambayeque">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
                         <button type="submit" class="btn-save">💾 GUARDAR DATOS EMPRESA</button>
+                        <button type="button" class="btn-add-custom" id="btn-abrir-modal-nuevo">+ AÑADIR OTRO DATO</button>
                     </div>
                 </form>
+
+                <!-- Sección de Datos Adicionales Personalizados -->
+                <div style="margin-top: 30px;">
+                    <div style="font-weight: bold; font-size: 13px; color: var(--green-primary); margin-bottom: 10px; text-transform: uppercase;">• DATOS ADICIONALES REGISTRADOS:</div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Etiqueta / Concepto</th>
+                                    <th>Valor / Detalle</th>
+                                    <th style="text-align: right;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-datos-adicionales">
+                                <tr><td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 15px;">No hay datos adicionales registrados.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
-    <!-- Modal Alerta -->
+    <!-- MODAL PARA AÑADIR OTRO DATO (MOVIBLE) -->
+    <div id="modal-nuevo-dato" class="modal-overlay">
+        <div class="modal-card" id="card-modal-nuevo">
+            <h3>AGREGAR DATO ADICIONAL</h3>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; font-weight: normal;">(Haga clic sobre el título para mover esta ventana)</p>
+            
+            <div class="form-group" style="text-align: left; margin-bottom: 12px;">
+                <label style="font-size: 10px; font-weight: bold; color: var(--green-primary); display: block; margin-bottom: 4px; text-transform: uppercase;">Concepto / Etiqueta:</label>
+                <input type="text" id="input-nuevo-label" placeholder="Ej. Representante, Licencia..." style="width: 100%; padding: 9px; background: var(--bg-main); color: white; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; text-transform: uppercase; box-sizing: border-box;">
+            </div>
+
+            <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                <label style="font-size: 10px; font-weight: bold; color: var(--green-primary); display: block; margin-bottom: 4px; text-transform: uppercase;">Valor o Detalle:</label>
+                <input type="text" id="input-nuevo-valor" placeholder="Ej. Katia Baldera López..." style="width: 100%; padding: 9px; background: var(--bg-main); color: white; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; text-transform: uppercase; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-modal-cancel" id="btn-cancelar-nuevo">Cancelar</button>
+                <button type="button" class="btn-modal-close" id="btn-guardar-nuevo">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ALERTA GENERAL (MOVIBLE) -->
     <div id="modal-alerta" class="modal-overlay">
-        <div class="modal-card">
+        <div class="modal-card" id="card-modal-alerta">
             <h3>PROMOTORES DEL AGRO</h3>
-            <p id="modal-mensaje">DATOS DE LA EMPRESA ACTUALIZADOS CON ÉXITO.</p>
-            <div>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; font-weight: normal;">(Ventana movible)</p>
+            <p id="modal-mensaje">DATOS ACTUALIZADOS CON ÉXITO.</p>
+            <div style="text-align: right;">
                 <button type="button" class="btn-modal-close" id="btn-cerrar-alerta">ACEPTAR</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Función para hacer las ventanas flotantes arrastrables con el mouse
+        function hacerMovible(cardId) {
+            const card = document.getElementById(cardId);
+            const header = card.querySelector('h3');
+            let isDragging = false;
+            let startX, startY, initialX, initialY;
+
+            header.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = card.getBoundingClientRect();
+                card.style.position = 'absolute';
+                card.style.left = rect.left + 'px';
+                card.style.top = rect.top + 'px';
+                card.style.transform = 'none';
+
+                initialX = rect.left;
+                initialY = rect.top;
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                if (!isDragging) return;
+                let dx = e.clientX - startX;
+                let dy = e.clientY - startY;
+                card.style.left = (initialX + dx) + 'px';
+                card.style.top = (initialY + dy) + 'px';
+            }
+
+            function onMouseUp() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        hacerMovible('card-modal-nuevo');
+        hacerMovible('card-modal-alerta');
+
+        // Cargar datos guardados previamente si existen
+        function cargarDatosGuardados() {
+            if (localStorage.getItem('agro_razon_social')) {
+                document.getElementById('cfg-razon').value = localStorage.getItem('agro_razon_social');
+            }
+            if (localStorage.getItem('agro_ruc')) {
+                document.getElementById('cfg-ruc').value = localStorage.getItem('agro_ruc');
+            }
+            if (localStorage.getItem('agro_correo')) {
+                document.getElementById('cfg-correo').value = localStorage.getItem('agro_correo');
+            }
+            if (localStorage.getItem('agro_celular')) {
+                document.getElementById('cfg-celular').value = localStorage.getItem('agro_celular');
+            }
+            if (localStorage.getItem('agro_calle')) {
+                document.getElementById('cfg-calle').value = localStorage.getItem('agro_calle');
+            }
+        }
+        cargarDatosGuardados();
+
+        // Guardar datos principales de la empresa
         document.getElementById('form-configuracion').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Guardar opcionalmente en localStorage si lo manejas del lado cliente
-            localStorage.setItem('agro_razon_social', document.getElementById('cfg-razon').value);
-            localStorage.setItem('agro_ruc', document.getElementById('cfg-ruc').value);
+            localStorage.setItem('agro_razon_social', document.getElementById('cfg-razon').value.trim().toUpperCase());
+            localStorage.setItem('agro_ruc', document.getElementById('cfg-ruc').value.trim().toUpperCase());
+            localStorage.setItem('agro_correo', document.getElementById('cfg-correo').value.trim());
+            localStorage.setItem('agro_celular', document.getElementById('cfg-celular').value.trim().toUpperCase());
+            localStorage.setItem('agro_calle', document.getElementById('cfg-calle').value.trim().toUpperCase());
 
+            document.getElementById('modal-mensaje').innerText = "DATOS DE LA EMPRESA ACTUALIZADOS CON ÉXITO.";
             document.getElementById('modal-alerta').style.display = 'flex';
         });
 
         document.getElementById('btn-cerrar-alerta').addEventListener('click', function() {
             document.getElementById('modal-alerta').style.display = 'none';
         });
+
+        // Lógica para el modal y tabla de datos adicionales personalizados
+        let datosAdicionales = JSON.parse(localStorage.getItem('agro_datos_adicionales')) || [];
+
+        function renderizarDatosAdicionales() {
+            let tbody = document.getElementById('tabla-datos-adicionales');
+            tbody.innerHTML = '';
+
+            if (datosAdicionales.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 15px;">No hay datos adicionales registrados.</td></tr>`;
+                return;
+            }
+
+            datosAdicionales.forEach((item, index) => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.label}</strong></td>
+                    <td>${item.valor}</td>
+                    <td style="text-align: right;">
+                        <button type="button" class="btn-delete-item" onclick="eliminarDatoAdicional(${index})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        renderizarDatosAdicionales();
+
+        const modalNuevo = document.getElementById('modal-nuevo-dato');
+        document.getElementById('btn-abrir-modal-nuevo').addEventListener('click', function() {
+            document.getElementById('input-nuevo-label').value = '';
+            document.getElementById('input-nuevo-valor').value = '';
+            modalNuevo.style.display = 'flex';
+            document.getElementById('input-nuevo-label').focus();
+        });
+
+        document.getElementById('btn-cancelar-nuevo').addEventListener('click', function() {
+            modalNuevo.style.display = 'none';
+        });
+
+        document.getElementById('btn-guardar-nuevo').addEventListener('click', function() {
+            let label = document.getElementById('input-nuevo-label').value.trim().toUpperCase();
+            let valor = document.getElementById('input-nuevo-valor').value.trim().toUpperCase();
+
+            if (!label || !valor) {
+                alert('POR FAVOR INGRESE TANTO EL CONCEPTO COMO EL VALOR.');
+                return;
+            }
+
+            datosAdicionales.push({ label, valor });
+            localStorage.setItem('agro_datos_adicionales', JSON.stringify(datosAdicionales));
+            renderizarDatosAdicionales();
+
+            modalNuevo.style.display = 'none';
+            document.getElementById('modal-mensaje').innerText = "DATO ADICIONAL AGREGADO CON ÉXITO.";
+            document.getElementById('modal-alerta').style.display = 'flex';
+        });
+
+        window.eliminarDatoAdicional = function(index) {
+            if (confirm('¿ESTÁ SEGURO DE ELIMINAR ESTE DATO?')) {
+                datosAdicionales.splice(index, 1);
+                localStorage.setItem('agro_datos_adicionales', JSON.stringify(datosAdicionales));
+                renderizarDatosAdicionales();
+            }
+        };
     </script>
 
 </body>
