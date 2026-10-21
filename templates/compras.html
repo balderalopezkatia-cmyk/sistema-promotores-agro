@@ -36,12 +36,12 @@
         .mixto-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 15px;
             background: #1a2a3a;
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             border: 1px dashed var(--green-primary);
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         /* Lista de Autocompletado */
@@ -630,7 +630,7 @@
             );
         };
 
-        // LÓGICA DE MEDIO DE PAGO Y PAGO MIXTO
+        // LÓGICA DE MEDIO DE PAGO Y PAGO MIXTO CORREGIDA Y FLUIDA
         const selectMedio = document.getElementById('compra-medio');
         const seccionMixto = document.getElementById('seccion-pago-mixto');
         const inputEfecMixto = document.getElementById('mixto-monto-efectivo');
@@ -642,36 +642,43 @@
         selectMedio.addEventListener('change', function() {
             if (this.value === 'PAGO MIXTO') {
                 seccionMixto.style.display = 'grid';
-                autocalcularMixto();
             } else {
                 seccionMixto.style.display = 'none';
             }
         });
 
-        function autocalcularMixto() {
-            let totalAmort = parseFloat(inputAmortizado.value) || 0;
-            let efec = parseFloat(inputEfecMixto.value) || 0;
-            if (efec > totalAmort) efec = totalAmort;
-            inputDigiMixto.value = (totalAmort - efec).toFixed(2);
-        }
-
+        // Al escribir en Efectivo, suma con Digital y actualiza el Amortizado y el Saldo
         inputEfecMixto.addEventListener('input', function() {
-            let totalAmort = parseFloat(inputAmortizado.value) || 0;
             let efec = parseFloat(this.value) || 0;
-            let digi = totalAmort - efec;
-            if (digi < 0) digi = 0;
-            inputDigiMixto.value = digi.toFixed(2);
+            let digi = parseFloat(inputDigiMixto.value) || 0;
+            let suma = efec + digi;
+            
+            inputAmortizado.value = suma.toFixed(2);
+            calcularTotalesCompra(false); // Recalcular saldo sin alterar las casillas mixtas
         });
 
+        // Al escribir en Digital, suma con Efectivo y actualiza el Amortizado y el Saldo
         inputDigiMixto.addEventListener('input', function() {
-            let totalAmort = parseFloat(inputAmortizado.value) || 0;
+            let efec = parseFloat(inputEfecMixto.value) || 0;
             let digi = parseFloat(this.value) || 0;
-            let efec = totalAmort - digi;
-            if (efec < 0) efec = 0;
-            inputEfecMixto.value = efec.toFixed(2);
+            let suma = efec + digi;
+
+            inputAmortizado.value = suma.toFixed(2);
+            calcularTotalesCompra(false); // Recalcular saldo sin alterar las casillas mixtas
         });
 
-        function calcularTotalesCompra() {
+        // Si se cambia directamente el Amortizado
+        inputAmortizado.addEventListener('input', function() {
+            if (selectMedio.value === 'PAGO MIXTO') {
+                let totalAmort = parseFloat(this.value) || 0;
+                let efec = parseFloat(inputEfecMixto.value) || 0;
+                if (efec > totalAmort) efec = totalAmort;
+                inputDigiMixto.value = (totalAmort - efec).toFixed(2);
+            }
+            calcularTotalesCompra(false);
+        });
+
+        function calcularTotalesCompra(actualizarMixto = true) {
             let total = itemsCompraActual.reduce((acc, i) => acc + i.subtotal, 0);
             inputMontoTotal.value = "S/ " + total.toFixed(2);
             
@@ -679,13 +686,7 @@
             let saldo = total - amort;
             if (saldo < 0) saldo = 0;
             inputSaldo.value = "S/ " + saldo.toFixed(2);
-
-            if (selectMedio.value === 'PAGO MIXTO') {
-                autocalcularMixto();
-            }
         }
-
-        inputAmortizado.addEventListener('input', calcularTotalesCompra);
 
         document.getElementById('btn-registrar-compra').addEventListener('click', function() {
             let proveedor = document.getElementById('compra-proveedor').value.trim().toUpperCase();
@@ -989,7 +990,7 @@
                     
                     itemsCompraActual = [...c.items];
                     renderizarTablaItemsActual();
-                    calcularTotalesCompra();
+                    calcularTotalesCompra(false);
 
                     document.getElementById('btn-registrar-compra').innerText = "ACTUALIZAR COMPRA";
                     document.getElementById('titulo-form-compra').innerText = "REGISTRO DE COMPRAS - EDITANDO FACTURA EXISTENTE";
