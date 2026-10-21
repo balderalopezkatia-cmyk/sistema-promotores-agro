@@ -654,7 +654,7 @@
             let suma = efec + digi;
             
             inputAmortizado.value = suma.toFixed(2);
-            calcularTotalesCompra(false); // Recalcular saldo sin alterar las casillas mixtas
+            calcularTotalesCompra(false);
         });
 
         // Al escribir en Digital, suma con Efectivo y actualiza el Amortizado y el Saldo
@@ -664,7 +664,7 @@
             let suma = efec + digi;
 
             inputAmortizado.value = suma.toFixed(2);
-            calcularTotalesCompra(false); // Recalcular saldo sin alterar las casillas mixtas
+            calcularTotalesCompra(false);
         });
 
         // Si se cambia directamente el Amortizado
@@ -852,7 +852,10 @@
                 return;
             }
 
+            let sumaTotalDeuda = 0;
+
             filtrados.forEach((c) => {
+                sumaTotalDeuda += c.saldo;
                 let realIdx = historialCompras.indexOf(c);
                 let fechaForm = formatearFecha(c.fecha);
                 let tr = document.createElement('tr');
@@ -870,6 +873,15 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Fila de Resumen Final con el monto total que se le debe al proveedor o en la consulta
+            let trTotal = document.createElement('tr');
+            trTotal.style.background = "#1a2a3a";
+            trTotal.innerHTML = `
+                <td colspan="5" style="text-align: right; font-weight: bold; color: var(--green-primary); text-transform: uppercase;">MONTO TOTAL DE LA DEUDA PENDIENTE:</td>
+                <td colspan="2" class="text-red" style="font-size: 14px; font-weight: bold;">S/ ${sumaTotalDeuda.toFixed(2)}</td>
+            `;
+            tbody.appendChild(trTotal);
         });
 
         function formatearFecha(fechaStr) {
