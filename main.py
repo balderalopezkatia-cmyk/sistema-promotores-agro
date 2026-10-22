@@ -102,7 +102,6 @@ def api_dashboard_resumen():
             
         cursor = conexion.cursor(dictionary=True)
         
-        # Si la tabla está vaciada, estas consultas devolverán 0.0 de forma automática y limpia
         cursor.execute("SELECT IFNULL(SUM(total), 0) as total_ventas_hoy FROM ventas WHERE DATE(fecha) = CURDATE()")
         res_hoy = cursor.fetchone()
         ventas_hoy = res_hoy['total_ventas_hoy'] if res_hoy and res_hoy['total_ventas_hoy'] else 0.0
@@ -141,6 +140,18 @@ def amortizaciones():
     if 'rol' not in session:
         return redirect(url_for('index'))
     return render_template_con_branding('amortizaciones.html')
+
+@app.route('/creditos')
+def creditos():
+    if session.get('rol') != 'gerente':
+        return redirect(url_for('ventas'))
+    return render_template_con_branding('creditos.html')
+
+@app.route('/tesoreria')
+def tesoreria():
+    if session.get('rol') != 'gerente':
+        return redirect(url_for('ventas'))
+    return render_template_con_branding('tesoreria.html')
 
 @app.route('/gastos')
 def gastos():

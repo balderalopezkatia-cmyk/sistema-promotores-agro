@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tesorería y Caja - Promotores del Agro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { padding: 16px; }
+        .main-content { width: 100%; max-width: 1400px; margin: 0 auto; }
+        
+        .top-navbar { padding: 14px 20px; }
+        .logo-container-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .logo-container-top img { height: 75px; width: auto; object-fit: contain; }
+        .logo-slogan-italic { font-size: 10px; font-style: italic; color: var(--text-secondary); margin-left: 2px; letter-spacing: 0.3px; }
+
+        .card-box { background: var(--bg-card); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); margin-bottom: 25px; overflow: hidden; border: 1px solid var(--border-color); }
+        .card-header { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--green-primary); padding: 16px 20px; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 20px; }
+
+        .seccion-titulo { font-size: 13px; font-weight: bold; color: var(--green-primary); text-transform: uppercase; margin: 15px 0 10px 0; display: flex; align-items: center; gap: 8px; }
+
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .metric-card { background: var(--bg-main); border-radius: 10px; padding: 15px; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-left: 4px solid var(--green-primary); }
+        .metric-card.info { border-left-color: var(--blue-tag); }
+        .metric-card.warning { border-left-color: var(--orange-avatar); }
+
+        .metric-title { font-size: 11px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
+        .metric-value { font-size: 20px; font-weight: bold; color: var(--text-white); margin-bottom: 4px; }
+        .metric-desc { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
+
+        .form-container { background: #1a2a3a; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 25px; }
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: flex-end; }
+        .form-group label { display: block; font-size: 11px; font-weight: bold; color: var(--green-primary); text-transform: uppercase; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 9px 12px; background: var(--bg-main); color: #fff; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); outline: none; }
+
+        .btn-registrar { background: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 22px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; text-transform: uppercase; transition: 0.2s; height: 38px; }
+        .btn-registrar:hover { background: #35f5aa; }
+
+        .table-container { margin: 5px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow-y: auto; max-height: 400px; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; color: #fff; }
+        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 11px 14px; font-weight: bold; border-bottom: 1px solid var(--border-color); font-size: 12px; text-transform: uppercase; position: sticky; top: 0; }
+        td { padding: 11px 14px; border-bottom: 1px solid var(--border-color); color: #fff; text-transform: uppercase; }
+
+        .badge-aporte { background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        .badge-retiro { background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior Universal -->
+    <div class="top-navbar">
+        <div class="nav-left">
+            <div class="logo-container-top">
+                <img src="/static/logo.png" alt="Promotores del Agro" onerror="this.style.display='none'">
+                <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
+            </div>
+            <div class="nav-menu" style="margin-left: 20px; align-self: center;">
+                <a href="/dashboard" class="nav-link">PANEL</a>
+                <a href="/stock" class="nav-link">STOCK</a>
+                <a href="/ventas" class="nav-link">VENTAS</a>
+                <a href="/compras" class="nav-link">COMPRAS</a>
+                <a href="/creditos" class="nav-link">CRÉDITOS</a>
+                <a href="/tesoreria" class="nav-link active">TESORERÍA</a>
+                <a href="/gastos" class="nav-link">GASTOS</a>
+                <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
+            </div>
+        </div>
+        <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
+            <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
+            <button class="user-avatar" title="Cerrar Sesión" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+
+        <div class="card-box">
+            <div class="card-header">
+                <span>TESORERÍA - APORTES DE CAPITAL Y MOVIMIENTOS DE LIQUIDEZ</span>
+            </div>
+            <div class="card-body">
+
+                <!-- Tarjetas de Métricas -->
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-title">Total Aportes / Liquidez (Mes)</div>
+                        <div class="metric-value" id="val-total-aportes">S/ 0.00</div>
+                        <div class="metric-desc">Ingresos propios o de socios</div>
+                    </div>
+                    <div class="metric-card warning">
+                        <div class="metric-title">Total Retiros / Salidas (Mes)</div>
+                        <div class="metric-value" id="val-total-retiros">S/ 0.00</div>
+                        <div class="metric-desc">Retiros de capital o personales</div>
+                    </div>
+                    <div class="metric-card info">
+                        <div class="metric-title">Balance Neto Tesorería</div>
+                        <div class="metric-value" id="val-balance-tesoreria">S/ 0.00</div>
+                        <div class="metric-desc">Flujo financiero neto</div>
+                    </div>
+                </div>
+
+                <!-- Formulario para Registrar Nuevo Movimiento de Caja / Capital -->
+                <div class="seccion-titulo">• Registrar Nuevo Movimiento Financiero</div>
+                <div class="form-container">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>TIPO DE MOVIMIENTO:</label>
+                            <select id="input-tipo">
+                                <option value="APORTE SOCIO">APORTE DE ACCIONISTA / SOCIO</option>
+                                <option value="LIQUIDEZ PROPIA">INYECCIÓN DE LIQUIDEZ PROPIA</option>
+                                <option value="PRESTAMO TERCERO">PRÉSTAMO BANCARIO / TERCEROS</option>
+                                <option value="RETIRO CAPITAL">RETIRO DE CAPITAL / UTILIDADES</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>CONCEPTO / DESCRIPCIÓN:</label>
+                            <input type="text" id="input-concepto" placeholder="Ej. Capital inicial de caja...">
+                        </div>
+                        <div class="form-group">
+                            <label>MONTO (S/):</label>
+                            <input type="number" step="0.01" id="input-monto" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>DESTINO / ORIGEN:</label>
+                            <select id="input-destino">
+                                <option value="CAJA FÍSICA">CAJA FÍSICA (EFECTIVO)</option>
+                                <option value="CUENTA BCP">CUENTA BANCARIA BCP</option>
+                                <option value="YAPE / PLIN NEGOCIO">YAPE / PLIN NEGOCIO</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-registrar" onclick="registrarMovimientoTesoreria()">+ Registrar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial de Movimientos -->
+                <div class="seccion-titulo">• Historial de Movimientos de Tesorería</div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>FECHA</th>
+                                <th>TIPO</th>
+                                <th>CONCEPTO</th>
+                                <th>DESTINO / ORIGEN</th>
+                                <th>MONTO</th>
+                                <th style="text-align: right;">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-body-tesoreria">
+                            <!-- Dinámico con JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let movimientosTesoreria = JSON.parse(localStorage.getItem('movimientos_tesoreria_agro')) || [];
+
+        function registrarMovimientoTesoreria() {
+            let tipo = document.getElementById('input-tipo').value;
+            let concepto = document.getElementById('input-concepto').value.trim().toUpperCase();
+            let monto = parseFloat(document.getElementById('input-monto').value);
+            let destino = document.getElementById('input-destino').value;
+
+            if (!concepto || isNaN(monto) || monto <= 0) {
+                alert("POR FAVOR INGRESE UN CONCEPTO Y UN MONTO VÁLIDO.");
+                return;
+            }
+
+            let fechaHoy = new Date().toISOString().split('T')[0];
+
+            let nuevoMov = {
+                id: Date.now(),
+                fecha: fechaHoy,
+                tipo: tipo,
+                concepto: concepto,
+                monto: monto,
+                destino: destino
+            };
+
+            movimientosTesoreria.push(nuevoMov);
+            localStorage.setItem('movimientos_tesoreria_agro', JSON.stringify(movimientosTesoreria));
+
+            document.getElementById('input-concepto').value = '';
+            document.getElementById('input-monto').value = '';
+
+            renderizarTesoreria();
+        }
+
+        function renderizarTesoreria() {
+            let tbody = document.getElementById('tabla-body-tesoreria');
+            tbody.innerHTML = '';
+
+            let totalAportes = 0;
+            let totalRetiros = 0;
+
+            if (movimientosTesoreria.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color: var(--text-secondary);">No hay movimientos financieros registrados.</td></tr>`;
+                document.getElementById('val-total-aportes').innerText = 'S/ 0.00';
+                document.getElementById('val-total-retiros').innerText = 'S/ 0.00';
+                document.getElementById('val-balance-tesoreria').innerText = 'S/ 0.00';
+                return;
+            }
+
+            movimientosTesoreria.forEach((item, index) => {
+                let esRetiro = item.tipo === 'RETIRO CAPITAL';
+                if (esRetiro) {
+                    totalRetiros += item.monto;
+                } else {
+                    totalAportes += item.monto;
+                }
+
+                let badge = esRetiro ? `<span class="badge-retiro">RETIRO</span>` : `<span class="badge-aporte">INGRESO / APORTE</span>`;
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.fecha}</td>
+                    <td>${badge}</td>
+                    <td><strong>${item.concepto}</strong></td>
+                    <td>${item.destino}</td>
+                    <td class="${esRetiro ? 'text-red' : 'text-green'}">S/ ${item.monto.toFixed(2)}</td>
+                    <td style="text-align: right;"><a class="link-danger" onclick="eliminarMovimiento(${index})" style="cursor:pointer; font-size:11px;">Eliminar</a></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            let balance = totalAportes - totalRetiros;
+
+            document.getElementById('val-total-aportes').innerText = `S/ ${totalAportes.toFixed(2)}`;
+            document.getElementById('val-total-retiros').innerText = `S/ ${totalRetiros.toFixed(2)}`;
+            document.getElementById('val-balance-tesoreria').innerText = `S/ ${balance.toFixed(2)}`;
+        }
+
+        window.eliminarMovimiento = function(index) {
+            if (confirm("¿ESTÁ SEGURO DE ELIMINAR ESTE REGISTRO?")) {
+                movimientosTesoreria.splice(index, 1);
+                localStorage.setItem('movimientos_tesoreria_agro', JSON.stringify(movimientosTesoreria));
+                renderizarTesoreria();
+            }
+        };
+
+        renderizarTesoreria();
+    </script>
+</body>
+</html>
