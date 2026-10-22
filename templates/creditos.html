@@ -33,14 +33,12 @@
         .metric-value { font-size: 20px; font-weight: bold; color: var(--text-white); margin-bottom: 4px; }
         .metric-desc { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
 
-        /* Formulario dinámico de boletas */
         .form-container { background: #1a2a3a; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; }
         .form-grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .form-group label { display: block; font-size: 10px; font-weight: bold; color: var(--green-primary); text-transform: uppercase; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 8px 10px; background: var(--bg-main); color: #fff; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; box-sizing: border-box; }
         .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); outline: none; }
 
-        /* Tabla temporal de productos en la boleta */
         .tabla-temporal { width: 100%; border-collapse: collapse; margin-bottom: 12px; background: var(--bg-main); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
         .tabla-temporal th { background: #0f172a; color: var(--text-secondary); padding: 8px; font-size: 11px; text-align: left; }
         .tabla-temporal td { padding: 8px; font-size: 12px; border-bottom: 1px solid var(--border-color); }
@@ -141,8 +139,8 @@
                             <input type="text" id="reg-persona" placeholder="Nombre completo o empresa...">
                         </div>
                         <div class="form-group">
-                            <label>N° DE BOLETA / FACTURA:</label>
-                            <input type="text" id="reg-nro-boleta" placeholder="Ej. B001-045">
+                            <label>N° DE BOLETA (CORRELATIVO AUTOMÁTICO):</label>
+                            <input type="text" id="reg-nro-boleta" readonly style="background:#0f172a; color:var(--green-primary); font-weight:bold;">
                         </div>
                         <div class="form-group">
                             <label>FECHA DE LA BOLETA:</label>
@@ -156,12 +154,12 @@
                         <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; align-items: flex-end;">
                             <div class="form-group" style="margin:0;"><label>Producto:</label><input type="text" id="temp-prod" placeholder="Nombre del producto..."></div>
                             <div class="form-group" style="margin:0;"><label>Cantidad:</label><input type="number" id="temp-cant" value="1" min="1"></div>
-                            <div class="form-group" style="margin:0;"><label id="lbl-temp-precio">Precio Venta Unitario:</label><input type="number" step="0.01" id="temp-precio" placeholder="0.00"></div>
+                            <div class="form-group" style="margin:0;"><label id="lbl-temp-precio">Precio Unitario:</label><input type="number" step="0.01" id="temp-precio" placeholder="0.00"></div>
                             <div><button type="button" class="btn-add-prod" onclick="agregarProductoTemporal()">+ Agregar Producto</button></div>
                         </div>
                     </div>
 
-                    <!-- Tabla temporal de productos añadidos -->
+                    <!-- Tabla temporal con opciones de Editar y Quitar -->
                     <div style="overflow-x: auto; margin-bottom: 12px;">
                         <table class="tabla-temporal">
                             <thead>
@@ -170,7 +168,7 @@
                                     <th>Descripción del Producto</th>
                                     <th>P. Unitario</th>
                                     <th>Subtotal</th>
-                                    <th style="text-align: right;">Acción</th>
+                                    <th style="text-align: right;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-temp-productos">
@@ -229,7 +227,26 @@
         </div>
     </div>
 
-    <!-- MODAL DETALLE DE BOLETA (Al hacer clic en el N°) -->
+    <!-- MODAL EDITAR PRODUCTO TEMPORAL -->
+    <div id="modal-editar-temp" class="modal-overlay">
+        <div class="modal-card" id="card-modal-editar-temp" style="max-width: 400px;">
+            <div id="header-editar-temp" style="cursor: move; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between;">
+                <h3 style="margin:0; color:var(--green-primary); font-size:14px;">EDITAR PRODUCTO TEMPORAL</h3>
+                <span style="font-size:10px; color:var(--text-secondary);">(Mover)</span>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;"><label>PRODUCTO:</label><input type="text" id="edit-temp-prod"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                <div class="form-group"><label>CANTIDAD:</label><input type="number" id="edit-temp-cant" min="1"></div>
+                <div class="form-group"><label>P. UNITARIO:</label><input type="number" step="0.01" id="edit-temp-precio"></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-modal-close" onclick="cerrarModal('modal-editar-temp')">Cancelar</button>
+                <button type="button" class="btn-modal-save" onclick="guardarEdicionTemporal()">Actualizar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE DE BOLETA -->
     <div id="modal-detalle" class="modal-overlay">
         <div class="modal-card" id="card-modal-detalle">
             <div id="header-detalle" style="cursor: move; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between;">
@@ -273,7 +290,7 @@
                 <span style="font-size:10px; color:var(--text-secondary);">(Mover ventana)</span>
             </div>
             <div class="form-group" style="margin-bottom:10px;"><label>CLIENTE / PROVEEDOR:</label><input type="text" id="edit-persona"></div>
-            <div class="form-group" style="margin-bottom:10px;"><label>N° BOLETA:</label><input type="text" id="edit-comprobante"></div>
+            <div class="form-group" style="margin-bottom:10px;"><label>N° BOLETA:</label><input type="text" id="edit-comprobante" readonly style="background:#0f172a;"></div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
                 <div class="form-group"><label>TOTAL BOLETA (S/):</label><input type="number" step="0.01" id="edit-total"></div>
                 <div class="form-group"><label>FECHA:</label><input type="date" id="edit-fecha"></div>
@@ -301,7 +318,6 @@
     </div>
 
     <script>
-        // Hacer movibles todas las ventanas flotantes
         function hacerMovible(cardId, headerId) {
             const card = document.getElementById(cardId);
             const header = document.getElementById(headerId);
@@ -326,17 +342,25 @@
         hacerMovible('card-modal-abono', 'header-abono');
         hacerMovible('card-modal-editar', 'header-editar');
         hacerMovible('card-modal-confirm', 'header-confirm');
+        hacerMovible('card-modal-editar-temp', 'header-editar-temp');
 
-        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_v3')) || [];
-        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_v3')) || [];
+        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_v4')) || [];
+        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_v4')) || [];
         let productosTemporales = [];
         let modoActual = 'cobrar';
         let indiceSeleccionado = -1;
+        let indiceTempEditando = -1;
 
         let hoyStr = new Date().toISOString().split('T')[0];
         document.getElementById('reg-fecha').value = hoyStr;
         document.getElementById('reg-fecha-amort').value = hoyStr;
         document.getElementById('abono-fecha').value = hoyStr;
+
+        function generarCorrelativo() {
+            let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
+            let siguiente = lista.length + 1;
+            return "B-" + String(siguiente).padStart(4, '0');
+        }
 
         function cambiarVista(modo) {
             modoActual = modo;
@@ -347,13 +371,14 @@
                 document.getElementById('lbl-metrica-total').innerText = "Total por Cobrar (Clientes)";
                 document.getElementById('titulo-form-reg').innerText = "• Registrar Nueva Boleta de Crédito (Cliente)";
                 document.getElementById('lbl-entidad').innerText = "NOMBRE DEL CLIENTE DEUDOR:";
-                document.getElementById('lbl-temp-precio').innerText = "Precio Venta Unitario:";
+                document.getElementById('lbl-temp-precio').innerText = "Precio Unitario:";
             } else {
                 document.getElementById('lbl-metrica-total').innerText = "Total por Pagar (Proveedores)";
                 document.getElementById('titulo-form-reg').innerText = "• Registrar Nueva Boleta de Crédito (Proveedor)";
                 document.getElementById('lbl-entidad').innerText = "NOMBRE DEL PROVEEDOR / EMPRESA:";
-                document.getElementById('lbl-temp-precio').innerText = "Precio Costo Unitario:";
+                document.getElementById('lbl-temp-precio').innerText = "Costo Unitario:";
             }
+            document.getElementById('reg-nro-boleta').value = generarCorrelativo();
             renderizarTablaCreditos();
         }
 
@@ -403,27 +428,57 @@
                     <td><strong>${item.producto}</strong></td>
                     <td>S/ ${item.precio.toFixed(2)}</td>
                     <td class="text-green"><strong>S/ ${item.subtotal.toFixed(2)}</strong></td>
-                    <td style="text-align: right;"><button type="button" class="btn-action-delete" onclick="quitarItemTemp(${idx})">Quitar</button></td>
+                    <td style="text-align: right;">
+                        <button type="button" class="btn-action-edit" onclick="abrirEditarTemporal(${idx})">Editar</button>
+                        <button type="button" class="btn-action-delete" onclick="quitarItemTemp(${idx})">Quitar</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function quitarItemTemp(idx) {
-            productosTemporales.splice(idx, 1);
+        function abrirEditarTemporal(idx) {
+            indiceTempEditando = idx;
+            let item = productosTemporales[idx];
+            document.getElementById('edit-temp-prod').value = item.producto;
+            document.getElementById('edit-temp-cant').value = item.cantidad;
+            document.getElementById('edit-temp-precio').value = item.precio;
+            document.getElementById('modal-editar-temp').style.display = 'flex';
+        }
+
+        function guardarEdicionTemporal() {
+            let prod = document.getElementById('edit-temp-prod').value.trim().toUpperCase();
+            let cant = parseFloat(document.getElementById('edit-temp-cant').value) || 0;
+            let prec = parseFloat(document.getElementById('edit-temp-precio').value) || 0;
+
+            if (!prod || cant <= 0 || prec <= 0) {
+                alert("DATOS INVÁLIDOS.");
+                return;
+            }
+
+            productosTemporales[indiceTempEditando] = { producto: prod, cantidad: cant, precio: prec, subtotal: cant * prec };
+            cerrarModal('modal-editar-temp');
             renderizarTemporal();
+        }
+
+        function quitarItemTemp(idx) {
+            let item = productosTemporales[idx];
+            mostrarAlertaAccion("QUITAR PRODUCTO", `¿ESTÁ SEGURO DE QUITAR <strong>${item.producto}</strong> DE LA LISTA TEMPORAL?`, function() {
+                productosTemporales.splice(idx, 1);
+                renderizarTemporal();
+            });
         }
 
         function guardarBoletaCompleta() {
             let persona = document.getElementById('reg-persona').value.trim().toUpperCase();
-            let nroBoleta = document.getElementById('reg-nro-boleta').value.trim().toUpperCase() || `B-${Date.now().toString().slice(-4)}`;
+            let nroBoleta = document.getElementById('reg-nro-boleta').value;
             let fecha = document.getElementById('reg-fecha').value;
             let medio = document.getElementById('reg-medio').value;
             let fechaAmort = document.getElementById('reg-fecha-amort').value;
             let abonado = parseFloat(document.getElementById('reg-abonado').value) || 0;
 
             if (!persona || productosTemporales.length === 0 || !fecha) {
-                mostrarAlertaAccion("⚠️ DATOS INCOMPLETOS", "POR FAVOR INGRESE EL NOMBRE, LA FECHA Y AL MENOS UN PRODUCTO EN LA BOLETA.", function(){});
+                mostrarAlertaAccion("⚠️ DATOS INCOMPLETOS", "POR FAVOR INGRESE EL NOMBRE, LA FECHA Y AL MENOS UN PRODUCTO.", function(){});
                 return;
             }
 
@@ -453,21 +508,20 @@
                 abonado: abonado
             };
 
-            mostrarAlertaAccion("GUARDAR BOLETA", `¿ESTÁ SEGURO DE REGISTRAR LA BOLETA <strong>${nroBoleta}</strong> PARA <strong>${persona}</strong> POR UN TOTAL DE <strong>S/ ${totalBoleta.toFixed(2)}</strong>?`, function() {
+            mostrarAlertaAccion("GUARDAR BOLETA", `¿ESTÁ SEGURO DE GUARDAR LA BOLETA <strong>${nroBoleta}</strong> PARA <strong>${persona}</strong> (S/ ${totalBoleta.toFixed(2)})?`, function() {
                 if (modoActual === 'cobrar') {
                     creditosClientes.push(nuevaBoleta);
-                    localStorage.setItem('creditos_clientes_v3', JSON.stringify(creditosClientes));
+                    localStorage.setItem('creditos_clientes_v4', JSON.stringify(creditosClientes));
                 } else {
                     creditosProveedores.push(nuevaBoleta);
-                    localStorage.setItem('creditos_proveedores_v3', JSON.stringify(creditosProveedores));
+                    localStorage.setItem('creditos_proveedores_v4', JSON.stringify(creditosProveedores));
                 }
 
-                // Limpiar formulario
                 document.getElementById('reg-persona').value = '';
-                document.getElementById('reg-nro-boleta').value = '';
                 document.getElementById('reg-abonado').value = '0.00';
                 productosTemporales = [];
                 renderizarTemporal();
+                document.getElementById('reg-nro-boleta').value = generarCorrelativo();
                 renderizarTablaCreditos();
             });
         }
@@ -577,7 +631,6 @@
             document.getElementById('modal-detalle').style.display = 'flex';
         }
 
-        // SISTEMA DE CONFIRMACIÓN EXPLÍCITA Y MOVIBLE
         function mostrarAlertaAccion(titulo, mensaje, callbackSi) {
             document.getElementById('confirm-titulo-modal').innerText = titulo;
             document.getElementById('confirm-msg').innerHTML = mensaje;
@@ -646,7 +699,6 @@
 
         function guardarEdicion() {
             let persona = document.getElementById('edit-persona').value.trim().toUpperCase();
-            let comp = document.getElementById('edit-comprobante').value.trim().toUpperCase();
             let total = parseFloat(document.getElementById('edit-total').value) || 0;
             let fecha = document.getElementById('edit-fecha').value;
 
@@ -655,7 +707,6 @@
 
             mostrarAlertaAccion("GUARDAR CAMBIOS", `¿DESEA GUARDAR LAS MODIFICACIONES EN LA BOLETA <strong>${b.comprobante}</strong>?`, function() {
                 b.persona = persona;
-                b.comprobante = comp;
                 b.total = total;
                 b.fecha = fecha;
                 guardarStorage();
@@ -676,8 +727,8 @@
         }
 
         function guardarStorage() {
-            localStorage.setItem('creditos_clientes_v3', JSON.stringify(creditosClientes));
-            localStorage.setItem('creditos_proveedores_v3', JSON.stringify(creditosProveedores));
+            localStorage.setItem('creditos_clientes_v4', JSON.stringify(creditosClientes));
+            localStorage.setItem('creditos_proveedores_v4', JSON.stringify(creditosProveedores));
         }
 
         function cerrarModal(idModal) {
@@ -686,6 +737,7 @@
         }
 
         // Carga Inicial
+        document.getElementById('reg-nro-boleta').value = generarCorrelativo();
         renderizarTablaCreditos();
     </script>
 </body>
