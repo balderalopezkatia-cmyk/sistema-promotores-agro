@@ -29,7 +29,7 @@
         .metric-desc { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
 
         .form-container { background: #1a2a3a; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 25px; }
-        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: flex-end; }
+        .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
         .form-group label { display: block; font-size: 11px; font-weight: bold; color: var(--green-primary); text-transform: uppercase; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 100%; padding: 9px 12px; background: var(--bg-main); color: #fff; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; box-sizing: border-box; }
         .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); outline: none; }
@@ -44,6 +44,15 @@
 
         .badge-aporte { background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .badge-retiro { background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+
+        .btn-action-edit { background: var(--blue-tag); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.2s; margin-right: 3px; }
+        .btn-action-delete { background: var(--red-alert); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+
+        /* Ventanas Flotantes Movibles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-card { background: var(--bg-card); padding: 25px; border-radius: 12px; width: 95%; max-width: 500px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary); position: absolute; max-height: 90vh; overflow-y: auto; }
+        .btn-modal-close { background: var(--border-color); color: white; border: none; padding: 9px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .btn-modal-save { background: var(--green-primary); color: var(--bg-main); border: none; padding: 9px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -118,20 +127,33 @@
                             <input type="text" id="input-concepto" placeholder="Ej. Capital inicial de caja...">
                         </div>
                         <div class="form-group">
-                            <label>MONTO (S/):</label>
-                            <input type="number" step="0.01" id="input-monto" placeholder="0.00">
+                            <label>FECHA DEL MOVIMIENTO:</label>
+                            <input type="date" id="input-fecha">
                         </div>
                         <div class="form-group">
                             <label>DESTINO / ORIGEN:</label>
-                            <select id="input-destino">
+                            <select id="input-destino" onchange="verificarDestinoTesoreria()">
                                 <option value="CAJA FÍSICA">CAJA FÍSICA (EFECTIVO)</option>
                                 <option value="CUENTA BCP">CUENTA BANCARIA BCP</option>
                                 <option value="YAPE / PLIN NEGOCIO">YAPE / PLIN NEGOCIO</option>
+                                <option value="MIXTO">MIXTO (FÍSICO + DIGITAL)</option>
                             </select>
                         </div>
-                        <div>
-                            <button type="button" class="btn-registrar" onclick="registrarMovimientoTesoreria()">+ Registrar</button>
+                        <div class="form-group" id="grupo-mixto-fisico" style="display: none;">
+                            <label>MONTO FÍSICO / EFECTIVO (S/):</label>
+                            <input type="number" step="0.01" id="input-monto-fisico" placeholder="0.00" value="0.00">
                         </div>
+                        <div class="form-group" id="grupo-mixto-digital" style="display: none;">
+                            <label>MONTO DIGITAL (S/):</label>
+                            <input type="number" step="0.01" id="input-monto-digital" placeholder="0.00" value="0.00">
+                        </div>
+                        <div class="form-group" id="grupo-monto-simple">
+                            <label>MONTO TOTAL (S/):</label>
+                            <input type="number" step="0.01" id="input-monto" placeholder="0.00">
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+                        <button type="button" class="btn-registrar" onclick="confirmarRegistrarMovimiento()">+ Registrar</button>
                     </div>
                 </div>
 
@@ -146,7 +168,7 @@
                                 <th>CONCEPTO</th>
                                 <th>DESTINO / ORIGEN</th>
                                 <th>MONTO</th>
-                                <th style="text-align: right;">ACCIÓN</th>
+                                <th style="text-align: right;">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-body-tesoreria">
@@ -160,38 +182,155 @@
 
     </div>
 
-    <script>
-        let movimientosTesoreria = JSON.parse(localStorage.getItem('movimientos_tesoreria_agro')) || [];
+    <!-- MODAL EDITAR MOVIMIENTO -->
+    <div id="modal-editar" class="modal-overlay">
+        <div class="modal-card" id="card-modal-editar">
+            <div id="header-editar" style="cursor: move; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between;">
+                <h3 style="margin:0; color:var(--green-primary); font-size:14px;">EDITAR MOVIMIENTO FINANCIERO</h3>
+                <span style="font-size:10px; color:var(--text-secondary);">(Mover ventana)</span>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;"><label>TIPO:</label>
+                <select id="edit-tipo">
+                    <option value="APORTE SOCIO">APORTE DE ACCIONISTA / SOCIO</option>
+                    <option value="LIQUIDEZ PROPIA">INYECCIÓN DE LIQUIDEZ PROPIA</option>
+                    <option value="PRESTAMO TERCERO">PRÉSTAMO BANCARIO / TERCEROS</option>
+                    <option value="RETIRO CAPITAL">RETIRO DE CAPITAL / UTILIDADES</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;"><label>CONCEPTO:</label><input type="text" id="edit-concepto"></div>
+            <div class="form-group" style="margin-bottom:10px;"><label>FECHA:</label><input type="date" id="edit-fecha"></div>
+            <div class="form-group" style="margin-bottom:10px;"><label>DESTINO / ORIGEN:</label><input type="text" id="edit-destino"></div>
+            <div class="form-group" style="margin-bottom:15px;"><label>MONTO (S/):</label><input type="number" step="0.01" id="edit-monto"></div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-modal-close" onclick="cerrarModal('modal-editar')">Cancelar</button>
+                <button type="button" class="btn-modal-save" onclick="guardarEdicionTesoreria()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
 
-        function registrarMovimientoTesoreria() {
+    <!-- MODAL CONFIRMACIÓN CON ACCIÓN EXPLÍCITA -->
+    <div id="modal-confirm" class="modal-overlay">
+        <div class="modal-card" id="card-modal-confirm" style="max-width:400px;">
+            <div id="header-confirm" style="cursor: move; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between;">
+                <h3 id="confirm-titulo-modal" style="margin:0; color:var(--green-primary); font-size:14px;">CONFIRMACIÓN DE ACCIÓN</h3>
+                <span style="font-size:10px; color:var(--text-secondary);">(Mover)</span>
+            </div>
+            <p id="confirm-msg" style="font-size:12px; margin-bottom:15px; font-weight:bold; line-height: 1.4;"></p>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-modal-close" id="conf-btn-no">No, Cancelar</button>
+                <button type="button" class="btn-modal-save" id="conf-btn-si">Sí, Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function hacerMovible(cardId, headerId) {
+            const card = document.getElementById(cardId);
+            const header = document.getElementById(headerId);
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            header.onmousedown = function(e) {
+                e.preventDefault();
+                pos3 = e.clientX; pos4 = e.clientY;
+                document.onmouseup = cerrarArrastre;
+                document.onmousemove = elementoArrastrandose;
+            };
+            function elementoArrastrandose(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+                pos3 = e.clientX; pos4 = e.clientY;
+                card.style.position = "absolute";
+                card.style.top = (card.offsetTop - pos2) + "px";
+                card.style.left = (card.offsetLeft - pos1) + "px";
+            }
+            function cerrarArrastre() { document.onmouseup = null; document.onmousemove = null; }
+        }
+        hacerMovible('card-modal-editar', 'header-editar');
+        hacerMovible('card-modal-confirm', 'header-confirm');
+
+        let movimientosTesoreria = JSON.parse(localStorage.getItem('movimientos_tesoreria_agro_v2')) || [];
+        let indiceSeleccionado = -1;
+
+        let hoyStr = new Date().toISOString().split('T')[0];
+        document.getElementById('input-fecha').value = hoyStr;
+
+        function verificarDestinoTesoreria() {
+            let destino = document.getElementById('input-destino').value;
+            let gFisico = document.getElementById('grupo-mixto-fisico');
+            let gDigital = document.getElementById('grupo-mixto-digital');
+            let gSimple = document.getElementById('grupo-monto-simple');
+
+            if (destino === 'MIXTO') {
+                gFisico.style.display = 'block';
+                gDigital.style.display = 'block';
+                gSimple.style.display = 'none';
+            } else {
+                gFisico.style.display = 'none';
+                gDigital.style.display = 'none';
+                gSimple.style.display = 'block';
+            }
+        }
+
+        function mostrarAlertaAccion(titulo, mensaje, callbackSi) {
+            document.getElementById('confirm-titulo-modal').innerText = titulo;
+            document.getElementById('confirm-msg').innerHTML = mensaje;
+            let btnSi = document.getElementById('conf-btn-si');
+            let btnNo = document.getElementById('conf-btn-no');
+
+            let nuevoBtnSi = btnSi.cloneNode(true);
+            btnSi.parentNode.replaceChild(nuevoBtnSi, btnSi);
+
+            nuevoBtnSi.addEventListener('click', function() {
+                cerrarModal('modal-confirm');
+                callbackSi();
+            });
+
+            btnNo.onclick = function() { cerrarModal('modal-confirm'); };
+            document.getElementById('modal-confirm').style.display = 'flex';
+        }
+
+        function confirmarRegistrarMovimiento() {
             let tipo = document.getElementById('input-tipo').value;
             let concepto = document.getElementById('input-concepto').value.trim().toUpperCase();
-            let monto = parseFloat(document.getElementById('input-monto').value);
-            let destino = document.getElementById('input-destino').value;
+            let fecha = document.getElementById('input-fecha').value;
+            let destinoSelect = document.getElementById('input-destino').value;
+            let monto = 0;
+            let destinoFinal = destinoSelect;
 
-            if (!concepto || isNaN(monto) || monto <= 0) {
-                alert("POR FAVOR INGRESE UN CONCEPTO Y UN MONTO VÁLIDO.");
+            if (destinoSelect === 'MIXTO') {
+                let fisico = parseFloat(document.getElementById('input-monto-fisico').value) || 0;
+                let digital = parseFloat(document.getElementById('input-monto-digital').value) || 0;
+                monto = fisico + digital;
+                destinoFinal = `MIXTO (Físico: S/${fisico.toFixed(2)} / Digital: S/${digital.toFixed(2)})`;
+            } else {
+                monto = parseFloat(document.getElementById('input-monto').value);
+            }
+
+            if (!concepto || isNaN(monto) || monto <= 0 || !fecha) {
+                mostrarAlertaAccion("⚠️ DATOS INCOMPLETOS", "POR FAVOR COMPLETE EL CONCEPTO, LA FECHA Y UN MONTO VÁLIDO.", function(){});
                 return;
             }
 
-            let fechaHoy = new Date().toISOString().split('T')[0];
+            mostrarAlertaAccion("REGISTRAR MOVIMIENTO", `¿ESTÁ SEGURO DE REGISTRAR <strong>${tipo}</strong> POR <strong>S/ ${monto.toFixed(2)}</strong>?`, function() {
+                let nuevoMov = {
+                    id: Date.now(),
+                    fecha: fecha,
+                    tipo: tipo,
+                    concepto: concepto,
+                    monto: monto,
+                    destino: destinoFinal
+                };
 
-            let nuevoMov = {
-                id: Date.now(),
-                fecha: fechaHoy,
-                tipo: tipo,
-                concepto: concepto,
-                monto: monto,
-                destino: destino
-            };
+                movimientosTesoreria.push(nuevoMov);
+                localStorage.setItem('movimientos_tesoreria_agro_v2', JSON.stringify(movimientosTesoreria));
 
-            movimientosTesoreria.push(nuevoMov);
-            localStorage.setItem('movimientos_tesoreria_agro', JSON.stringify(movimientosTesoreria));
+                document.getElementById('input-concepto').value = '';
+                document.getElementById('input-monto').value = '';
+                document.getElementById('input-monto-fisico').value = '0.00';
+                document.getElementById('input-monto-digital').value = '0.00';
+                document.getElementById('input-fecha').value = hoyStr;
 
-            document.getElementById('input-concepto').value = '';
-            document.getElementById('input-monto').value = '';
-
-            renderizarTesoreria();
+                renderizarTesoreria();
+            });
         }
 
         function renderizarTesoreria() {
@@ -226,7 +365,10 @@
                     <td><strong>${item.concepto}</strong></td>
                     <td>${item.destino}</td>
                     <td class="${esRetiro ? 'text-red' : 'text-green'}">S/ ${item.monto.toFixed(2)}</td>
-                    <td style="text-align: right;"><a class="link-danger" onclick="eliminarMovimiento(${index})" style="cursor:pointer; font-size:11px;">Eliminar</a></td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button class="btn-action-edit" onclick="abrirEditarTesoreria(${index})">Editar</button>
+                        <button class="btn-action-delete" onclick="eliminarMovimiento(${index})">Eliminar</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -238,13 +380,60 @@
             document.getElementById('val-balance-tesoreria').innerText = `S/ ${balance.toFixed(2)}`;
         }
 
-        window.eliminarMovimiento = function(index) {
-            if (confirm("¿ESTÁ SEGURO DE ELIMINAR ESTE REGISTRO?")) {
-                movimientosTesoreria.splice(index, 1);
-                localStorage.setItem('movimientos_tesoreria_agro', JSON.stringify(movimientosTesoreria));
-                renderizarTesoreria();
+        function abrirEditarTesoreria(index) {
+            indiceSeleccionado = index;
+            let item = movimientosTesoreria[index];
+
+            document.getElementById('edit-tipo').value = item.tipo;
+            document.getElementById('edit-concepto').value = item.concepto;
+            document.getElementById('edit-fecha').value = item.fecha;
+            document.getElementById('edit-destino').value = item.destino;
+            document.getElementById('edit-monto').value = item.monto;
+
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        function guardarEdicionTesoreria() {
+            let tipo = document.getElementById('edit-tipo').value;
+            let concepto = document.getElementById('edit-concepto').value.trim().toUpperCase();
+            let fecha = document.getElementById('edit-fecha').value;
+            let destino = document.getElementById('edit-destino').value.trim().toUpperCase();
+            let monto = parseFloat(document.getElementById('edit-monto').value) || 0;
+
+            if (!concepto || monto <= 0 || !fecha) {
+                mostrarAlertaAccion("⚠️ ERROR", "POR FAVOR COMPLETE LOS CAMPOS CORRECTAMENTE.", function(){});
+                return;
             }
-        };
+
+            mostrarAlertaAccion("GUARDAR CAMBIOS", `¿DESEA ACTUALIZAR ESTE MOVIMIENTO FINANCIERO?`, function() {
+                movimientosTesoreria[indiceSeleccionado] = {
+                    id: movimientosTesoreria[indiceSeleccionado].id,
+                    fecha: fecha,
+                    tipo: tipo,
+                    concepto: concepto,
+                    monto: monto,
+                    destino: destino
+                };
+
+                localStorage.setItem('movimientos_tesoreria_agro_v2', JSON.stringify(movimientosTesoreria));
+                cerrarModal('modal-editar');
+                renderizarTesoreria();
+            });
+        }
+
+        function eliminarMovimiento(index) {
+            let item = movimientosTesoreria[index];
+            mostrarAlertaAccion("🗑️ ELIMINAR REGISTRO", `¿ESTÁ SEGURO DE ELIMINAR EL MOVIMIENTO <strong>${item.concepto}</strong> (S/ ${item.monto.toFixed(2)})?`, function() {
+                movimientosTesoreria.splice(index, 1);
+                localStorage.setItem('movimientos_tesoreria_agro_v2', JSON.stringify(movimientosTesoreria));
+                renderizarTesoreria();
+            });
+        }
+
+        function cerrarModal(idModal) {
+            document.getElementById(idModal).style.display = 'none';
+            indiceSeleccionado = -1;
+        }
 
         renderizarTesoreria();
     </script>
