@@ -130,8 +130,8 @@
                     </div>
                 </div>
 
-                <!-- FORMULARIO DE CREACIÓN DE BOLETA CON MULTI-PRODUCTO -->
-                <div class="seccion-titulo" id="titulo-form-reg">• Registrar Nueva Boleta de Crédito Antigua</div>
+                <!-- FORMULARIO INDEPENDIENTE PARA CLIENTES Y PROVEEDORES -->
+                <div class="seccion-titulo" id="titulo-form-reg">• Registrar Nueva Boleta de Crédito</div>
                 <div class="form-container">
                     <div class="form-grid-3">
                         <div class="form-group">
@@ -159,7 +159,7 @@
                         </div>
                     </div>
 
-                    <!-- Tabla temporal con opciones de Editar y Quitar -->
+                    <!-- Tabla temporal independiente -->
                     <div style="overflow-x: auto; margin-bottom: 12px;">
                         <table class="tabla-temporal">
                             <thead>
@@ -344,9 +344,14 @@
         hacerMovible('card-modal-confirm', 'header-confirm');
         hacerMovible('card-modal-editar-temp', 'header-editar-temp');
 
-        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_v4')) || [];
-        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_v4')) || [];
-        let productosTemporales = [];
+        // Almacenamientos separados para Clientes y Proveedores (Persisten al refrescar)
+        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_v5')) || [];
+        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_v5')) || [];
+        
+        // Listas temporales separadas por panel para que no se crucen los datos al alternar
+        let tempClientes = JSON.parse(localStorage.getItem('temp_clientes_v5')) || [];
+        let tempProveedores = JSON.parse(localStorage.getItem('temp_proveedores_v5')) || [];
+
         let modoActual = 'cobrar';
         let indiceSeleccionado = -1;
         let indiceTempEditando = -1;
@@ -355,6 +360,18 @@
         document.getElementById('reg-fecha').value = hoyStr;
         document.getElementById('reg-fecha-amort').value = hoyStr;
         document.getElementById('abono-fecha').value = hoyStr;
+
+        function obtenerTempActual() {
+            return modoActual === 'cobrar' ? tempClientes : tempProveedores;
+        }
+
+        function guardarTempActual() {
+            if (modoActual === 'cobrar') {
+                localStorage.setItem('temp_clientes_v5', JSON.stringify(tempClientes));
+            } else {
+                localStorage.setItem('temp_proveedores_v5', JSON.stringify(tempProveedores));
+            }
+        }
 
         function generarCorrelativo() {
             let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
@@ -379,6 +396,7 @@
                 document.getElementById('lbl-temp-precio').innerText = "Costo Unitario:";
             }
             document.getElementById('reg-nro-boleta').value = generarCorrelativo();
+            renderizarTemporal();
             renderizarTablaCreditos();
         }
 
@@ -406,7 +424,9 @@
             }
 
             mostrarAlertaAccion("AGREGAR PRODUCTO", `¿DESEA AGREGAR <strong>${cant}x ${prod}</strong> (S/ ${prec.toFixed(2)} c/u) A LA BOLETA?`, function() {
-                productosTemporales.push({ producto: prod, cantidad: cant, precio: prec, subtotal: cant * prec });
+                let tempActual = obtenerTempActual();
+                tempActual.push({ producto: prod, cantidad: cant, precio: prec, subtotal: cant * prec });
+                guardarTempActual();
                 document.getElementById('temp-prod').value = '';
                 document.getElementById('temp-cant').value = '1';
                 document.getElementById('temp-precio').value = '';
@@ -417,11 +437,13 @@
         function renderizarTemporal() {
             let tbody = document.getElementById('tbody-temp-productos');
             tbody.innerHTML = '';
-            if (productosTemporales.length === 0) {
+            let tempActual = obtenerTempActual();
+
+            if (tempActual.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-secondary);">No hay productos agregados a la boleta todavía.</td></tr>`;
                 return;
             }
-            productosTemporales.forEach((item, idx) => {
+            tempActual.forEach((item, idx) => {
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${item.cantidad}</td>
@@ -439,7 +461,8 @@
 
         function abrirEditarTemporal(idx) {
             indiceTempEditando = idx;
-            let item = productosTemporales[idx];
+            let tempActual = obtenerTempActual();
+            let item = tempActual[idx];
             document.getElementById('edit-temp-prod').value = item.producto;
             document.getElementById('edit-temp-cant').value = item.cantidad;
             document.getElementById('edit-temp-precio').value = item.precio;
@@ -456,15 +479,19 @@
                 return;
             }
 
-            productosTemporales[indiceTempEditando] = { producto: prod, cantidad: cant, precio: prec, subtotal: cant * prec };
+            let tempActual = obtenerTempActual();
+            tempActual[indiceTempEditando] = { producto: prod, cantidad: cant, precio: prec, subtotal: cant * prec };
+            guardarTempActual();
             cerrarModal('modal-editar-temp');
             renderizarTemporal();
         }
 
         function quitarItemTemp(idx) {
-            let item = productosTemporales[idx];
+            let tempActual = obtenerTempActual();
+            let item = tempActual[idx];
             mostrarAlertaAccion("QUITAR PRODUCTO", `¿ESTÁ SEGURO DE QUITAR <strong>${item.producto}</strong> DE LA LISTA TEMPORAL?`, function() {
-                productosTemporales.splice(idx, 1);
+                tempActual.splice(idx, 1);
+                guardarTempActual();
                 renderizarTemporal();
             });
         }
@@ -476,13 +503,14 @@
             let medio = document.getElementById('reg-medio').value;
             let fechaAmort = document.getElementById('reg-fecha-amort').value;
             let abonado = parseFloat(document.getElementById('reg-abonado').value) || 0;
+            let tempActual = obtenerTempActual();
 
-            if (!persona || productosTemporales.length === 0 || !fecha) {
+            if (!persona || tempActual.length === 0 || !fecha) {
                 mostrarAlertaAccion("⚠️ DATOS INCOMPLETOS", "POR FAVOR INGRESE EL NOMBRE, LA FECHA Y AL MENOS UN PRODUCTO.", function(){});
                 return;
             }
 
-            let totalBoleta = productosTemporales.reduce((acc, item) => acc + item.subtotal, 0);
+            let totalBoleta = tempActual.reduce((acc, item) => acc + item.subtotal, 0);
 
             if (abonado > totalBoleta) {
                 mostrarAlertaAccion("⚠️ MONTO INVÁLIDO", "EL MONTO ABONADO NO PUEDE SER MAYOR AL TOTAL DE LA BOLETA.", function(){});
@@ -501,7 +529,7 @@
                 comprobante: nroBoleta,
                 persona: persona,
                 fecha: fecha,
-                items: [...productosTemporales],
+                items: [...tempActual],
                 total: totalBoleta,
                 medio: descMedio,
                 fechaAmort: fechaAmort,
@@ -511,15 +539,18 @@
             mostrarAlertaAccion("GUARDAR BOLETA", `¿ESTÁ SEGURO DE GUARDAR LA BOLETA <strong>${nroBoleta}</strong> PARA <strong>${persona}</strong> (S/ ${totalBoleta.toFixed(2)})?`, function() {
                 if (modoActual === 'cobrar') {
                     creditosClientes.push(nuevaBoleta);
-                    localStorage.setItem('creditos_clientes_v4', JSON.stringify(creditosClientes));
+                    localStorage.setItem('creditos_clientes_v5', JSON.stringify(creditosClientes));
+                    tempClientes = [];
+                    localStorage.setItem('temp_clientes_v5', JSON.stringify(tempClientes));
                 } else {
                     creditosProveedores.push(nuevaBoleta);
-                    localStorage.setItem('creditos_proveedores_v4', JSON.stringify(creditosProveedores));
+                    localStorage.setItem('creditos_proveedores_v5', JSON.stringify(creditosProveedores));
+                    tempProveedores = [];
+                    localStorage.setItem('temp_proveedores_v5', JSON.stringify(tempProveedores));
                 }
 
                 document.getElementById('reg-persona').value = '';
                 document.getElementById('reg-abonado').value = '0.00';
-                productosTemporales = [];
                 renderizarTemporal();
                 document.getElementById('reg-nro-boleta').value = generarCorrelativo();
                 renderizarTablaCreditos();
@@ -727,8 +758,8 @@
         }
 
         function guardarStorage() {
-            localStorage.setItem('creditos_clientes_v4', JSON.stringify(creditosClientes));
-            localStorage.setItem('creditos_proveedores_v4', JSON.stringify(creditosProveedores));
+            localStorage.setItem('creditos_clientes_v5', JSON.stringify(creditosClientes));
+            localStorage.setItem('creditos_proveedores_v5', JSON.stringify(creditosProveedores));
         }
 
         function cerrarModal(idModal) {
@@ -738,6 +769,7 @@
 
         // Carga Inicial
         document.getElementById('reg-nro-boleta').value = generarCorrelativo();
+        renderizarTemporal();
         renderizarTablaCreditos();
     </script>
 </body>
