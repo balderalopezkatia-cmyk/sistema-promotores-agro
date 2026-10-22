@@ -106,9 +106,10 @@
                 <a href="/dashboard" class="nav-link active">PANEL</a>
                 <a href="/stock" class="nav-link">STOCK</a>
                 <a href="/ventas" class="nav-link">VENTAS</a>
-                <a href="/gastos" class="nav-link">GASTOS</a>
-                <a href="/amortizaciones" class="nav-link">AMORTIZACIONES</a>
                 <a href="/compras" class="nav-link">COMPRAS</a>
+                <a href="/creditos" class="nav-link">CRÉDITOS</a>
+                <a href="/tesoreria" class="nav-link">TESORERÍA</a>
+                <a href="/gastos" class="nav-link">GASTOS</a>
                 <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
             </div>
         </div>
@@ -224,13 +225,13 @@
                         Nueva Venta
                         <span>Registrar nueva venta</span>
                     </a>
-                    <a href="/gastos" class="action-card">
-                        Registrar Gasto
-                        <span>Agregar gasto operativo</span>
+                    <a href="/creditos" class="action-card">
+                        Créditos
+                        <span>Clientes y Proveedores</span>
                     </a>
-                    <a href="/amortizaciones" class="action-card">
-                        Movimientos de Caja
-                        <span>Registrar ingreso/egreso</span>
+                    <a href="/tesoreria" class="action-card">
+                        Tesoreria / Caja
+                        <span>Aportes y capital</span>
                     </a>
                     <button type="button" class="action-card" id="btn-abrir-historial-ventas">
                         Historial de Ventas
@@ -285,7 +286,6 @@
             </div>
             <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 15px; text-transform: uppercase;">Alarmas automáticas y pagos programados del mes:</p>
             
-            <!-- Formulario para agregar nuevo pago o alarma -->
             <div style="background: #1a2a3a; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 15px; display: flex; gap: 10px; align-items: flex-end;">
                 <div style="flex: 2;">
                     <label style="font-size: 10px; font-weight: bold; color: var(--green-primary); display: block; margin-bottom: 4px; text-transform: uppercase;">Descripción del Pago / Recordatorio:</label>
@@ -346,7 +346,6 @@
     </div>
 
     <script>
-        // Función para hacer las ventanas flotantes arrastrables con el mouse
         function hacerMovible(cardId, headerId) {
             const card = document.getElementById(cardId);
             const header = document.getElementById(headerId);
@@ -567,9 +566,6 @@
             modalHistorial.style.display = 'none';
         });
 
-        // ==========================================
-        // LÓGICA DE LA CAMPANITA DE NOTIFICACIONES Y PAGOS
-        // ==========================================
         let recordatoriosDefault = [
             { id: 1, dia: 10, concepto: "Pagar el alquiler de local" },
             { id: 2, dia: 10, concepto: "Pagar el recibo de luz y agua" },
@@ -585,7 +581,6 @@
         const tablaCuerpoNotif = document.getElementById('tabla-cuerpo-notificaciones');
         const puntoCampana = document.getElementById('punto-alerta-campana');
 
-        // Modal de confirmación dinámico y movible
         const modalAccion = document.getElementById('modal-accion-confirmacion');
         const confTitulo = document.getElementById('conf-titulo');
         const confMensaje = document.getElementById('conf-mensaje');
@@ -760,23 +755,18 @@
             );
         };
 
-        // ==========================================
-        // CARGAR DATOS DINÁMICOS DEL DASHBOARD DESDE LA API
-        // ==========================================
         function cargarResumenDashboard() {
             fetch('/api/dashboard/resumen')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) return;
 
-                    // Actualizar valores del día y mes en pantalla
                     document.getElementById('val-ventas-dia').innerText = `S/ ${(data.ventas_dia || 0).toFixed(2)}`;
                     document.getElementById('val-ventas-mes').innerText = `S/ ${(data.ventas_mes || 0).toFixed(2)}`;
                     document.getElementById('val-deudas-cobrar').innerText = `S/ ${(data.deudas_cobrar || 0).toFixed(2)}`;
                     
-                    // Ganancias y proyecciones basadas en ventas del mes
                     let ventasMes = data.ventas_mes || 0;
-                    let gananciaMes = ventasMes * 0.15; // Estimación estándar de ganancia
+                    let gananciaMes = ventasMes * 0.15;
                     let reinversion = gananciaMes * 0.50;
                     let reservaEmpleado = gananciaMes * 0.20;
                     let reservaGastos = gananciaMes * 0.30;
@@ -789,13 +779,9 @@
                 .catch(error => console.error("Error al actualizar el dashboard:", error));
         }
 
-        // ==========================================
-        // ALERTA AUTOMÁTICA AL ABRIR LA PÁGINA (ESTILO MENSAJE DE TEXTO)
-        // ==========================================
         function verificarAlertasDelDia() {
             let hoy = new Date();
             let diaActual = hoy.getDate();
-
             let pagosHoy = misNotificaciones.filter(n => n.dia === diaActual);
 
             if (pagosHoy.length > 0) {
@@ -815,11 +801,9 @@
             }
         }
 
-        // Ejecutar al cargar la página
         renderizarNotificaciones();
         verificarAlertasDelDia();
         cargarResumenDashboard();
     </script>
-
 </body>
 </html>
