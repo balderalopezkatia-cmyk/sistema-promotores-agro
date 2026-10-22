@@ -109,6 +109,28 @@
         .btn-modal-action:hover { background: #35f5aa; }
         .btn-modal-cancel { background: var(--border-color); border: none; color: var(--text-white); padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px; text-transform: uppercase; margin-right: 8px; }
         .btn-modal-cancel:hover { background: #2c3e50; }
+
+        .btn-view-large {
+            background: #1a2a3a;
+            border: 1px solid var(--green-primary);
+            color: var(--green-primary);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .btn-view-large:hover {
+            background: var(--green-primary);
+            color: var(--bg-main);
+        }
     </style>
 </head>
 <body>
@@ -260,9 +282,9 @@
         </div>
     </div>
 
-    <!-- MODAL DE CARGA DE IMAGEN DE PRODUCTO -->
+    <!-- MODAL DE GESTIÓN DE IMAGEN DE PRODUCTO -->
     <div id="modal-imagen" class="modal-overlay">
-        <div class="modal-box" id="card-imagen" style="max-width: 440px;">
+        <div class="modal-box" id="card-imagen" style="max-width: 480px;">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-imagen')">
                 <h3>GESTIONAR IMAGEN DE PRODUCTO</h3>
                 <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-imagen')">✕</span>
@@ -275,6 +297,11 @@
 
                 <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary);">2. O pegar enlace de internet (URL):</label>
                 <input type="text" id="input-url-img" class="input-box" placeholder="https://ejemplo.com/producto.jpg">
+
+                <label style="font-size: 11px; font-weight: bold; color: var(--green-primary);">3. Visualización de la imagen:</label>
+                <button type="button" class="btn-view-large" onclick="verImagenCompletaDesdeModal()">
+                    🔍 VER IMAGEN COMPLETA DEL PRODUCTO (SUPER GRANDE)
+                </button>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
@@ -284,18 +311,18 @@
         </div>
     </div>
 
-    <!-- MODAL PARA VER IMAGEN GRANDE (MOVIBLE) -->
+    <!-- MODAL PARA VER IMAGEN SUPER GRANDE (MOVIBLE Y AMPLIA) -->
     <div id="modal-ver-imagen" class="modal-overlay">
-        <div class="modal-box" id="card-ver-imagen" style="max-width: 550px; padding: 16px;">
+        <div class="modal-box" id="card-ver-imagen" style="max-width: 850px; width: 95%; padding: 18px;">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-ver-imagen')">
-                <h3 id="titulo-ver-imagen">IMAGEN AMPLIADA</h3>
+                <h3 id="titulo-ver-imagen">VISUALIZACIÓN DE IMAGEN EN TAMAÑO COMPLETO</h3>
                 <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-ver-imagen')">✕</span>
             </div>
-            <div style="width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; border-radius: 8px;">
-                <img id="img-ampliada-grande" src="" alt="Imagen Ampliada" style="max-width: 100%; max-height: 65vh; object-fit: contain;">
+            <div style="width: 100%; max-height: 80vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: #0b131e; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px;">
+                <img id="img-ampliada-grande" src="" alt="Imagen Completa del Producto" style="max-width: 100%; max-height: 75vh; object-fit: contain; border-radius: 6px;">
             </div>
             <div style="text-align: right; margin-top: 15px;">
-                <button type="button" class="btn-modal-action" onclick="cerrarModal('modal-ver-imagen')">CERRAR</button>
+                <button type="button" class="btn-modal-action" onclick="cerrarModal('modal-ver-imagen')">CERRAR VISUALIZACIÓN</button>
             </div>
         </div>
     </div>
@@ -551,9 +578,30 @@
         }
 
         function abrirImagenGrande(urlImagen, nombreProducto) {
-            document.getElementById('titulo-ver-imagen').innerText = `IMAGEN: ${nombreProducto}`;
+            document.getElementById('titulo-ver-imagen').innerText = `IMAGEN COMPLETA: ${nombreProducto}`;
             document.getElementById('img-ampliada-grande').src = urlImagen;
             document.getElementById('modal-ver-imagen').style.display = 'flex';
+        }
+
+        function verImagenCompletaDesdeModal() {
+            let imagenesGuardadas = JSON.parse(localStorage.getItem('imagenes_productos_agro')) || {};
+            let urlGuardada = imagenesGuardadas[productoSeleccionadoParaImagen];
+            let urlInput = document.getElementById('input-url-img').value.trim();
+            let fileInput = document.getElementById('input-archivo-img');
+
+            if (fileInput.files && fileInput.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    abrirImagenGrande(e.target.result, productoSeleccionadoParaImagen);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else if (urlInput !== '') {
+                abrirImagenGrande(urlInput, productoSeleccionadoParaImagen);
+            } else if (urlGuardada) {
+                abrirImagenGrande(urlGuardada, productoSeleccionadoParaImagen);
+            } else {
+                mostrarAlerta('No hay ninguna imagen cargada o seleccionada para este producto.');
+            }
         }
 
         function abrirModalImagen(nombreProducto) {
