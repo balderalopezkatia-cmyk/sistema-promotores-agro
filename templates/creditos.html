@@ -524,6 +524,16 @@
                 return;
             }
 
+            // Historial de amortizaciones inicial
+            let historialAmortizaciones = [];
+            if (abonado > 0) {
+                historialAmortizaciones.push({
+                    fecha: fechaAmort || fecha,
+                    monto: abonado,
+                    medio: descMedio
+                });
+            }
+
             let nuevaBoleta = {
                 id: Date.now(),
                 comprobante: nroBoleta,
@@ -533,7 +543,8 @@
                 total: totalBoleta,
                 medio: descMedio,
                 fechaAmort: fechaAmort,
-                abonado: abonado
+                abonado: abonado,
+                amortizaciones: historialAmortizaciones
             };
 
             mostrarAlertaAccion("GUARDAR BOLETA", `¿ESTÁ SEGURO DE GUARDAR LA BOLETA <strong>${nroBoleta}</strong> PARA <strong>${persona}</strong> (S/ ${totalBoleta.toFixed(2)})?`, function() {
@@ -640,12 +651,35 @@
             let b = lista[index];
             let saldo = b.total - b.abonado;
 
+            // Construir historial de amortizaciones o mostrar la única si no tiene array estructurado
+            let historialHTML = '';
+            if (b.amortizaciones && b.amortizaciones.length > 0) {
+                historialHTML = b.amortizaciones.map(am => `
+                    <tr>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${am.fecha}</td>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${am.medio}</td>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right;" class="text-green">S/ ${am.monto.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            } else if (b.abonado > 0) {
+                historialHTML = `
+                    <tr>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${b.fechaAmort || b.fecha}</td>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${b.medio}</td>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right;" class="text-green">S/ ${b.abonado.toFixed(2)}</td>
+                    </tr>
+                `;
+            } else {
+                historialHTML = `<tr><td colspan="3" style="text-align:center; padding:6px; color:var(--text-secondary);">No registra amortizaciones aún.</td></tr>`;
+            }
+
             let html = `
                 <div style="background:var(--bg-main); padding:15px; border-radius:6px; border:1px solid var(--border-color);">
                     <div style="display:flex; justify-content:space-between; border-bottom:2px solid var(--green-primary); padding-bottom:8px; margin-bottom:12px;">
-                        <div><strong style="color:var(--green-primary);">COMPROBANTE N°: ${b.comprobante}</strong><br><small style="color:var(--text-secondary);">Fecha: ${b.fecha}</small></div>
+                        <div><strong style="color:var(--green-primary);">COMPROBANTE N°: ${b.comprobante}</strong><br><small style="color:var(--text-secondary);">Fecha de Emisión: ${b.fecha}</small></div>
                         <div style="text-align:right;"><strong style="color:var(--green-primary);">${b.persona}</strong></div>
                     </div>
+
                     <p style="font-weight:bold; font-size:11px; color:var(--green-primary); margin-bottom:6px;">PRODUCTOS ADQUIRIDOS:</p>
                     <table style="width:100%; font-size:12px; margin-bottom:12px; border-collapse:collapse;">
                         <thead><tr style="background:#0f172a;"><th style="padding:6px;">Cant</th><th style="padding:6px;">Producto</th><th style="padding:6px; text-align:right;">P. Unit</th><th style="padding:6px; text-align:right;">Subtotal</th></tr></thead>
@@ -653,10 +687,22 @@
                             ${b.items.map(i => `<tr><td style="padding:6px; border-bottom:1px solid var(--border-color);">${i.cantidad}</td><td style="padding:6px; border-bottom:1px solid var(--border-color);">${i.producto}</td><td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right;">S/${i.precio.toFixed(2)}</td><td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right; font-weight:bold;">S/${i.subtotal.toFixed(2)}</td></tr>`).join('')}
                         </tbody>
                     </table>
-                    <div style="background:#0f172a; padding:10px; border-radius:4px; font-size:12px;">
-                        <div style="display:flex; justify-content:space-between;"><span>Total Boleta:</span><strong>S/ ${b.total.toFixed(2)}</strong></div>
-                        <div style="display:flex; justify-content:space-between;"><span>Total Abonado:</span><strong class="text-green">S/ ${b.abonado.toFixed(2)}</strong></div>
-                        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-color); margin-top:5px; padding-top:5px;"><span>Saldo Pendiente:</span><strong class="${saldo > 0 ? 'text-red' : 'text-green'}">S/ ${saldo.toFixed(2)}</strong></div>
+
+                    <p style="font-weight:bold; font-size:11px; color:var(--green-primary); margin-bottom:6px;">HISTORIAL DE AMORTIZACIONES:</p>
+                    <table style="width:100%; font-size:12px; margin-bottom:15px; border-collapse:collapse;">
+                        <thead><tr style="background:#0f172a;"><th style="padding:6px;">Fecha de Abono</th><th style="padding:6px;">Medio / Detalle</th><th style="padding:6px; text-align:right;">Monto Abonado</th></tr></thead>
+                        <tbody>
+                            ${historialHTML}
+                        </tbody>
+                    </table>
+
+                    <div style="background:#0f172a; padding:12px; border-radius:4px; font-size:12px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Total Boleta:</span><strong>S/ ${b.total.toFixed(2)}</strong></div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;"><span>Total Abonado:</span><strong class="text-green">S/ ${b.abonado.toFixed(2)}</strong></div>
+                        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--border-color); margin-top:6px; padding-top:6px;">
+                            <span>SALDO TOTAL DE LA DEUDA:</span>
+                            <strong class="${saldo > 0 ? 'text-red' : 'text-green'}" style="font-size:14px;">S/ ${saldo.toFixed(2)}</strong>
+                        </div>
                     </div>
                 </div>`;
 
@@ -712,6 +758,16 @@
                 b.abonado += monto;
                 b.medio = medio;
                 b.fechaAmort = fechaAmort;
+
+                if (!b.amortizaciones) {
+                    b.amortizaciones = [];
+                }
+                b.amortizaciones.push({
+                    fecha: fechaAmort,
+                    monto: monto,
+                    medio: medio
+                });
+
                 guardarStorage();
                 cerrarModal('modal-abono');
                 renderizarTablaCreditos();
