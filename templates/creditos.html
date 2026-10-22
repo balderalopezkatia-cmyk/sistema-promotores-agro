@@ -68,7 +68,6 @@
         .btn-action-edit { background: var(--blue-tag); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.2s; margin-right: 3px; }
         .btn-action-delete { background: var(--red-alert); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
 
-        /* Ventanas Flotantes Movibles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .modal-card { background: var(--bg-card); padding: 25px; border-radius: 12px; width: 95%; max-width: 600px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary); position: absolute; max-height: 90vh; overflow-y: auto; }
         .btn-modal-close { background: var(--border-color); color: white; border: none; padding: 9px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
@@ -130,7 +129,6 @@
                     </div>
                 </div>
 
-                <!-- FORMULARIO INDEPENDIENTE PARA CLIENTES Y PROVEEDORES -->
                 <div class="seccion-titulo" id="titulo-form-reg">• Registrar Nueva Boleta de Crédito</div>
                 <div class="form-container">
                     <div class="form-grid-3">
@@ -148,7 +146,6 @@
                         </div>
                     </div>
 
-                    <!-- SECCIÓN AGREGAR PRODUCTOS -->
                     <div style="background: var(--bg-main); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 12px;">
                         <div style="font-size: 11px; font-weight: bold; color: var(--green-primary); margin-bottom: 8px; text-transform: uppercase;">Agregar Productos a esta Boleta:</div>
                         <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px; align-items: flex-end;">
@@ -159,7 +156,6 @@
                         </div>
                     </div>
 
-                    <!-- Tabla temporal independiente -->
                     <div style="overflow-x: auto; margin-bottom: 12px;">
                         <table class="tabla-temporal">
                             <thead>
@@ -196,7 +192,7 @@
                             <label>MONTO DIGITAL (S/):</label>
                             <input type="number" step="0.01" id="reg-monto-digital" placeholder="0.00" value="0.00">
                         </div>
-                        <div class="form-group">
+                        <div class="form-group" id="grupo-abono-simple">
                             <label>MONTO YA AMORTIZADO (S/):</label>
                             <input type="number" step="0.01" id="reg-abonado" placeholder="0.00" value="0.00">
                         </div>
@@ -344,13 +340,11 @@
         hacerMovible('card-modal-confirm', 'header-confirm');
         hacerMovible('card-modal-editar-temp', 'header-editar-temp');
 
-        // Almacenamientos separados para Clientes y Proveedores (Persisten al refrescar)
-        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_v5')) || [];
-        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_v5')) || [];
+        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_v6')) || [];
+        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_v6')) || [];
         
-        // Listas temporales separadas por panel para que no se crucen los datos al alternar
-        let tempClientes = JSON.parse(localStorage.getItem('temp_clientes_v5')) || [];
-        let tempProveedores = JSON.parse(localStorage.getItem('temp_proveedores_v5')) || [];
+        let tempClientes = JSON.parse(localStorage.getItem('temp_clientes_v6')) || [];
+        let tempProveedores = JSON.parse(localStorage.getItem('temp_proveedores_v6')) || [];
 
         let modoActual = 'cobrar';
         let indiceSeleccionado = -1;
@@ -367,9 +361,9 @@
 
         function guardarTempActual() {
             if (modoActual === 'cobrar') {
-                localStorage.setItem('temp_clientes_v5', JSON.stringify(tempClientes));
+                localStorage.setItem('temp_clientes_v6', JSON.stringify(tempClientes));
             } else {
-                localStorage.setItem('temp_proveedores_v5', JSON.stringify(tempProveedores));
+                localStorage.setItem('temp_proveedores_v6', JSON.stringify(tempProveedores));
             }
         }
 
@@ -404,12 +398,15 @@
             let medio = document.getElementById('reg-medio').value;
             let gEfe = document.getElementById('grupo-mixto-efectivo');
             let gDig = document.getElementById('grupo-mixto-digital');
+            let gAbo = document.getElementById('grupo-abono-simple');
             if (medio === 'MIXTO') {
                 gEfe.style.display = 'block';
                 gDig.style.display = 'block';
+                gAbo.style.display = 'none';
             } else {
                 gEfe.style.display = 'none';
                 gDig.style.display = 'none';
+                gAbo.style.display = 'block';
             }
         }
 
@@ -502,7 +499,6 @@
             let fecha = document.getElementById('reg-fecha').value;
             let medio = document.getElementById('reg-medio').value;
             let fechaAmort = document.getElementById('reg-fecha-amort').value;
-            let abonado = parseFloat(document.getElementById('reg-abonado').value) || 0;
             let tempActual = obtenerTempActual();
 
             if (!persona || tempActual.length === 0 || !fecha) {
@@ -511,17 +507,21 @@
             }
 
             let totalBoleta = tempActual.reduce((acc, item) => acc + item.subtotal, 0);
+            let abonado = 0;
+            let descMedio = medio;
+
+            if (medio === 'MIXTO') {
+                let efe = parseFloat(document.getElementById('reg-monto-efectivo').value) || 0;
+                let dig = parseFloat(document.getElementById('reg-monto-digital').value) || 0;
+                abonado = efe + dig;
+                descMedio = `MIXTO (Efe: S/${efe.toFixed(2)} / Dig: S/${dig.toFixed(2)})`;
+            } else {
+                abonado = parseFloat(document.getElementById('reg-abonado').value) || 0;
+            }
 
             if (abonado > totalBoleta) {
                 mostrarAlertaAccion("⚠️ MONTO INVÁLIDO", "EL MONTO ABONADO NO PUEDE SER MAYOR AL TOTAL DE LA BOLETA.", function(){});
                 return;
-            }
-
-            let descMedio = medio;
-            if (medio === 'MIXTO') {
-                let efe = parseFloat(document.getElementById('reg-monto-efectivo').value) || 0;
-                let dig = parseFloat(document.getElementById('reg-monto-digital').value) || 0;
-                descMedio = `MIXTO (Efe: S/${efe.toFixed(2)} / Dig: S/${dig.toFixed(2)})`;
             }
 
             let nuevaBoleta = {
@@ -539,18 +539,20 @@
             mostrarAlertaAccion("GUARDAR BOLETA", `¿ESTÁ SEGURO DE GUARDAR LA BOLETA <strong>${nroBoleta}</strong> PARA <strong>${persona}</strong> (S/ ${totalBoleta.toFixed(2)})?`, function() {
                 if (modoActual === 'cobrar') {
                     creditosClientes.push(nuevaBoleta);
-                    localStorage.setItem('creditos_clientes_v5', JSON.stringify(creditosClientes));
+                    localStorage.setItem('creditos_clientes_v6', JSON.stringify(creditosClientes));
                     tempClientes = [];
-                    localStorage.setItem('temp_clientes_v5', JSON.stringify(tempClientes));
+                    localStorage.setItem('temp_clientes_v6', JSON.stringify(tempClientes));
                 } else {
                     creditosProveedores.push(nuevaBoleta);
-                    localStorage.setItem('creditos_proveedores_v5', JSON.stringify(creditosProveedores));
+                    localStorage.setItem('creditos_proveedores_v6', JSON.stringify(creditosProveedores));
                     tempProveedores = [];
-                    localStorage.setItem('temp_proveedores_v5', JSON.stringify(tempProveedores));
+                    localStorage.setItem('temp_proveedores_v6', JSON.stringify(tempProveedores));
                 }
 
                 document.getElementById('reg-persona').value = '';
                 document.getElementById('reg-abonado').value = '0.00';
+                document.getElementById('reg-monto-efectivo').value = '0.00';
+                document.getElementById('reg-monto-digital').value = '0.00';
                 renderizarTemporal();
                 document.getElementById('reg-nro-boleta').value = generarCorrelativo();
                 renderizarTablaCreditos();
@@ -758,8 +760,8 @@
         }
 
         function guardarStorage() {
-            localStorage.setItem('creditos_clientes_v5', JSON.stringify(creditosClientes));
-            localStorage.setItem('creditos_proveedores_v5', JSON.stringify(creditosProveedores));
+            localStorage.setItem('creditos_clientes_v6', JSON.stringify(creditosClientes));
+            localStorage.setItem('creditos_proveedores_v6', JSON.stringify(creditosProveedores));
         }
 
         function cerrarModal(idModal) {
@@ -767,7 +769,6 @@
             indiceSeleccionado = -1;
         }
 
-        // Carga Inicial
         document.getElementById('reg-nro-boleta').value = generarCorrelativo();
         renderizarTemporal();
         renderizarTablaCreditos();
