@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Créditos y Deudas - Promotores del Agro</title>
-    <!-- Enlace al archivo de estilos global -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
         body { padding: 16px; }
-        .main-content { width: 100%; max-width: 1400px; margin: 0 auto; }
+        .main-content { width: 100%; max-width: 1450px; margin: 0 auto; }
         
         .top-navbar { padding: 14px 20px; }
         .logo-container-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -34,40 +33,41 @@
         .metric-value { font-size: 20px; font-weight: bold; color: var(--text-white); margin-bottom: 4px; }
         .metric-desc { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
 
-        .search-box-container { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; background: #1a2a3a; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .search-box-container label { font-weight: bold; font-size: 13px; color: var(--green-primary); text-transform: uppercase; }
-        .search-box-container input { background: var(--bg-main); color: #fff; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; outline: none; flex: 1; }
-        .search-box-container input:focus { border-color: var(--green-primary); }
-
-        .table-container { margin: 5px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow-y: auto; max-height: 450px; }
-        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; color: #fff; }
-        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 11px 14px; font-weight: bold; border-bottom: 1px solid var(--border-color); font-size: 12px; text-transform: uppercase; position: sticky; top: 0; }
-        td { padding: 11px 14px; border-bottom: 1px solid var(--border-color); color: #fff; text-transform: uppercase; }
-
-        .badge-deuda { background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-        .badge-pagado { background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; }
-
-        .btn-action-pay { background: var(--green-primary); color: var(--bg-main); border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; font-size: 11px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
-        .btn-action-pay:hover { background: #35f5aa; }
-
-        /* Modal Flotante Movible */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-card { background: var(--bg-card); padding: 25px; border-radius: 12px; width: 95%; max-width: 520px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary); position: absolute; }
-        
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 11px; font-weight: bold; color: var(--green-primary); text-transform: uppercase; margin-bottom: 4px; }
-        .form-group input, .form-group select { width: 100%; padding: 8px 10px; background: var(--bg-main); color: #fff; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px; box-sizing: border-box; }
+        /* Formulario detallado */
+        .form-container { background: #1a2a3a; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; }
+        .form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 10px; font-weight: bold; color: var(--green-primary); text-transform: uppercase; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 10px; background: var(--bg-main); color: #fff; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; box-sizing: border-box; }
         .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); outline: none; }
 
-        .btn-modal-close { background: var(--border-color); color: white; border: none; padding: 9px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; text-transform: uppercase; }
-        .btn-modal-close:hover { background: #2c3e50; }
-        .btn-modal-save { background: var(--green-primary); color: var(--bg-main); border: none; padding: 9px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; text-transform: uppercase; }
-        .btn-modal-save:hover { background: #35f5aa; }
+        .btn-add-credit { background: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 24px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; text-transform: uppercase; transition: 0.2s; }
+        .btn-add-credit:hover { background: #35f5aa; }
+
+        .search-box-container { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; background: #1a2a3a; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .search-box-container label { font-weight: bold; font-size: 12px; color: var(--green-primary); text-transform: uppercase; }
+        .search-box-container input { background: var(--bg-main); color: #fff; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 12px; outline: none; flex: 1; }
+
+        .table-container { margin: 5px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow-x: auto; overflow-y: auto; max-height: 480px; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 12px; color: #fff; min-width: 1250px; }
+        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 10px 12px; font-weight: bold; border-bottom: 1px solid var(--border-color); font-size: 11px; text-transform: uppercase; position: sticky; top: 0; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: #fff; text-transform: uppercase; }
+
+        .badge-deuda { background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+        .badge-pagado { background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 10px; }
+
+        .btn-action-pay { background: var(--green-primary); color: var(--bg-main); border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.2s; margin-right: 3px; }
+        .btn-action-edit { background: var(--blue-tag); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.2s; margin-right: 3px; }
+        .btn-action-delete { background: var(--red-alert); color: #fff; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 10px; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+
+        /* Modal flotante */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-card { background: var(--bg-card); padding: 25px; border-radius: 12px; width: 95%; max-width: 520px; box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary); position: absolute; }
+        .btn-modal-close { background: var(--border-color); color: white; border: none; padding: 9px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .btn-modal-save { background: var(--green-primary); color: var(--bg-main); border: none; padding: 9px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <!-- Barra Superior Universal -->
     <div class="top-navbar">
         <div class="nav-left">
             <div class="logo-container-top">
@@ -91,251 +91,324 @@
         </div>
     </div>
 
-    <!-- Contenido Principal -->
     <div class="main-content">
-
         <div class="card-box">
             <div class="card-header">
-                <span>GESTIÓN DE CRÉDITOS Y CUENTAS POR COBRAR / PAGAR</span>
+                <span>MIGRACIÓN Y GESTIÓN DE CRÉDITOS / DEUDAS ANTIGUAS</span>
             </div>
             <div class="card-body">
 
-                <!-- Pestañas internas para alternar entre Clientes y Proveedores -->
                 <div class="tab-menu">
                     <button type="button" class="tab-btn active" id="tab-cobrar" onclick="cambiarVistaCreditos('cobrar')">💳 CUENTAS POR COBRAR (CLIENTES)</button>
                     <button type="button" class="tab-btn" id="tab-pagar" onclick="cambiarVistaCreditos('pagar')">🏭 CUENTAS POR PAGAR (PROVEEDORES)</button>
                 </div>
 
-                <!-- Métricas Dinámicas -->
                 <div class="grid-3">
                     <div class="metric-card danger">
-                        <div class="metric-title" id="lbl-metrica-total">Total por Cobrar (Clientes)</div>
+                        <div class="metric-title" id="lbl-metrica-total">Total por Cobrar</div>
                         <div class="metric-value" id="val-creditos-total">S/ 0.00</div>
                         <div class="metric-desc">Saldo pendiente acumulado</div>
                     </div>
                     <div class="metric-card warning">
-                        <div class="metric-title" id="lbl-metrica-conteo">Clientes con Deuda</div>
+                        <div class="metric-title" id="lbl-metrica-conteo">Registros Pendientes</div>
                         <div class="metric-value" id="val-creditos-conteo">0</div>
-                        <div class="metric-desc">Registros pendientes de pago</div>
+                        <div class="metric-desc">Deudas activas</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-title">Abonos Recaudados (Este Mes)</div>
+                        <div class="metric-title">Total Abonado / Amortizado</div>
                         <div class="metric-value" id="val-creditos-abonos">S/ 0.00</div>
-                        <div class="metric-desc">↑ Ingreso por amortizaciones</div>
+                        <div class="metric-desc">↑ Suma de pagos parciales</div>
                     </div>
                 </div>
 
-                <!-- Buscador rápido -->
-                <div class="search-box-container">
-                    <label for="input-buscar-credito">BUSCAR REGISTRO:</label>
-                    <input type="text" id="input-buscar-credito" placeholder="Escriba el nombre del cliente, RUC/DNI o concepto..." onkeyup="filtrarTablaCreditos()">
+                <!-- FORMULARIO DETALLADO PARA INGRESAR DATOS DE EXCEL -->
+                <div class="seccion-titulo" id="titulo-form-registro">• Ingresar Registro Antiguo</div>
+                <div class="form-container">
+                    <div class="form-grid-4">
+                        <div class="form-group">
+                            <label id="lbl-entidad">NOMBRE CLIENTE / PROVEEDOR:</label>
+                            <input type="text" id="reg-persona" placeholder="Escriba el nombre...">
+                        </div>
+                        <div class="form-group">
+                            <label>NOMBRE DEL PRODUCTO:</label>
+                            <input type="text" id="reg-producto" placeholder="Ej. Algrow, Spider...">
+                        </div>
+                        <div class="form-group">
+                            <label>FECHA DE LA BOLETA:</label>
+                            <input type="date" id="reg-fecha">
+                        </div>
+                        <div class="form-group">
+                            <label>CANTIDAD:</label>
+                            <input type="number" id="reg-cantidad" value="1" min="1" oninput="calcularTotalReg()">
+                        </div>
+                    </div>
+
+                    <div class="form-grid-4">
+                        <div class="form-group">
+                            <label id="lbl-precio">PRECIO VENTA UNITARIO (S/):</label>
+                            <input type="number" step="0.01" id="reg-precio" placeholder="0.00" oninput="calcularTotalReg()">
+                        </div>
+                        <div class="form-group">
+                            <label>TOTAL BOLETA (S/):</label>
+                            <input type="number" step="0.01" id="reg-total" placeholder="0.00" readonly style="background: #0f172a; font-weight: bold; color: var(--green-primary);">
+                        </div>
+                        <div class="form-group">
+                            <label>MEDIO DE PAGO:</label>
+                            <select id="reg-medio">
+                                <option value="EFECTIVO">EFECTIVO</option>
+                                <option value="YAPE">YAPE</option>
+                                <option value="PLIN">PLIN</option>
+                                <option value="TRANSFERENCIA BCP">TRANSFERENCIA BCP</option>
+                                <option value="MIXTO">MIXTO (EFECTIVO + DIGITAL)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>FECHA DE AMORTIZACIÓN:</label>
+                            <input type="date" id="reg-fecha-amort">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <div style="display: flex; gap: 10px; width: 50%;">
+                            <div class="form-group" style="flex: 1;">
+                                <label>MONTO YA AMORTIZADO / ABONADO (S/):</label>
+                                <input type="number" step="0.01" id="reg-abonado" placeholder="0.00" value="0.00">
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn-add-credit" onclick="guardarRegistroAntiguo()">+ Guardar en el Sistema</button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Tabla Principal -->
+                <div class="search-box-container">
+                    <label for="input-buscar-credito">BUSCAR:</label>
+                    <input type="text" id="input-buscar-credito" placeholder="Buscar por cliente, proveedor o producto..." onkeyup="filtrarTabla()">
+                </div>
+
                 <div class="table-container">
                     <table>
-                        <thead id="tabla-head-creditos">
-                            <tr>
-                                <th>FECHA</th>
-                                <th>CLIENTE / PERSONA</th>
-                                <th>CONCEPTO / PRODUCTO</th>
-                                <th>TOTAL CRÉDITO</th>
-                                <th>ABONADO</th>
-                                <th>SALDO PENDIENTE</th>
-                                <th>ESTADO</th>
-                                <th style="text-align: right;">ACCIÓN</th>
-                            </tr>
+                        <thead id="tabla-head">
+                            <!-- Dinámico -->
                         </thead>
-                        <tbody id="tabla-body-creditos">
-                            <!-- Se llena dinámicamente con JS -->
+                        <tbody id="tabla-body">
+                            <!-- Dinámico -->
                         </tbody>
                     </table>
                 </div>
 
             </div>
         </div>
-
     </div>
 
-    <!-- MODAL MOVIBLE: REGISTRAR ABONO / AMORTIZACIÓN -->
+    <!-- MODAL ABONO -->
     <div id="modal-abono" class="modal-overlay">
         <div class="modal-card" id="card-modal-abono">
-            <div id="header-modal-abono" style="cursor: move; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modal-abono-titulo" style="margin: 0; color: var(--green-primary); font-size: 15px;">REGISTRAR AMORTIZACIÓN / ABONO</h3>
-                <span style="font-size: 10px; color: var(--text-secondary);">(Mover)</span>
+            <div id="header-abono" style="cursor: move; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between;">
+                <h3 style="margin:0; color:var(--green-primary); font-size:14px;">REGISTRAR AMORTIZACIÓN / ABONO</h3>
+                <span style="font-size:10px; color:var(--text-secondary);">(Mover)</span>
             </div>
-
-            <div class="form-group">
-                <label>PERSONA / ENTIDAD:</label>
-                <input type="text" id="abono-persona" readonly style="background: #1a2a3a;">
-            </div>
-
-            <div class="form-group">
-                <label>SALDO PENDIENTE ACTUAL:</label>
-                <input type="text" id="abono-saldo-actual" readonly style="background: #1a2a3a; color: var(--red-alert); font-weight: bold;">
-            </div>
-
-            <div class="form-group">
-                <label>MONTO A ABONAR (S/):</label>
-                <input type="number" step="0.01" id="abono-monto-ingresado" placeholder="0.00" autofocus>
-            </div>
-
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom:10px;"><label>PERSONA:</label><input type="text" id="abono-persona" readonly style="background:#0f172a;"></div>
+            <div class="form-group" style="margin-bottom:10px;"><label>SALDO PENDIENTE:</label><input type="text" id="abono-saldo" readonly style="background:#0f172a; color:var(--red-alert); font-weight:bold;"></div>
+            <div class="form-group" style="margin-bottom:10px;"><label>MONTO A ABONAR (S/):</label><input type="number" step="0.01" id="abono-monto" placeholder="0.00"></div>
+            <div class="form-group" style="margin-bottom:15px;">
                 <label>MEDIO DE PAGO:</label>
-                <select id="abono-medio-pago">
-                    <option value="EFECTIVO">EFECTIVO (CAJA FÍSICA)</option>
-                    <option value="YAPE">YAPE</option>
-                    <option value="PLIN">PLIN</option>
-                    <option value="TRANSFERENCIA BCP">TRANSFERENCIA BCP</option>
-                </select>
+                <select id="abono-medio"><option value="EFECTIVO">EFECTIVO</option><option value="YAPE">YAPE</option><option value="PLIN">PLIN</option><option value="TRANSFERENCIA BCP">TRANSFERENCIA BCP</option><option value="MIXTO">MIXTO</option></select>
             </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 15px;">
-                <button type="button" class="btn-modal-close" onclick="cerrarModalAbono()">CANCELAR</button>
-                <button type="button" class="btn-modal-save" onclick="guardarAbono()">REGISTRAR ABONO</button>
+            <div class="form-group" style="margin-bottom:15px;"><label>FECHA DE AMORTIZACIÓN:</label><input type="date" id="abono-fecha"></div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-modal-close" onclick="cerrarModal('modal-abono')">Cancelar</button>
+                <button type="button" class="btn-modal-save" onclick="procesarAbono()">Registrar Abono</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL MOVIBLE DE CONFIRMACIÓN -->
-    <div id="modal-confirmacion-gen" class="modal-overlay">
-        <div class="modal-card" id="card-modal-confirm-gen" style="max-width: 420px;">
-            <div id="header-modal-confirm-gen" style="cursor: move; padding-bottom: 8px; border-bottom: 1px solid var(--border-color); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="conf-gen-titulo" style="margin: 0; color: var(--green-primary); font-size: 15px;">CONFIRMACIÓN</h3>
-                <span style="font-size: 10px; color: var(--text-secondary);">(Mover)</span>
+    <!-- MODAL EDITAR -->
+    <div id="modal-editar" class="modal-overlay">
+        <div class="modal-card" id="card-modal-editar">
+            <div id="header-editar" style="cursor: move; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between;">
+                <h3 style="margin:0; color:var(--green-primary); font-size:14px;">EDITAR REGISTRO DE CRÉDITO</h3>
+                <span style="font-size:10px; color:var(--text-secondary);">(Mover)</span>
             </div>
-            <p id="conf-gen-mensaje" style="font-size: 13px; color: #fff; margin-bottom: 15px; font-weight: bold; line-height: 1.4;"></p>
-            
-            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 12px;">
-                <button type="button" class="btn-modal-close" id="conf-gen-btn-cancelar">CANCELAR</button>
-                <button type="button" class="btn-modal-save" id="conf-gen-btn-aceptar">ACEPTAR</button>
+            <div class="form-group" style="margin-bottom:10px;"><label>NOMBRE:</label><input type="text" id="edit-persona"></div>
+            <div class="form-group" style="margin-bottom:10px;"><label>PRODUCTO:</label><input type="text" id="edit-producto"></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                <div class="form-group"><label>CANTIDAD:</label><input type="number" id="edit-cantidad"></div>
+                <div class="form-group"><label>PRECIO UNITARIO:</label><input type="number" step="0.01" id="edit-precio"></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                <div class="form-group"><label>TOTAL BOLETA:</label><input type="number" step="0.01" id="edit-total"></div>
+                <div class="form-group"><label>FECHA BOLETA:</label><input type="date" id="edit-fecha"></div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-modal-close" onclick="cerrarModal('modal-editar')">Cancelar</button>
+                <button type="button" class="btn-modal-save" onclick="guardarEdicion()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACION GENERAL -->
+    <div id="modal-confirm" class="modal-overlay">
+        <div class="modal-card" id="card-modal-confirm" style="max-width:400px;">
+            <div id="header-confirm" style="cursor: move; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 12px; display:flex; justify-content:space-between;">
+                <h3 style="margin:0; color:var(--green-primary); font-size:14px;">CONFIRMACIÓN</h3>
+                <span style="font-size:10px; color:var(--text-secondary);">(Mover)</span>
+            </div>
+            <p id="confirm-msg" style="font-size:12px; margin-bottom:15px; font-weight:bold;"></p>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn-modal-close" id="conf-btn-no">Cancelar</button>
+                <button type="button" class="btn-modal-save" id="conf-btn-si">Aceptar</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Función para hacer las ventanas movibles con el ratón
         function hacerMovible(cardId, headerId) {
             const card = document.getElementById(cardId);
             const header = document.getElementById(headerId);
             let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-
             header.onmousedown = function(e) {
                 e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
+                pos3 = e.clientX; pos4 = e.clientY;
                 document.onmouseup = cerrarArrastre;
                 document.onmousemove = elementoArrastrandose;
             };
-
             function elementoArrastrandose(e) {
                 e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
+                pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+                pos3 = e.clientX; pos4 = e.clientY;
                 card.style.position = "absolute";
                 card.style.top = (card.offsetTop - pos2) + "px";
                 card.style.left = (card.offsetLeft - pos1) + "px";
             }
-
-            function cerrarArrastre() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
+            function cerrarArrastre() { document.onmouseup = null; document.onmousemove = null; }
         }
+        hacerMovible('card-modal-abono', 'header-abono');
+        hacerMovible('card-modal-editar', 'header-editar');
+        hacerMovible('card-modal-confirm', 'header-confirm');
 
-        hacerMovible('card-modal-abono', 'header-modal-abono');
-        hacerMovible('card-modal-confirm-gen', 'header-modal-confirm-gen');
+        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_agro_v2')) || [];
+        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_agro_v2')) || [];
+        let modoActual = 'cobrar';
+        let indiceSeleccionado = -1;
 
-        // Datos en LocalStorage
-        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_agro')) || [];
-        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_agro')) || [];
+        // Fechas de hoy por defecto
+        let hoyStr = new Date().toISOString().split('T')[0];
+        document.getElementById('reg-fecha').value = hoyStr;
+        document.getElementById('reg-fecha-amort').value = hoyStr;
+        document.getElementById('abono-fecha').value = hoyStr;
 
-        let modoActual = 'cobrar'; // 'cobrar' o 'pagar'
-        let registroSeleccionadoIndex = -1;
-
-        // Modal de confirmación dinámico
-        const modalConfirmGen = document.getElementById('modal-confirmacion-gen');
-        const confGenTitulo = document.getElementById('conf-gen-titulo');
-        const confGenMensaje = document.getElementById('conf-gen-mensaje');
-        const confGenBtnAceptar = document.getElementById('conf-gen-btn-aceptar');
-        const confGenBtnCancelar = document.getElementById('conf-gen-btn-cancelar');
-        let callbackConfirmacion = null;
-
-        function mostrarConfirmacion(titulo, mensaje, callback, soloAviso = false) {
-            confGenTitulo.innerText = titulo;
-            confGenMensaje.innerHTML = mensaje;
-            callbackConfirmacion = callback;
-
-            if (soloAviso) {
-                confGenBtnCancelar.style.display = 'none';
-            } else {
-                confGenBtnCancelar.style.display = 'inline-block';
-            }
-            modalConfirmGen.style.display = 'flex';
+        function calcularTotalReg() {
+            let cant = parseFloat(document.getElementById('reg-cantidad').value) || 0;
+            let prec = parseFloat(document.getElementById('reg-precio').value) || 0;
+            document.getElementById('reg-total').value = (cant * prec).toFixed(2);
         }
-
-        confGenBtnCancelar.addEventListener('click', () => {
-            modalConfirmGen.style.display = 'none';
-            callbackConfirmacion = null;
-        });
-
-        confGenBtnAceptar.addEventListener('click', () => {
-            modalConfirmGen.style.display = 'none';
-            if (typeof callbackConfirmacion === 'function') callbackConfirmacion();
-            callbackConfirmacion = null;
-        });
 
         function cambiarVistaCreditos(modo) {
             modoActual = modo;
             document.getElementById('tab-cobrar').classList.toggle('active', modo === 'cobrar');
             document.getElementById('tab-pagar').classList.toggle('active', modo === 'pagar');
 
-            const head = document.getElementById('tabla-head-creditos');
             if (modo === 'cobrar') {
-                document.getElementById('lbl-metrica-total').innerText = "Total por Cobrar (Clientes)";
-                document.getElementById('lbl-metrica-conteo').innerText = "Clientes con Deuda";
-                head.innerHTML = `
-                    <tr>
-                        <th>FECHA</th>
-                        <th>CLIENTE / EMPRESA</th>
-                        <th>CONCEPTO / PRODUCTOS</th>
-                        <th>TOTAL VENDIDO</th>
-                        <th>ABONADO</th>
-                        <th>SALDO PENDIENTE</th>
-                        <th>ESTADO</th>
-                        <th style="text-align: right;">ACCIÓN</th>
-                    </tr>`;
+                document.getElementById('lbl-metrica-total').innerText = "Total por Cobrar";
+                document.getElementById('lbl-metrica-conteo').innerText = "Clientes Deudores";
+                document.getElementById('titulo-form-registro').innerText = "• Registrar Deuda Antigua de Cliente";
+                document.getElementById('lbl-entidad').innerText = "NOMBRE DEL CLIENTE:";
+                document.getElementById('lbl-precio').innerText = "PRECIO VENTA UNITARIO (S/):";
             } else {
-                document.getElementById('lbl-metrica-total').innerText = "Total por Pagar (Proveedores)";
-                document.getElementById('lbl-metrica-conteo').innerText = "Facturas / Compras Pendientes";
-                head.innerHTML = `
-                    <tr>
-                        <th>FECHA</th>
-                        <th>PROVEEDOR / EMPRESA</th>
-                        <th>DESCRIPCIÓN / COMPRA</th>
-                        <th>TOTAL COMPRA</th>
-                        <th>PAGADO</th>
-                        <th>SALDO PENDIENTE</th>
-                        <th>ESTADO</th>
-                        <th style="text-align: right;">ACCIÓN</th>
-                    </tr>`;
+                document.getElementById('lbl-metrica-total').innerText = "Total por Pagar";
+                document.getElementById('lbl-metrica-conteo').innerText = "Proveedores Pendientes";
+                document.getElementById('titulo-form-registro').innerText = "• Registrar Deuda Antigua a Proveedor";
+                document.getElementById('lbl-entidad').innerText = "NOMBRE DEL PROVEEDOR / EMPRESA:";
+                document.getElementById('lbl-precio').innerText = "PRECIO COSTO UNITARIO (S/):";
             }
-            renderizarTablaCreditos();
+            renderizarTabla();
         }
 
-        function renderizarTablaCreditos() {
-            const tbody = document.getElementById('tabla-body-creditos');
+        function guardarRegistroAntiguo() {
+            let persona = document.getElementById('reg-persona').value.trim().toUpperCase();
+            let producto = document.getElementById('reg-producto').value.trim().toUpperCase();
+            let fechaBoleta = document.getElementById('reg-fecha').value;
+            let cantidad = parseFloat(document.getElementById('reg-cantidad').value) || 0;
+            let precio = parseFloat(document.getElementById('reg-precio').value) || 0;
+            let total = parseFloat(document.getElementById('reg-total').value) || (cantidad * precio);
+            let medio = document.getElementById('reg-medio').value;
+            let fechaAmort = document.getElementById('reg-fecha-amort').value;
+            let abonado = parseFloat(document.getElementById('reg-abonado').value) || 0;
+
+            if (!persona || !producto || total <= 0 || !fechaBoleta) {
+                alert("POR FAVOR COMPLETE LOS CAMPOS OBLIGATORIOS (CLIENTE/PROVEEDOR, PRODUCTO, FECHA Y MONTO).");
+                return;
+            }
+
+            if (abonado > total) {
+                alert("EL MONTO YA AMORTIZADO NO PUEDE SER MAYOR AL TOTAL DE LA BOLETA.");
+                return;
+            }
+
+            let nuevoItem = {
+                id: Date.now(),
+                persona: persona,
+                producto: producto,
+                fechaBoleta: fechaBoleta,
+                cantidad: cantidad,
+                precio: precio,
+                total: total,
+                medio: medio,
+                fechaAmort: fechaAmort,
+                abonado: abonado
+            };
+
+            if (modoActual === 'cobrar') {
+                creditosClientes.push(nuevoItem);
+                localStorage.setItem('creditos_clientes_agro_v2', JSON.stringify(creditosClientes));
+            } else {
+                creditosProveedores.push(nuevoItem);
+                localStorage.setItem('creditos_proveedores_agro_v2', JSON.stringify(creditosProveedores));
+            }
+
+            // Limpiar
+            document.getElementById('reg-persona').value = '';
+            document.getElementById('reg-producto').value = '';
+            document.getElementById('reg-cantidad').value = '1';
+            document.getElementById('reg-precio').value = '';
+            document.getElementById('reg-total').value = '';
+            document.getElementById('reg-abonado').value = '0.00';
+
+            alert("¡REGISTRO GUARDADO EXITOSAMENTE!");
+            renderizarTabla();
+        }
+
+        function renderizarTabla() {
+            let head = document.getElementById('tabla-head');
+            let tbody = document.getElementById('tabla-body');
             tbody.innerHTML = '';
 
-            let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
-            let totalPendiente = 0;
-            let deudoresConteo = 0;
-            let abonosMes = 0;
+            let esCobrar = (modoActual === 'cobrar');
+
+            head.innerHTML = `
+                <tr>
+                    <th>FECHA BOLETA</th>
+                    <th>${esCobrar ? 'CLIENTE' : 'PROVEEDOR'}</th>
+                    <th>PRODUCTO</th>
+                    <th>CANT.</th>
+                    <th>${esCobrar ? 'P. VENTA' : 'P. COSTO'}</th>
+                    <th>TOTAL</th>
+                    <th>MEDIO PAGO</th>
+                    <th>FECHA AMORTIZACIÓN</th>
+                    <th>ABONADO</th>
+                    <th>SALDO PENDIENTE</th>
+                    <th>ESTADO</th>
+                    <th style="text-align: right;">ACCIONES FUNCIONALES</th>
+                </tr>`;
+
+            let lista = esCobrar ? creditosClientes : creditosProveedores;
+            let sumaTotalPendiente = 0;
+            let conteoPendientes = 0;
+            let sumaAbonos = 0;
 
             if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--text-secondary);">No hay registros de crédito registrados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding: 40px; color: var(--text-secondary);">NO HAY REGISTROS INGRESADOS.</td></tr>`;
                 document.getElementById('val-creditos-total').innerText = 'S/ 0.00';
                 document.getElementById('val-creditos-conteo').innerText = '0';
                 document.getElementById('val-creditos-abonos').innerText = 'S/ 0.00';
@@ -344,101 +417,148 @@
 
             lista.forEach((item, index) => {
                 let saldo = item.total - item.abonado;
-                if (saldo > 0) deudoresConteo++;
-                totalPendiente += Math.max(0, saldo);
-                abonosMes += (item.abonado || 0);
+                if (saldo > 0) conteoPendientes++;
+                sumaTotalPendiente += Math.max(0, saldo);
+                sumaAbonos += (item.abonado || 0);
 
-                let badgeState = saldo <= 0 ? 
+                let badge = saldo <= 0 ? 
                     `<span class="badge-pagado">CANCELADO ✓</span>` : 
-                    `<span class="badge-deuda">PENDIENTE (S/ ${saldo.toFixed(2)})</span>`;
+                    `<span class="badge-deuda">DEBE S/ ${saldo.toFixed(2)}</span>`;
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${item.fecha}</td>
-                    <td><strong>${item.nombre}</strong></td>
-                    <td>${item.concepto}</td>
-                    <td>S/ ${item.total.toFixed(2)}</td>
+                    <td>${item.fechaBoleta}</td>
+                    <td><strong>${item.persona}</strong></td>
+                    <td>${item.producto}</td>
+                    <td>${item.cantidad}</td>
+                    <td>S/ ${(item.precio || 0).toFixed(2)}</td>
+                    <td><strong>S/ ${item.total.toFixed(2)}</strong></td>
+                    <td>${item.medio}</td>
+                    <td>${item.fechaAmort || '---'}</td>
                     <td class="text-green">S/ ${(item.abonado || 0).toFixed(2)}</td>
-                    <td class="${saldo > 0 ? 'text-red' : 'text-green'}">S/ ${saldo.toFixed(2)}</td>
-                    <td>${badgeState}</td>
-                    <td style="text-align: right;">
-                        ${saldo > 0 ? `<button class="btn-action-pay" onclick="abrirModalAbono(${index})">+ Abono</button>` : `<span style="color:var(--text-secondary); font-size:11px;">OK</span>`}
+                    <td class="${saldo > 0 ? 'text-red' : 'text-green'}"><strong>S/ ${saldo.toFixed(2)}</strong></td>
+                    <td>${badge}</td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        ${saldo > 0 ? `<button class="btn-action-pay" title="Registrar abono" onclick="abrirAbono(${index})">+ Abono</button>` : ''}
+                        <button class="btn-action-edit" title="Editar este registro" onclick="abrirEditar(${index})">✏️ Editar</button>
+                        <button class="btn-action-delete" title="Eliminar este registro permanentemente" onclick="eliminarRegistro(${index})">🗑️ Eliminar</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('val-creditos-total').innerText = `S/ ${totalPendiente.toFixed(2)}`;
-            document.getElementById('val-creditos-conteo').innerText = deudoresConteo.toString();
-            document.getElementById('val-creditos-abonos').innerText = `S/ ${abonosMes.toFixed(2)}`;
+            document.getElementById('val-creditos-total').innerText = `S/ ${sumaTotalPendiente.toFixed(2)}`;
+            document.getElementById('val-creditos-conteo').innerText = conteoPendientes.toString();
+            document.getElementById('val-creditos-abonos').innerText = `S/ ${sumaAbonos.toFixed(2)}`;
         }
 
-        function filtrarTablaCreditos() {
+        function filtrarTabla() {
             let filtro = document.getElementById('input-buscar-credito').value.toUpperCase();
-            let filas = document.getElementById('tabla-body-creditos').getElementsByTagName('tr');
-
-            for (let fila of filas) {
-                let texto = fila.innerText.toUpperCase();
-                fila.style.display = texto.includes(filtro) ? '' : 'none';
+            let filas = document.getElementById('tabla-body').getElementsByTagName('tr');
+            for (let f of filas) {
+                f.style.display = f.innerText.toUpperCase().includes(filtro) ? '' : 'none';
             }
         }
 
-        function abrirModalAbono(index) {
-            registroSeleccionadoIndex = index;
+        function abrirAbono(index) {
+            indiceSeleccionado = index;
             let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
             let item = lista[index];
             let saldo = item.total - item.abonado;
 
-            document.getElementById('abono-persona').value = item.nombre;
-            document.getElementById('abono-saldo-actual').value = `S/ ${saldo.toFixed(2)}`;
-            document.getElementById('abono-monto-ingresado').value = '';
-            document.getElementById('abono-monto-ingresado').focus();
-
-            document.getElementById('modal-abono-titulo').innerText = modoActual === 'cobrar' ? "REGISTRAR AMORTIZACIÓN (CLIENTE)" : "REGISTRAR PAGO (PROVEEDOR)";
+            document.getElementById('abono-persona').value = item.persona;
+            document.getElementById('abono-saldo').value = `S/ ${saldo.toFixed(2)}`;
+            document.getElementById('abono-monto').value = '';
             document.getElementById('modal-abono').style.display = 'flex';
         }
 
-        function cerrarModalAbono() {
-            document.getElementById('modal-abono').style.display = 'none';
-            registroSeleccionadoIndex = -1;
-        }
-
-        function guardarAbono() {
-            let monto = parseFloat(document.getElementById('abono-monto-ingresado').value);
-            let medio = document.getElementById('abono-medio-pago').value;
+        function procesarAbono() {
+            let monto = parseFloat(document.getElementById('abono-monto').value) || 0;
+            let medio = document.getElementById('abono-medio').value;
+            let fechaAmort = document.getElementById('abono-fecha').value;
 
             let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
-            let item = lista[registroSeleccionadoIndex];
+            let item = lista[indiceSeleccionado];
             let saldoActual = item.total - item.abonado;
 
-            if (isNaN(monto) || monto <= 0) {
-                mostrarConfirmacion("⚠️ ADVERTENCIA", "POR FAVOR INGRESE UN MONTO DE ABONO VÁLIDO.", null, true);
+            if (monto <= 0 || monto > saldoActual) {
+                alert("MONTO DE ABONO INVÁLIDO O MAYOR AL SALDO PENDIENTE.");
                 return;
             }
 
-            if (monto > saldoActual) {
-                mostrarConfirmacion("⚠️ ADVERTENCIA", `EL ABONO (S/ ${monto.toFixed(2)}) NO PUEDE SER MAYOR AL SALDO PENDIENTE (S/ ${saldoActual.toFixed(2)}).`, null, true);
-                return;
-            }
+            item.abonado += monto;
+            item.medio = medio;
+            item.fechaAmort = fechaAmort;
 
-            mostrarConfirmacion(
-                "CONFIRMAR REGISTRO DE ABONO",
-                `¿DESEA REGISTRAR EL ABONO DE <strong>S/ ${monto.toFixed(2)}</strong> PARA <strong>${item.nombre}</strong> VIA <strong>${medio}</strong>?`,
-                function() {
-                    item.abonado += monto;
-                    if (modoActual === 'cobrar') {
-                        localStorage.setItem('creditos_clientes_agro', JSON.stringify(creditosClientes));
-                    } else {
-                        localStorage.setItem('creditos_proveedores_agro', JSON.stringify(creditosProveedores));
-                    }
-                    cerrarModalAbono();
-                    renderizarTablaCreditos();
-                }
-            );
+            guardarStorage();
+            cerrarModal('modal-abono');
+            renderizarTabla();
+            alert("¡AMORTIZACIÓN REGISTRADA CORRECTAMENTE!");
         }
 
-        // Carga Inicial
-        renderizarTablaCreditos();
+        function abrirEditar(index) {
+            indiceSeleccionado = index;
+            let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
+            let item = lista[index];
+
+            document.getElementById('edit-persona').value = item.persona;
+            document.getElementById('edit-producto').value = item.producto;
+            document.getElementById('edit-cantidad').value = item.cantidad;
+            document.getElementById('edit-precio').value = item.precio;
+            document.getElementById('edit-total').value = item.total;
+            document.getElementById('edit-fecha').value = item.fechaBoleta;
+
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        function guardarEdicion() {
+            let persona = document.getElementById('edit-persona').value.trim().toUpperCase();
+            let producto = document.getElementById('edit-producto').value.trim().toUpperCase();
+            let cantidad = parseFloat(document.getElementById('edit-cantidad').value) || 0;
+            let precio = parseFloat(document.getElementById('edit-precio').value) || 0;
+            let total = parseFloat(document.getElementById('edit-total').value) || (cantidad * precio);
+            let fecha = document.getElementById('edit-fecha').value;
+
+            let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
+            let item = lista[indiceSeleccionado];
+
+            item.persona = persona;
+            item.producto = producto;
+            item.cantidad = cantidad;
+            item.precio = precio;
+            item.total = total;
+            item.fechaBoleta = fecha;
+
+            guardarStorage();
+            cerrarModal('modal-editar');
+            renderizarTabla();
+            alert("¡REGISTRO ACTUALIZADO CON ÉXITO!");
+        }
+
+        function eliminarRegistro(index) {
+            let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
+            let item = lista[index];
+
+            if (confirm(`¿ESTÁ SEGURO DE ELIMINAR EL REGISTRO DE "${item.persona}" (${item.producto})?`)) {
+                lista.splice(index, 1);
+                guardarStorage();
+                renderizarTabla();
+                alert("¡REGISTRO ELIMINADO!");
+            }
+        }
+
+        function guardarStorage() {
+            localStorage.setItem('creditos_clientes_agro_v2', JSON.stringify(creditosClientes));
+            localStorage.setItem('creditos_proveedores_agro_v2', JSON.stringify(creditosProveedores));
+        }
+
+        function cerrarModal(idModal) {
+            document.getElementById(idModal).style.display = 'none';
+            indiceSeleccionado = -1;
+        }
+
+        // Carga inicial
+        renderizarTabla();
     </script>
 </body>
 </html>
