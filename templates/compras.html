@@ -130,10 +130,10 @@
                 <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
             </div>
             <div class="nav-menu" style="margin-left: 20px; align-self: center;">
-                <a href="/dashboard" class="nav-link active">PANEL</a>
+                <a href="/dashboard" class="nav-link">PANEL</a>
                 <a href="/stock" class="nav-link">STOCK</a>
                 <a href="/ventas" class="nav-link">VENTAS</a>
-                <a href="/compras" class="nav-link">COMPRAS</a>
+                <a href="/compras" class="nav-link active">COMPRAS</a>
                 <a href="/creditos" class="nav-link">CRÉDITOS</a>
                 <a href="/tesoreria" class="nav-link">TESORERÍA</a>
                 <a href="/gastos" class="nav-link">GASTOS</a>
@@ -631,7 +631,6 @@
             );
         };
 
-        // LÓGICA DE MEDIO DE PAGO Y PAGO MIXTO CORREGIDA Y FLUIDA
         const selectMedio = document.getElementById('compra-medio');
         const seccionMixto = document.getElementById('seccion-pago-mixto');
         const inputEfecMixto = document.getElementById('mixto-monto-efectivo');
@@ -648,7 +647,6 @@
             }
         });
 
-        // Al escribir en Efectivo, suma con Digital y actualiza el Amortizado y el Saldo
         inputEfecMixto.addEventListener('input', function() {
             let efec = parseFloat(this.value) || 0;
             let digi = parseFloat(inputDigiMixto.value) || 0;
@@ -658,7 +656,6 @@
             calcularTotalesCompra(false);
         });
 
-        // Al escribir en Digital, suma con Efectivo y actualiza el Amortizado y el Saldo
         inputDigiMixto.addEventListener('input', function() {
             let efec = parseFloat(inputEfecMixto.value) || 0;
             let digi = parseFloat(this.value) || 0;
@@ -668,7 +665,6 @@
             calcularTotalesCompra(false);
         });
 
-        // Si se cambia directamente el Amortizado
         inputAmortizado.addEventListener('input', function() {
             if (selectMedio.value === 'PAGO MIXTO') {
                 let totalAmort = parseFloat(this.value) || 0;
@@ -715,7 +711,6 @@
                 return;
             }
 
-            // Validar Pago Mixto
             let efecMixto = 0;
             let digiMixto = 0;
             let textoMedioGuardar = medio;
@@ -875,7 +870,6 @@
                 tbody.appendChild(tr);
             });
 
-            // Fila de Resumen Final con el monto total que se le debe al proveedor o en la consulta
             let trTotal = document.createElement('tr');
             trTotal.style.background = "#1a2a3a";
             trTotal.innerHTML = `
