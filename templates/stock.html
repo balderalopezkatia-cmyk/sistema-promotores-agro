@@ -55,6 +55,11 @@
         .btn-add-main { background: var(--green-primary); border: none; color: var(--bg-main); padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: 0.2s; box-shadow: 0 0 10px rgba(13, 242, 153, 0.3); text-decoration: none; }
         .btn-add-main:hover { background: #35f5aa; }
 
+        /* Tarjeta de Resumen de Monto Total del Stock */
+        .stock-summary-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green-primary); }
+        .stock-summary-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; }
+        .stock-summary-value { font-size: 18px; font-weight: 700; color: var(--green-primary); }
+
         /* Barra de Selección Masiva */
         .selection-bar { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
         .selection-left { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; color: var(--text-white); cursor: pointer; }
@@ -73,9 +78,10 @@
         .card-left { display: flex; align-items: center; gap: 14px; }
         .checkbox-item { width: 16px; height: 16px; accent-color: var(--green-primary); cursor: pointer; }
         
-        .thumb-box { width: 64px; height: 64px; background: var(--bg-main); border: 1px solid var(--green-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; flex-shrink: 0; }
+        .thumb-box { width: 64px; height: 64px; background: var(--bg-main); border: 1px solid var(--green-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; }
         .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
         .thumb-box span { font-size: 24px; color: var(--green-primary); }
+        .thumb-box:hover::after { content: '🔍'; position: absolute; background: rgba(0,0,0,0.5); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
         
         .card-info h3 { font-size: 14px; font-weight: 700; color: var(--text-white); text-transform: uppercase; margin-bottom: 5px; }
         .card-meta { display: flex; gap: 8px; font-size: 11px; color: var(--text-white); text-transform: uppercase; align-items: center; }
@@ -115,8 +121,8 @@
                 <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
             </div>
             <div class="nav-menu" style="margin-left: 20px; align-self: center;">
-                <a href="/dashboard" class="nav-link active">PANEL</a>
-                <a href="/stock" class="nav-link">STOCK</a>
+                <a href="/dashboard" class="nav-link">PANEL</a>
+                <a href="/stock" class="nav-link active">STOCK</a>
                 <a href="/ventas" class="nav-link">VENTAS</a>
                 <a href="/compras" class="nav-link">COMPRAS</a>
                 <a href="/creditos" class="nav-link">CRÉDITOS</a>
@@ -210,6 +216,15 @@
                     </div>
                 </div>
 
+                <!-- Tarjeta de Resumen: Monto Total del Stock -->
+                <div class="stock-summary-card">
+                    <div>
+                        <div class="stock-summary-title">Monto Total del Stock (Valorizado al Costo)</div>
+                        <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Suma total de existencias actuales</div>
+                    </div>
+                    <div class="stock-summary-value" id="val-monto-total-stock">S/ 0.00</div>
+                </div>
+
                 <!-- Barra de Selección Masiva -->
                 <div class="selection-bar">
                     <div class="selection-left">
@@ -265,6 +280,22 @@
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
                 <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modal-imagen')">Cancelar</button>
                 <button type="button" class="btn-modal-action" onclick="guardarImagenProducto()">Guardar Imagen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA VER IMAGEN GRANDE (MOVIBLE) -->
+    <div id="modal-ver-imagen" class="modal-overlay">
+        <div class="modal-box" id="card-ver-imagen" style="max-width: 550px; padding: 16px;">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-ver-imagen')">
+                <h3 id="titulo-ver-imagen">IMAGEN AMPLIADA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-ver-imagen')">✕</span>
+            </div>
+            <div style="width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; border-radius: 8px;">
+                <img id="img-ampliada-grande" src="" alt="Imagen Ampliada" style="max-width: 100%; max-height: 65vh; object-fit: contain;">
+            </div>
+            <div style="text-align: right; margin-top: 15px;">
+                <button type="button" class="btn-modal-action" onclick="cerrarModal('modal-ver-imagen')">CERRAR</button>
             </div>
         </div>
     </div>
@@ -390,7 +421,17 @@
             });
 
             listaStockCache = Object.values(mapaStock);
+            calcularMontoTotalStockGeneral();
             aplicarFiltrosYOrdenamiento();
+        }
+
+        function calcularMontoTotalStockGeneral() {
+            let montoTotalValorizado = 0;
+            listaStockCache.forEach(item => {
+                let saldoStock = Math.max(0, item.compras - item.ventas);
+                montoTotalValorizado += (saldoStock * item.costo);
+            });
+            document.getElementById('val-monto-total-stock').innerText = `S/ ${montoTotalValorizado.toFixed(2)}`;
         }
 
         function filtrarEstado(estado, elemento) {
@@ -465,14 +506,20 @@
                 let saldoStock = Math.max(0, item.compras - item.ventas);
                 let stockClass = saldoStock <= 3 ? "tag-stock-low" : "tag-stock";
                 let stockText = saldoStock <= 3 ? `${saldoStock} en stock - bajo` : `${saldoStock} en stock`;
-                let thumbContent = item.imagen ? `<img src="${item.imagen}" alt="${item.producto}">` : `<span>🌱</span>`;
+                
+                let thumbContent = '';
+                if (item.imagen) {
+                    thumbContent = `<img src="${item.imagen}" alt="${item.producto}" onclick="event.stopPropagation(); abrirImagenGrande('${item.imagen}', '${item.producto}')" title="Haz clic para ver imagen grande">`;
+                } else {
+                    thumbContent = `<span onclick="event.stopPropagation(); abrirModalImagen('${item.producto}')" title="Haz clic para cargar foto">🌱</span>`;
+                }
 
                 let card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
                     <div class="card-left">
                         <input type="checkbox" class="checkbox-item producto-checkbox" data-producto="${item.producto}" onclick="actualizarContadorSeleccionados()">
-                        <div class="thumb-box" title="Haz clic para cargar/cambiar foto de ${item.producto}" onclick="abrirModalImagen('${item.producto}')">
+                        <div class="thumb-box" title="Gestionar foto" onclick="abrirModalImagen('${item.producto}')">
                             ${thumbContent}
                         </div>
                         <div class="card-info">
@@ -501,6 +548,12 @@
             contenedor.innerHTML = '';
             contenedor.appendChild(fragment);
             actualizarContadorSeleccionados();
+        }
+
+        function abrirImagenGrande(urlImagen, nombreProducto) {
+            document.getElementById('titulo-ver-imagen').innerText = `IMAGEN: ${nombreProducto}`;
+            document.getElementById('img-ampliada-grande').src = urlImagen;
+            document.getElementById('modal-ver-imagen').style.display = 'flex';
         }
 
         function abrirModalImagen(nombreProducto) {
