@@ -25,7 +25,6 @@ def render_template_con_branding(template_name, **kwargs):
     html_content = render_template(template_name, **kwargs)
     soup = BeautifulSoup(html_content, 'html.parser')
     
-    # 1. Cambiar el título de la pestaña a "Promotores del Agro"
     if soup.find('title'):
         soup.find('title').string = "Promotores del Agro"
     else:
@@ -34,14 +33,12 @@ def render_template_con_branding(template_name, **kwargs):
             new_title.string = "Promotores del Agro"
             soup.head.append(new_title)
             
-    # 2. Agregar etiqueta descriptiva para el navegador
     if soup.head:
         meta_desc = soup.find('meta', attrs={'name': 'description'})
         if not meta_desc:
             meta_desc = soup.new_tag('meta', attrs={'name': 'description', 'content': 'Promotores del Agro - Sistema de Gestión y Ventas'})
             soup.head.append(meta_desc)
 
-    # 3. Limpiar iconos anteriores y agregar favicon con control de versión (?v=2) para evitar caché
     for existing_icon in soup.find_all('link', rel=lambda x: x and 'icon' in x.lower()):
         existing_icon.decompose()
         
@@ -51,13 +48,11 @@ def render_template_con_branding(template_name, **kwargs):
         
     return str(soup)
 
-# Ruta automática para el archivo físico del símbolo en la pestaña del navegador
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'static'),
                                'favicon_simbolo.png', mimetype='image/png')
 
-# Página principal limpia sin errores
 @app.route('/')
 def index():
     return render_template_con_branding('index.html', error=False)
@@ -77,7 +72,6 @@ def login():
         session['rol'] = 'empleado'
         return redirect(url_for('ventas'))
 
-# Ruta para cerrar sesión
 @app.route('/logout')
 def logout():
     session.clear()
@@ -89,7 +83,6 @@ def dashboard():
         return redirect(url_for('ventas'))
     return render_template_con_branding('dashboard.html')
 
-# API para obtener el resumen financiero del Dashboard directamente desde MySQL de forma limpia
 @app.route('/api/dashboard/resumen')
 def api_dashboard_resumen():
     if session.get('rol') != 'gerente':
@@ -129,6 +122,7 @@ def api_dashboard_resumen():
             'deudas_cobrar': 0.0
         })
 
+# MÓDULOS DE ACCESO GENERAL / EMPLEADO (Ventas y Amortizaciones)
 @app.route('/ventas')
 def ventas():
     if 'rol' not in session:
@@ -141,6 +135,7 @@ def amortizaciones():
         return redirect(url_for('index'))
     return render_template_con_branding('amortizaciones.html')
 
+# MÓDULOS EXCLUSIVOS PARA GERENTE (Acceso total a gestión, stock, compras, tesorería, etc.)
 @app.route('/creditos')
 def creditos():
     if session.get('rol') != 'gerente':
