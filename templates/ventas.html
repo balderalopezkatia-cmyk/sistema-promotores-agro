@@ -336,7 +336,43 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIRMACIÓN DE EDICIÓN -->
+    <!-- MODAL EDITAR ITEM CARRITO -->
+    <div id="modal-editar-carrito" class="modal-overlay">
+        <div class="modal-card" id="card-editar-carrito">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-editar-carrito')">
+                <h3>MODIFICACIÓN DE ÍTEM EN CARRITO</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-editar-carrito')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 15px;">MODIFIQUE LA CANTIDAD O EL PRECIO DEL PRODUCTO:</p>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">CANTIDAD:</label>
+                <input type="number" id="edit-carrito-cant" min="0.01" step="any" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+                <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">PRECIO UNITARIO (S/):</label>
+                <input type="number" id="edit-carrito-precio" step="0.01" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 8px; border-radius: 6px;">
+            </div>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-guardar-edicion-carrito" style="background-color: var(--green-primary); color: var(--bg-main);">GUARDAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-editar-carrito')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ELIMINAR ITEM CARRITO -->
+    <div id="modal-eliminar-carrito" class="modal-overlay">
+        <div class="modal-card" id="card-eliminar-carrito">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-eliminar-carrito')">
+                <h3>ELIMINACIÓN DE ÍTEM DEL CARRITO</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-eliminar-carrito')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿ESTÁ SEGURO DE QUITAR ESTE PRODUCTO DE LA LISTA DE VENTA?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-confirmar-eliminar-carrito">ACEPTAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-eliminar-carrito')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN DE EDICIÓN HISTORIAL -->
     <div id="modal-editar-venta" class="modal-overlay">
         <div class="modal-card" id="card-editar">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-editar')">
@@ -351,7 +387,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIRMACIÓN DE ELIMINACIÓN -->
+    <!-- MODAL CONFIRMACIÓN DE ELIMINACIÓN HISTORIAL -->
     <div id="modal-eliminar-venta" class="modal-overlay">
         <div class="modal-card" id="card-eliminar">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-eliminar')">
@@ -585,13 +621,57 @@
                     <td>${item.cantidad}</td>
                     <td>S/ ${item.precio.toFixed(2)}</td>
                     <td>S/ ${item.subtotal.toFixed(2)}</td>
-                    <td><a class="link-danger" onclick="carrito.splice(${index}, 1); actualizarTablaCarrito();">ELIMINAR</a></td>
+                    <td>
+                        <a class="link-action" onclick="pedirEditarCarrito(${index})">EDITAR</a>
+                        <a class="link-danger" onclick="pedirEliminarCarrito(${index})">ELIMINAR</a>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
             document.getElementById('total-pagar').value = totalGeneral.toFixed(2);
             document.getElementById('monto-abonado').value = totalGeneral.toFixed(2);
         }
+
+        let indiceItemEditar = null;
+        window.pedirEditarCarrito = function(index) {
+            indiceItemEditar = index;
+            let item = carrito[index];
+            document.getElementById('edit-carrito-cant').value = item.cantidad;
+            document.getElementById('edit-carrito-precio').value = item.precio;
+            document.getElementById('modal-editar-carrito').style.display = 'flex';
+        };
+
+        document.getElementById('btn-guardar-edicion-carrito').addEventListener('click', function() {
+            if (indiceItemEditar !== null) {
+                let nuevaCant = parseFloat(document.getElementById('edit-carrito-cant').value) || 0;
+                let nuevoPrecio = parseFloat(document.getElementById('edit-carrito-precio').value) || 0;
+                if (nuevaCant <= 0 || nuevoPrecio <= 0) {
+                    alert('Ingrese valores válidos mayores a cero.');
+                    return;
+                }
+                carrito[indiceItemEditar].cantidad = nuevaCant;
+                carrito[indiceItemEditar].precio = nuevoPrecio;
+                carrito[indiceItemEditar].subtotal = nuevaCant * nuevoPrecio;
+                actualizarTablaCarrito();
+                document.getElementById('modal-editar-carrito').style.display = 'none';
+                indiceItemEditar = null;
+            }
+        });
+
+        let indiceItemEliminar = null;
+        window.pedirEliminarCarrito = function(index) {
+            indiceItemEliminar = index;
+            document.getElementById('modal-eliminar-carrito').style.display = 'flex';
+        };
+
+        document.getElementById('btn-confirmar-eliminar-carrito').addEventListener('click', function() {
+            if (indiceItemEliminar !== null) {
+                carrito.splice(indiceItemEliminar, 1);
+                actualizarTablaCarrito();
+                document.getElementById('modal-eliminar-carrito').style.display = 'none';
+                indiceItemEliminar = null;
+            }
+        });
 
         document.getElementById('btn-confirmar-e-imprimir').addEventListener('click', function() {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
