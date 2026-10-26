@@ -488,7 +488,7 @@
         let carrito = [];
         let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
 
-        // Lógica corregida del correlativo: busca el primer número faltante (huecos por eliminaciones) o continúa con el siguiente
+        // Lógica corregida y robusta del correlativo (rellena huecos si se eliminaron boletas)
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
             if (historialVentas.length === 0) {
@@ -778,25 +778,27 @@
             document.getElementById('modal-imprimir-ticket').style.display = 'flex';
         });
 
-        // Ejecutar Confirmación y Guardado de Venta (AHORA MANTIENE LOS DATOS EN PANTALLA)
+        // 1. CONFIRMAR VENTA: Guarda la venta en el sistema PERO MANTIENE los datos en pantalla para poder imprimir luego
         document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
             guardarVentaEnSistemaSinLimpiar();
             document.getElementById('modal-confirmar-venta').style.display = 'none';
             mostrarAlerta('¡VENTA GUARDADA Y REGISTRADA EXITOSAMENTE EN EL SISTEMA!');
         });
 
-        // Ejecutar Impresión de Ticket (IMPRIME Y LUEGO LIMPIA EL FORMULARIO PARA LA SIGUIENTE VENTA)
+        // 2. IMPRIMIR TICKET: Imprime el ticket térmico y LUEGO limpia el formulario y actualiza el correlativo para la siguiente venta
         document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
             prepararYImprimirTicket();
-            // Si la venta no se había guardado antes, la guardamos ahora al imprimir
+            
+            // Asegurar que quede guardada si no se le dio antes a confirmar
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
             let yaRegistrada = historialVentas.some(v => v.comprobante === comprobante && v.cliente === cliente);
             if (!yaRegistrada) {
-                guardarVentaEnSistema();
-            } else {
-                limpiarFormularioVenta();
+                guardarVentaEnSistemaSinLimpiar();
             }
+
+            // Limpiar formulario y avanzar al siguiente correlativo
+            limpiarFormularioVenta();
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
 
@@ -861,21 +863,20 @@
             let medio = document.getElementById('medio-pago').value;
             let saldo = Math.max(0, total - abonado);
 
-            // Evitar duplicados si ya está guardado
-            let existe = historialVentas.some(v => v.comprobante === comprobante);
-            if (!existe) {
-                let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
+            // Evitar duplicados si ya está guardado con el mismo número de comprobante
+            let indexExistente = historialVentas.findIndex(v => v.comprobante === comprobante);
+            let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
+            
+            if (indexExistente !== -1) {
+                historialVentas[indexExistente] = nuevaVenta;
+            } else {
                 historialVentas.push(nuevaVenta);
-                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
             }
+            
+            localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
 
             document.getElementById('filtro-cliente-input').value = cliente;
             document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
-        }
-
-        function guardarVentaEnSistema() {
-            guardarVentaEnSistemaSinLimpiar();
-            limpiarFormularioVenta();
         }
 
         function limpiarFormularioVenta() {
@@ -884,6 +885,7 @@
             document.getElementById('cliente').value = '';
             document.getElementById('doc-identidad').value = '';
             calcularCorrelativoComprobante();
+            document.getElementById('fecha-operacion').valueAsDate = new Date();
         }
 
         const filtroClienteInput = document.getElementById('filtro-cliente-input');
@@ -985,6 +987,7 @@
                 localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
                 document.getElementById('modal-editar-venta').style.display = 'none';
                 filtroClienteInput.dispatchEvent(new Event('input'));
+                calcularCorrelativoComprobante();
                 indiceAEditar = null;
             }
         });
@@ -1001,7 +1004,7 @@
                 localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
                 filtroClienteInput.dispatchEvent(new Event('input'));
-                calcularCorrelativoComprobante(); // Actualiza el correlativo si se eliminó una boleta para rellenar huecos
+                calcularCorrelativoComprobante(); // Actualiza el correlativo para rellenar huecos si se eliminó una boleta
                 indiceAEliminar = null;
             }
         });
