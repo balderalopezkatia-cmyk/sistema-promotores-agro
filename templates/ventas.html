@@ -25,7 +25,7 @@
         .row-3 { grid-template-columns: 2fr 1fr 1fr; }
         .row-3-btn { grid-template-columns: 2fr 1fr 1fr auto; }
         .row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-        .row-2 { grid-template-columns: 1fr 1fr; }
+        .row-2-buttons { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         .row-search-historial { grid-template-columns: 1fr auto; align-items: center; }
 
         .form-group { display: flex; flex-direction: column; position: relative; }
@@ -47,8 +47,11 @@
         .btn-add { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 18px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
         .btn-add:hover { background-color: #35f5aa; }
         
-        .btn-confirm-all { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 13px 25px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 14px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-transform: uppercase; }
-        .btn-confirm-all:hover { background-color: #35f5aa; }
+        .btn-action-primary { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 13px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; }
+        .btn-action-primary:hover { background-color: #35f5aa; }
+
+        .btn-action-secondary { background-color: #1a2a3a; color: var(--green-primary); border: 1px solid var(--green-primary); padding: 13px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; }
+        .btn-action-secondary:hover { background-color: rgba(46, 196, 182, 0.1); }
 
         /* Tablas */
         .table-container { margin: 15px 0 20px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
@@ -60,8 +63,9 @@
         .link-action { color: var(--blue-tag); text-decoration: none; font-weight: bold; margin-right: 8px; cursor: pointer; text-transform: uppercase; }
         .link-danger { color: var(--red-alert); text-decoration: none; cursor: pointer; margin-left: 8px; text-transform: uppercase; font-weight: bold; }
 
-        /* Caja de Deuda */
+        /* Caja de Deuda y Resumen Inferior */
         .deuda-box-short { background-color: rgba(255, 14, 85, 0.1); border: 1px solid var(--red-alert); color: var(--red-alert); padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; text-align: center; text-transform: uppercase; display: inline-block; min-width: 180px; }
+        .resumen-vuelto-saldo-box { background: #1a2a3a; border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 8px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold; text-transform: uppercase; color: var(--text-white); }
 
         /* Modales Arrastrables */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
@@ -220,9 +224,19 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 15px;">
-                    <button type="button" class="btn-confirm-all" id="btn-confirmar-e-imprimir">
-                        🖨️ CONFIRMAR VENTA E IMPRIMIR TICKET
+                <!-- Caja dinámica de Vuelto o Saldo Pendiente -->
+                <div class="resumen-vuelto-saldo-box">
+                    <span id="label-vuelto-saldo-texto">VUELTO / SALDO:</span>
+                    <span id="valor-vuelto-saldo-display" class="text-green">S/ 0.00</span>
+                </div>
+
+                <!-- Botones Separados -->
+                <div class="form-row row-2-buttons">
+                    <button type="button" class="btn-action-primary" id="btn-abrir-modal-confirmar">
+                        💾 CONFIRMAR VENTA
+                    </button>
+                    <button type="button" class="btn-action-secondary" id="btn-abrir-modal-imprimir">
+                        🖨️ IMPRIMIR TICKET
                     </button>
                 </div>
 
@@ -281,6 +295,36 @@
             <p id="modal-mensaje-texto" style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;"></p>
             <div style="text-align: right;">
                 <button class="btn-modal-close" onclick="cerrarModal('modal-alerta-general')">ACEPTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMAR VENTA (ARRASTRABLE) -->
+    <div id="modal-confirmar-venta" class="modal-overlay">
+        <div class="modal-card" id="card-conf-venta">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-conf-venta')">
+                <h3>CONFIRMACIÓN Y GUARDADO DE VENTA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-confirmar-venta')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿ESTÁ SEGURO DE GUARDAR Y REGISTRAR ESTA VENTA EN EL SISTEMA?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-ejecutar-confirmar-venta" style="background-color: var(--green-primary); color: var(--bg-main);">GUARDAR VENTA</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-confirmar-venta')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPRIMIR TICKET (ARRASTRABLE) -->
+    <div id="modal-imprimir-ticket" class="modal-overlay">
+        <div class="modal-card" id="card-imp-ticket">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-imp-ticket')">
+                <h3>IMPRESIÓN DIRECTA DE TICKET TÉRMICO</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-imprimir-ticket')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿DESEA PROCEDER A IMPRIMIR EL TICKET TÉRMICO DE ESTA VENTA?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-ejecutar-impresion" style="background-color: var(--green-primary); color: var(--bg-main);">IMPRIMIR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-imprimir-ticket')">CANCELAR</button>
             </div>
         </div>
     </div>
@@ -432,7 +476,7 @@
         <div style="margin-top: 6px;">
             ----------------------------------------<br>
             TOTAL A PAGAR: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-total"></span><br>
-            PAGA CON: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-abonado"></span><br>
+            <span id="t-etiqueta-paga-con">PAGA CON:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-abonado"></span><br>
             <span id="t-etiqueta-vuelto-saldo">VUELTO:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-vuelto-saldo"></span><br>
             ----------------------------------------<br>
             <div style="text-align: center; margin-top: 8px;">¡GRACIAS POR SU CONFIANZA!<br><strong>PROMOTORES DEL AGRO</strong></div>
@@ -630,6 +674,37 @@
             });
             document.getElementById('total-pagar').value = totalGeneral.toFixed(2);
             document.getElementById('monto-abonado').value = totalGeneral.toFixed(2);
+            actualizarCalculoVueltoSaldo();
+        }
+
+        document.getElementById('monto-abonado').addEventListener('input', actualizarCalculoVueltoSaldo);
+        document.getElementById('medio-pago').addEventListener('change', actualizarCalculoVueltoSaldo);
+
+        function actualizarCalculoVueltoSaldo() {
+            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+            let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
+            let medio = document.getElementById('medio-pago').value;
+            let labelText = document.getElementById('label-vuelto-saldo-texto');
+            let displayVal = document.getElementById('valor-vuelto-saldo-display');
+
+            if (medio === 'CREDITO') {
+                let saldo = Math.max(0, total - abonado);
+                labelText.innerText = "SALDO PENDIENTE A CRÉDITO:";
+                displayVal.innerText = "S/ " + saldo.toFixed(2);
+                displayVal.className = "text-red";
+            } else {
+                if (abonado >= total) {
+                    let vuelto = abonado - total;
+                    labelText.innerText = "VUELTO:";
+                    displayVal.innerText = "S/ " + vuelto.toFixed(2);
+                    displayVal.className = "text-green";
+                } else {
+                    let saldo = total - abonado;
+                    labelText.innerText = "SALDO PENDIENTE:";
+                    displayVal.innerText = "S/ " + saldo.toFixed(2);
+                    displayVal.className = "text-red";
+                }
+            }
         }
 
         let indiceItemEditar = null;
@@ -673,20 +748,49 @@
             }
         });
 
-        document.getElementById('btn-confirmar-e-imprimir').addEventListener('click', function() {
-            let cliente = document.getElementById('cliente').value.trim().toUpperCase();
-            let doc = document.getElementById('doc-identidad').value.trim();
-            let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
-            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
-            let abonado = parseFloat(document.getElementById('monto-abonado').value) || total;
-            let fecha = document.getElementById('fecha-operacion').value;
-            let medio = document.getElementById('medio-pago').value;
-
+        // Apertura de modales para los botones separados
+        document.getElementById('btn-abrir-modal-confirmar').addEventListener('click', function() {
+            let cliente = document.getElementById('cliente').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim();
             if (!cliente || !comprobante || carrito.length === 0) {
                 mostrarAlerta('POR FAVOR COMPLETE EL CLIENTE, N° DE COMPROBANTE Y AGREGUE PRODUCTOS.');
                 return;
             }
+            document.getElementById('modal-confirmar-venta').style.display = 'flex';
+        });
 
+        document.getElementById('btn-abrir-modal-imprimir').addEventListener('click', function() {
+            let cliente = document.getElementById('cliente').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim();
+            if (!cliente || !comprobante || carrito.length === 0) {
+                mostrarAlerta('POR FAVOR COMPLETE EL CLIENTE, N° DE COMPROBANTE Y AGREGUE PRODUCTOS.');
+                return;
+            }
+            document.getElementById('modal-imprimir-ticket').style.display = 'flex';
+        });
+
+        // Ejecutar Confirmación y Guardado de Venta
+        document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
+            guardarVentaEnSistema();
+            document.getElementById('modal-confirmar-venta').style.display = 'none';
+            mostrarAlerta('¡VENTA GUARDADA Y REGISTRADA EXITOSAMENTE EN EL SISTEMA!');
+        });
+
+        // Ejecutar Impresión de Ticket
+        document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
+            prepararYImprimirTicket();
+            guardarVentaEnSistema();
+            document.getElementById('modal-imprimir-ticket').style.display = 'none';
+        });
+
+        function prepararYImprimirTicket() {
+            let cliente = document.getElementById('cliente').value.trim().toUpperCase();
+            let doc = document.getElementById('doc-identidad').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
+            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+            let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
+            let fecha = document.getElementById('fecha-operacion').value;
+            let medio = document.getElementById('medio-pago').value;
             let saldo = Math.max(0, total - abonado);
 
             document.getElementById('t-fecha').innerText = fecha;
@@ -711,15 +815,34 @@
 
             document.getElementById('t-total').innerText = total.toFixed(2);
             document.getElementById('t-abonado').innerText = abonado.toFixed(2);
-            if (abonado >= total) {
-                document.getElementById('t-etiqueta-vuelto-saldo').innerText = "VUELTO:";
-                document.getElementById('t-vuelto-saldo').innerText = (abonado - total).toFixed(2);
-            } else {
+
+            if (medio === 'CREDITO') {
+                document.getElementById('t-etiqueta-paga-con').innerText = "ABONADO / A CUENTA:";
                 document.getElementById('t-etiqueta-vuelto-saldo').innerText = "SALDO PENDIENTE:";
                 document.getElementById('t-vuelto-saldo').innerText = saldo.toFixed(2);
+            } else {
+                document.getElementById('t-etiqueta-paga-con').innerText = "PAGA CON:";
+                if (abonado >= total) {
+                    document.getElementById('t-etiqueta-vuelto-saldo').innerText = "VUELTO:";
+                    document.getElementById('t-vuelto-saldo').innerText = (abonado - total).toFixed(2);
+                } else {
+                    document.getElementById('t-etiqueta-vuelto-saldo').innerText = "SALDO PENDIENTE:";
+                    document.getElementById('t-vuelto-saldo').innerText = saldo.toFixed(2);
+                }
             }
 
             window.print();
+        }
+
+        function guardarVentaEnSistema() {
+            let cliente = document.getElementById('cliente').value.trim().toUpperCase();
+            let doc = document.getElementById('doc-identidad').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
+            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+            let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
+            let fecha = document.getElementById('fecha-operacion').value;
+            let medio = document.getElementById('medio-pago').value;
+            let saldo = Math.max(0, total - abonado);
 
             let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
             historialVentas.push(nuevaVenta);
@@ -732,7 +855,7 @@
             calcularCorrelativoComprobante();
             document.getElementById('filtro-cliente-input').value = cliente;
             document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
-        });
+        }
 
         const filtroClienteInput = document.getElementById('filtro-cliente-input');
         const seccionTablaHistorial = document.getElementById('seccion-tabla-historial');
