@@ -74,64 +74,24 @@
 
         /* MODAL DETALLE DE VENTA */
         .modal-detalle-card {
-            background: var(--bg-card);
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 650px;
-            width: 92%;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-            border: 1px solid var(--border-color);
-            border-top: 6px solid var(--green-primary);
-            text-align: left;
-            position: absolute;
+            background: var(--bg-card); padding: 30px; border-radius: 12px; max-width: 650px; width: 92%;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary);
+            text-align: left; position: absolute;
         }
         .modal-detalle-header {
-            font-size: 18px;
-            color: var(--green-primary);
-            font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 18px; color: var(--green-primary); font-weight: bold; text-transform: uppercase;
+            border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center;
         }
         .modal-detalle-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px 20px;
-            background: #1a2a3a;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            font-size: 13px;
-            text-transform: uppercase;
-            color: var(--text-white);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; background: #1a2a3a; padding: 15px;
+            border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; font-size: 13px; text-transform: uppercase; color: var(--text-white);
         }
         .modal-detalle-grid div span { font-weight: bold; color: var(--green-primary); }
-        .modal-detalle-tabla-container {
-            max-height: 220px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .modal-detalle-resumen {
-            background: #1a2a3a;
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            color: var(--text-white);
-        }
+        .modal-detalle-tabla-container { max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; }
+        .modal-detalle-resumen { background: #1a2a3a; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; font-size: 14px; text-transform: uppercase; margin-bottom: 20px; color: var(--text-white); }
         .modal-detalle-resumen-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-        .modal-detalle-resumen-row:last-child {
-            margin-bottom: 0; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 15px; font-weight: bold;
-        }
+        .modal-detalle-resumen-row:last-child { margin-bottom: 0; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 15px; font-weight: bold; }
 
         /* Ocultar ticket por defecto */
         #ticket-impresion { display: none; }
@@ -149,7 +109,7 @@
 </head>
 <body>
 
-    <!-- Barra Superior con el botón K universal para cerrar sesión -->
+    <!-- Barra Superior con menú unificado y pestaña VENTAS marcada como activa -->
     <div class="top-navbar">
         <div class="nav-left">
             <div class="logo-container-top">
@@ -157,9 +117,9 @@
                 <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
             </div>
             <div class="nav-menu" style="margin-left: 20px; align-self: center;">
-                <a href="/dashboard" class="nav-link active">PANEL</a>
+                <a href="/dashboard" class="nav-link">PANEL</a>
                 <a href="/stock" class="nav-link">STOCK</a>
-                <a href="/ventas" class="nav-link">VENTAS</a>
+                <a href="/ventas" class="nav-link active">VENTAS</a>
                 <a href="/compras" class="nav-link">COMPRAS</a>
                 <a href="/creditos" class="nav-link">CRÉDITOS</a>
                 <a href="/tesoreria" class="nav-link">TESORERÍA</a>
@@ -173,8 +133,7 @@
                 🔔
                 <span class="notification-dot"></span>
             </div>
-            <!-- Botón K universal para cerrar sesión -->
-            <button class="user-avatar" title="Cerrar Sesión / Cambiar Perfil" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
+            <button class="user-avatar" title="Cerrar Sesión" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
         </div>
     </div>
 
@@ -206,11 +165,11 @@
                     </div>
                 </div>
 
-                <!-- Selección de Producto -->
+                <!-- Selección de Producto Enlazada con el Stock Real -->
                 <div class="form-row row-3-btn">
                     <div class="form-group">
                         <label>PRODUCTO:</label>
-                        <input type="text" id="input-producto" placeholder="ESCRIBE PARA BUSCAR" autocomplete="off" style="text-transform: uppercase;">
+                        <input type="text" id="input-producto" placeholder="ESCRIBE PARA BUSCAR EN STOCK" autocomplete="off" style="text-transform: uppercase;">
                         <input type="hidden" id="input-producto-codigo">
                         <div id="dropdown-productos" class="dropdown-suggestions"></div>
                     </div>
@@ -345,100 +304,12 @@
 
     </div>
 
-    <!-- Modal para Avisos y Alertas -->
+    <!-- Modales -->
     <div id="modal-alerta-general" class="modal-overlay">
         <div class="modal-card">
             <h3 style="font-weight: bold;">PROMOTORES DEL AGRO</h3>
             <p id="modal-mensaje-texto" style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;"></p>
-            <div style="text-align: right;">
-                <button class="btn-modal-close" id="btn-cerrar-modal-alerta">ACEPTAR</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DETALLE DE VENTA -->
-    <div id="modal-detalle-venta" class="modal-overlay">
-        <div class="modal-detalle-card">
-            <div class="modal-detalle-header">
-                <span id="modal-titulo-boleta">NOTA DE VENTA N° --</span>
-                <span style="font-size: 12px; background: #1a2a3a; color: var(--green-primary); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">DETALLE DE VENTA</span>
-            </div>
-            
-            <div class="modal-detalle-grid">
-                <div><span>FECHA:</span> <span id="modal-fecha" style="font-weight: normal; color: var(--text-white);"></span></div>
-                <div><span>MEDIO PAGO:</span> <span id="modal-medio" style="font-weight: normal; color: var(--text-white);"></span></div>
-                <div><span>CLIENTE:</span> <span id="modal-cliente" style="font-weight: normal; color: var(--text-white);"></span></div>
-                <div><span>DNI / RUC:</span> <span id="modal-doc" style="font-weight: normal; color: var(--text-white);"></span></div>
-            </div>
-
-            <label style="font-size: 12px; font-weight: bold; color: var(--green-primary); margin-bottom: 6px; display: block; text-transform: uppercase;">Productos de la Venta:</label>
-            <div class="modal-detalle-tabla-container">
-                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px;">CANT</th>
-                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px;">PRODUCTO</th>
-                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px; text-align: right;">P. UNI</th>
-                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px; text-align: right;">SUBTOTAL</th>
-                        </tr>
-                    </thead>
-                    <tbody id="modal-items-lista">
-                        <!-- Items -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="modal-detalle-resumen">
-                <div class="modal-detalle-resumen-row">
-                    <span>Total a Pagar:</span>
-                    <span>S/ <span id="modal-total">0.00</span></span>
-                </div>
-                <div class="modal-detalle-resumen-row">
-                    <span>Monto Abonado / Pagado:</span>
-                    <span>S/ <span id="modal-abonado">0.00</span></span>
-                </div>
-                <div class="modal-detalle-resumen-row" style="color: var(--red-alert);">
-                    <span>Saldo Pendiente (Crédito):</span>
-                    <span>S/ <span id="modal-saldo">0.00</span></span>
-                </div>
-            </div>
-
-            <div style="text-align: right;">
-                <button class="btn-modal-close" id="btn-cerrar-modal-detalle">CERRAR VENTANA</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Confirmación de Eliminación -->
-    <div id="modal-eliminar-venta" class="modal-overlay">
-        <div class="modal-card">
-            <h3 style="font-weight: bold;">ELIMINAR</h3>
-            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿ESTÁ SEGURO DE ELIMINAR ESTE REGISTRO DE VENTA?</p>
-            <div style="text-align: right;">
-                <button class="btn-modal-danger" id="btn-confirmar-eliminar">ACEPTAR</button>
-                <button class="btn-modal-secondary" id="btn-cancelar-eliminar">CANCELAR</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Confirmación de Edición -->
-    <div id="modal-editar-venta" class="modal-overlay">
-        <div class="modal-card">
-            <h3 style="font-weight: bold;">EDITAR</h3>
-            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿DESEA EDITAR ESTE REGISTRO DE VENTA?</p>
-            <div style="text-align: right;">
-                <button class="btn-modal-danger" id="btn-confirmar-editar" style="background-color: var(--green-primary); color: var(--bg-main);">ACEPTAR</button>
-                <button class="btn-modal-secondary" id="btn-cancelar-editar">CANCELAR</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Agradecimiento -->
-    <div id="modal-agradecimiento" class="modal-overlay">
-        <div class="modal-card" style="text-align: center;">
-            <h3 style="color: var(--green-primary); border: none; font-weight: bold;">¡GRACIAS POR SU COMPRA!</h3>
-            <p style="font-weight: normal;">La venta ha sido registrada con éxito y enviada a la impresora.</p>
-            <button class="btn-modal-close" id="btn-cerrar-modal-gracias">ACEPTAR</button>
+            <div style="text-align: right;"><button class="btn-modal-close" id="btn-cerrar-modal-alerta">ACEPTAR</button></div>
         </div>
     </div>
 
@@ -446,10 +317,7 @@
     <div id="ticket-impresion">
         <div style="text-align: center; margin-bottom: 4px;">
             <strong style="font-size: 13px;">PROMOTORES DEL AGRO JK E.I.R.L.</strong><br>
-            Calle San Martín N° 687<br>
-            MOCHUMI - LAMBAYEQUE<br>
-            Telf: 922388208<br>
-            RUC: 20611525304<br>
+            Calle San Martín N° 687<br>MOCHUMI - LAMBAYEQUE<br>Telf: 922388208<br>RUC: 20611525304<br>
             ========================================<br>
             <strong style="font-size: 13px;">NOTA DE VENTA</strong><br>
             ========================================
@@ -470,8 +338,7 @@
                     <th style="text-align: right; width: 20%;">IMPORTE</th>
                 </tr>
             </thead>
-            <tbody id="t-cuerpo-items">
-            </tbody>
+            <tbody id="t-cuerpo-items"></tbody>
         </table>
         <div style="margin-top: 6px;">
             ----------------------------------------<br>
@@ -479,78 +346,73 @@
             PAGA CON: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-abonado"></span><br>
             <span id="t-etiqueta-vuelto-saldo">VUELTO:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-vuelto-saldo"></span><br>
             ----------------------------------------<br>
-            <div style="text-align: center; margin-top: 8px;">
-                ¡GRACIAS POR SU COMPRA Y CONFIANZA!<br>
-                <strong>PROMOTORES DEL AGRO</strong><br>
-                Asegura tus buenas cosechas
-            </div>
+            <div style="text-align: center; margin-top: 8px;">¡GRACIAS POR SU CONFIANZA!<br><strong>PROMOTORES DEL AGRO</strong></div>
         </div>
     </div>
 
     <script>
         document.getElementById('fecha-operacion').valueAsDate = new Date();
-
         let carrito = [];
         let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
 
         function mostrarAlerta(mensaje, elementoEnfocar = null) {
             document.getElementById('modal-mensaje-texto').innerText = mensaje;
             document.getElementById('modal-alerta-general').style.display = 'flex';
-            
             let btnCerrar = document.getElementById('btn-cerrar-modal-alerta');
             let nuevoBtn = btnCerrar.cloneNode(true);
             btnCerrar.parentNode.replaceChild(nuevoBtn, btnCerrar);
-            
             nuevoBtn.addEventListener('click', function() {
                 document.getElementById('modal-alerta-general').style.display = 'none';
-                if (elementoEnfocar) {
-                    elementoEnfocar.focus();
-                }
+                if (elementoEnfocar) elementoEnfocar.focus();
             });
         }
 
-        const productosInventario = [
-            { codigo: "P001", nombre: "PESOVER X 100 GR", stock: 5, precioSugerido: 30.00 },
-            { codigo: "P002", nombre: "PESOVER X 1 KG", stock: 3, precioSugerido: 250.00 },
-            { codigo: "K001", nombre: "KIETO 100 EC X 100 GR", stock: 12, precioSugerido: 17.00 },
-            { codigo: "K002", nombre: "KIETO MAX X 1 L", stock: 8, precioSugerido: 23.00 },
-            { codigo: "S001", nombre: "SPARTACO X 400 GR", stock: 40, precioSugerido: 28.00 },
-            { codigo: "S002", nombre: "SELECRON X 330 ML", stock: 15, precioSugerido: 25.00 },
-            { codigo: "O001", nombre: "ORTHENE 75 PS", stock: 20, precioSugerido: 18.00 }
-        ];
+        // ENLACE PERFECTO CON EL STOCK Y COMPRAS REALES
+        function obtenerInventarioDesdeStock() {
+            let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
+            let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
+            let mapaStock = {};
 
-        const clientesDB = {
-            "KATIA BALDERA": "77044985",
-            "JUAN SUCLUPE": "44112233",
-            "MANFREDO DIAZ": "10293847"
-        };
-
-        function verificarYAsignarCorrelativo() {
-            let campoComprobante = document.getElementById('comprobante');
-            if (campoComprobante.value.trim() === "") {
-                if (historialVentas.length === 0) {
-                    campoComprobante.value = "07";
-                } else {
-                    let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n));
-                    if (numeros.length === 0) {
-                        campoComprobante.value = "07";
-                    } else {
-                        let maxNum = Math.max(...numeros);
-                        let siguiente = maxNum + 1;
-                        campoComprobante.value = siguiente < 10 ? "0" + siguiente : "" + siguiente;
-                    }
+            historialCompras.forEach(compra => {
+                if (compra.items) {
+                    compra.items.forEach(item => {
+                        let nombreProd = item.producto ? item.producto.trim().toUpperCase() : '';
+                        if (!nombreProd) return;
+                        if (!mapaStock[nombreProd]) {
+                            mapaStock[nombreProd] = {
+                                codigo: "P" + (Object.keys(mapaStock).length + 1).toString().padStart(3, '0'),
+                                nombre: nombreProd,
+                                compras: 0,
+                                ventas: 0,
+                                precioSugerido: parseFloat(item.sugerido) || 0
+                            };
+                        }
+                        mapaStock[nombreProd].compras += parseFloat(item.cantidad) || 0;
+                        if (item.sugerido && parseFloat(item.sugerido) > 0) {
+                            mapaStock[nombreProd].precioSugerido = parseFloat(item.sugerido);
+                        }
+                    });
                 }
-            }
+            });
+
+            historialVentas.forEach(venta => {
+                if (venta.items) {
+                    venta.items.forEach(item => {
+                        let nombreProd = item.producto ? item.producto.trim().toUpperCase() : '';
+                        if (mapaStock[nombreProd]) {
+                            mapaStock[nombreProd].ventas += parseFloat(item.cantidad) || 0;
+                        }
+                    });
+                }
+            });
+
+            return Object.values(mapaStock).map(p => ({
+                codigo: p.codigo,
+                nombre: p.nombre,
+                stock: Math.max(0, p.compras - p.ventas),
+                precioSugerido: p.precioSugerido
+            }));
         }
-
-        verificarYAsignarCorrelativo();
-
-        document.getElementById('cliente').addEventListener('input', function() {
-            let nombre = this.value.trim().toUpperCase();
-            if (clientesDB[nombre]) {
-                document.getElementById('doc-identidad').value = clientesDB[nombre];
-            }
-        });
 
         const inputProducto = document.getElementById('input-producto');
         const dropdownProductos = document.getElementById('dropdown-productos');
@@ -564,7 +426,8 @@
                 return;
             }
 
-            let coincidencia = productosInventario.filter(p => p.nombre.includes(filtro) && p.stock > 0);
+            let productosInventario = obtenerInventarioDesdeStock();
+            let coincidencia = productosInventario.filter(p => p.nombre.includes(filtro));
 
             if (coincidencia.length === 0) {
                 dropdownProductos.style.display = 'none';
@@ -576,7 +439,7 @@
                 item.className = 'dropdown-item';
                 item.innerHTML = `
                     <span><span class="badge-code">[${p.codigo}]</span><strong>${p.nombre}</strong></span>
-                    <span class="badge-stock">Stock: ${p.stock} | S/ ${p.precioSugerido.toFixed(2)}</span>
+                    <span class="badge-stock">Stock: ${p.stock.toFixed(2)} | S/ ${p.precioSugerido.toFixed(2)}</span>
                 `;
                 item.addEventListener('click', function() {
                     inputProducto.value = p.nombre;
@@ -602,38 +465,23 @@
             let cantidad = parseFloat(document.getElementById('input-cantidad').value) || 0;
             let precio = parseFloat(document.getElementById('input-precio').value) || 0;
 
-            if (!nombreProducto) {
-                mostrarAlerta('POR FAVOR INGRESE O SELECCIONE UN PRODUCTO.', inputProducto);
-                return;
-            }
-            if (cantidad <= 0) {
-                mostrarAlerta('INGRESE UNA CANTIDAD MAYOR A CERO.', document.getElementById('input-cantidad'));
-                return;
-            }
-            if (precio <= 0) {
-                mostrarAlerta('INGRESE UN PRECIO UNITARIO MAYOR A CERO.', document.getElementById('input-precio'));
-                return;
-            }
+            if (!nombreProducto) { mostrarAlerta('POR FAVOR INGRESE O SELECCIONE UN PRODUCTO.', inputProducto); return; }
+            if (cantidad <= 0) { mostrarAlerta('INGRESE UNA CANTIDAD MAYOR A CERO.'); return; }
+            if (precio <= 0) { mostrarAlerta('INGRESE UN PRECIO UNITARIO.'); return; }
 
+            let productosInventario = obtenerInventarioDesdeStock();
             let prodInv = productosInventario.find(p => p.nombre.toUpperCase() === nombreProducto);
             let codigo = codigoInput || (prodInv ? prodInv.codigo : 'GEN');
 
             if (prodInv && prodInv.stock !== undefined) {
                 if (cantidad > prodInv.stock) {
-                    mostrarAlerta(`¡STOCK INSUFICIENTE! SOLO HAY ${prodInv.stock} UNIDADES DISPONIBLES DE ${prodInv.nombre}.`);
+                    mostrarAlerta(`¡STOCK INSUFICIENTE! SOLO HAY ${prodInv.stock.toFixed(2)} DISPONIBLES.`);
                     return;
                 }
             }
 
             let subtotal = cantidad * precio;
-            carrito.push({
-                codigo: codigo,
-                producto: nombreProducto,
-                cantidad: cantidad,
-                precio: precio,
-                subtotal: subtotal
-            });
-
+            carrito.push({ codigo, producto: nombreProducto, cantidad, precio, subtotal });
             actualizarTablaCarrito();
 
             inputProducto.value = '';
@@ -647,326 +495,38 @@
             let tbody = document.querySelector('#tabla-carrito tbody');
             tbody.innerHTML = '';
             let totalGeneral = 0;
-
             carrito.forEach((item, index) => {
                 totalGeneral += item.subtotal;
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${index + 1}</td>
-                    <td><small style="color:var(--text-secondary);">${item.codigo}</small></td>
+                    <td><small>${item.codigo}</small></td>
                     <td>${item.producto}</td>
                     <td>${item.cantidad}</td>
                     <td>S/ ${item.precio.toFixed(2)}</td>
                     <td>S/ ${item.subtotal.toFixed(2)}</td>
-                    <td>
-                        <a class="link-action" onclick="editarItem(${index})">EDITAR</a>
-                        <a class="link-danger" onclick="eliminarItem(${index})">ELIMINAR</a>
-                    </td>
+                    <td><a class="link-danger" onclick="carrito.splice(${index}, 1); actualizarTablaCarrito();">ELIMINAR</a></td>
                 `;
                 tbody.appendChild(tr);
             });
-
             document.getElementById('total-pagar').value = totalGeneral.toFixed(2);
-            ajustarMedioPagoAutomatico();
-        }
-
-        window.editarItem = function(index) {
-            let item = carrito[index];
-            inputProducto.value = item.producto;
-            document.getElementById('input-producto-codigo').value = item.codigo;
-            document.getElementById('input-cantidad').value = item.cantidad;
-            document.getElementById('input-precio').value = item.precio;
-
-            carrito.splice(index, 1);
-            actualizarTablaCarrito();
-        };
-
-        window.eliminarItem = function(index) {
-            carrito.splice(index, 1);
-            actualizarTablaCarrito();
-        };
-
-        const medioPagoSelect = document.getElementById('medio-pago');
-        const seccionPagoMixto = document.getElementById('seccion-pago-mixto');
-        const totalPagarInput = document.getElementById('total-pagar');
-        const montoAbonadoInput = document.getElementById('monto-abonado');
-        const labelInfoPago = document.getElementById('label-info-pago');
-        const valorInfoPago = document.getElementById('valor-info-pago');
-
-        medioPagoSelect.addEventListener('change', ajustarMedioPagoAutomatico);
-
-        function ajustarMedioPagoAutomatico() {
-            let total = parseFloat(totalPagarInput.value) || 0;
-            let seleccion = medioPagoSelect.value;
-
-            if (seleccion === 'CREDITO') {
-                seccionPagoMixto.style.display = 'none';
-                montoAbonadoInput.value = "0.00";
-            } else if (seleccion === 'PAGO MIXTO') {
-                seccionPagoMixto.style.display = 'block';
-                actualizarPagoMixto();
-            } else {
-                seccionPagoMixto.style.display = 'none';
-                if (montoAbonadoInput.value === "0.00" || parseFloat(montoAbonadoInput.value) < total) {
-                    montoAbonadoInput.value = total.toFixed(2);
-                }
-            }
-            calcularVueltoSaldo();
-        }
-
-        document.getElementById('monto-efectivo-mixto').addEventListener('input', actualizarPagoMixto);
-        document.getElementById('monto-digital-mixto').addEventListener('input', actualizarPagoMixto);
-
-        function actualizarPagoMixto() {
-            let ef = parseFloat(document.getElementById('monto-efectivo-mixto').value) || 0;
-            let dig = parseFloat(document.getElementById('monto-digital-mixto').value) || 0;
-            montoAbonadoInput.value = (ef + dig).toFixed(2);
-            calcularVueltoSaldo();
-        }
-
-        montoAbonadoInput.addEventListener('input', calcularVueltoSaldo);
-
-        function calcularVueltoSaldo() {
-            let total = parseFloat(totalPagarInput.value) || 0;
-            let abonado = parseFloat(montoAbonadoInput.value) || 0;
-
-            if (abonado > total) {
-                let vuelto = abonado - total;
-                labelInfoPago.innerText = "VUELTO:";
-                valorInfoPago.innerText = "S/ " + vuelto.toFixed(2);
-                valorInfoPago.style.color = "var(--green-primary)";
-            } else if (abonado < total) {
-                let saldo = total - abonado;
-                labelInfoPago.innerText = "SALDO PENDIENTE (CRÉDITO):";
-                valorInfoPago.innerText = "S/ " + saldo.toFixed(2);
-                valorInfoPago.style.color = "var(--red-alert)";
-            } else {
-                labelInfoPago.innerText = "VUELTO / SALDO:";
-                valorInfoPago.innerText = "S/ 0.00";
-                valorInfoPago.style.color = "var(--text-white)";
-            }
         }
 
         document.getElementById('btn-confirmar-e-imprimir').addEventListener('click', function() {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
-            let doc = document.getElementById('doc-identidad').value.trim();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
-            let total = parseFloat(totalPagarInput.value) || 0;
-            let abonado = parseFloat(montoAbonadoInput.value) || 0;
-            let fecha = document.getElementById('fecha-operacion').value;
-            let medio = document.getElementById('medio-pago').value;
-
+            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
             if (!cliente || !comprobante || carrito.length === 0) {
-                mostrarAlerta('POR FAVOR COMPLETE EL CLIENTE, NÚMERO DE COMPROBANTE Y AGREGUE PRODUCTOS AL CARRITO.');
+                mostrarAlerta('COMPLETE CLIENTE, COMPROBANTE Y AGREGUE PRODUCTOS.');
                 return;
             }
-
-            let saldo = total - abonado;
-            if (saldo < 0) saldo = 0;
-
-            let ahora = new Date();
-            document.getElementById('t-fecha').innerText = fecha;
-            document.getElementById('t-hora').innerText = ahora.toLocaleTimeString();
-            document.getElementById('t-cliente').innerText = cliente;
-            document.getElementById('t-doc').innerText = doc || '-';
-            document.getElementById('t-comprobante').innerText = comprobante;
-            document.getElementById('t-mediopago').innerText = medio;
-
-            let tbodyTicket = document.getElementById('t-cuerpo-items');
-            tbodyTicket.innerHTML = '';
-            carrito.forEach(item => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="padding: 2px 0;">${item.cantidad}</td>
-                    <td style="padding: 2px 0;">${item.producto}</td>
-                    <td style="text-align: right; padding: 2px 0;">${item.precio.toFixed(2)}</td>
-                    <td style="text-align: right; padding: 2px 0;">${item.subtotal.toFixed(2)}</td>
-                `;
-                tbodyTicket.appendChild(tr);
-            });
-
-            document.getElementById('t-total').innerText = total.toFixed(2);
-            document.getElementById('t-abonado').innerText = abonado.toFixed(2);
-
-            if (abonado >= total) {
-                document.getElementById('t-etiqueta-vuelto-saldo').innerText = "VUELTO:";
-                document.getElementById('t-vuelto-saldo').innerText = (abonado - total).toFixed(2);
-            } else {
-                document.getElementById('t-etiqueta-vuelto-saldo').innerText = "SALDO PENDIENTE:";
-                document.getElementById('t-vuelto-saldo').innerText = saldo.toFixed(2);
-            }
-
             window.print();
-
-            let nuevaVenta = { fecha, comprobante, cliente: cliente, doc, total, abonado, saldo, items: [...carrito], medio };
+            let nuevaVenta = { fecha: document.getElementById('fecha-operacion').value, comprobante, cliente, total, items: [...carrito] };
             historialVentas.push(nuevaVenta);
             localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-
-            filtroClienteInput.dispatchEvent(new Event('input'));
-
-            document.getElementById('modal-agradecimiento').style.display = 'flex';
-
-            document.getElementById('cliente').value = '';
-            document.getElementById('doc-identidad').value = '';
-            document.getElementById('comprobante').value = '';
-            verificarYAsignarCorrelativo();
-            inputProducto.value = '';
-            document.getElementById('input-cantidad').value = '1';
-            document.getElementById('input-precio').value = '0.00';
-            document.getElementById('monto-abonado').value = '0.00';
-            document.getElementById('monto-efectivo-mixto').value = '0.00';
-            document.getElementById('monto-digital-mixto').value = '0.00';
-            document.getElementById('seccion-pago-mixto').style.display = 'none';
-            document.getElementById('medio-pago').value = 'CONTADO';
             carrito = [];
             actualizarTablaCarrito();
         });
-
-        document.getElementById('btn-cerrar-modal-gracias').addEventListener('click', function() {
-            document.getElementById('modal-agradecimiento').style.display = 'none';
-        });
-
-        function formatearFecha(fechaStr) {
-            if (!fechaStr || fechaStr.indexOf('-') === -1) return fechaStr;
-            let partes = fechaStr.split('-');
-            return `${partes[2]}/${partes[1]}/${partes[0]}`;
-        }
-
-        const filtroClienteInput = document.getElementById('filtro-cliente-input');
-        const seccionTablaHistorial = document.getElementById('seccion-tabla-historial');
-        const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
-
-        function renderizarHistorial(lista) {
-            let tbodyHistorial = document.querySelector('#tabla-historial tbody');
-            tbodyHistorial.innerHTML = '';
-
-            let listaOrdenada = [...lista].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-            let deudaTotal = 0;
-
-            listaOrdenada.forEach((venta) => {
-                deudaTotal += venta.saldo;
-                let realIndex = historialVentas.indexOf(venta);
-
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${formatearFecha(venta.fecha)}</td>
-                    <td><a class="link-action" onclick="verDetalleVenta(${realIndex})">${venta.comprobante}</a></td>
-                    <td>${venta.cliente}</td>
-                    <td>S/ ${venta.total.toFixed(2)}</td>
-                    <td>S/ ${venta.abonado.toFixed(2)}</td>
-                    <td class="${venta.saldo > 0 ? 'text-red' : 'text-green'}">S/ ${venta.saldo.toFixed(2)}</td>
-                    <td>
-                        <a class="link-action" onclick="pedirEditarVenta(${realIndex})">EDITAR</a>
-                        <a class="link-danger" onclick="pedirEliminarVenta(${realIndex})">ELIMINAR</a>
-                    </td>
-                `;
-                tbodyHistorial.appendChild(tr);
-            });
-
-            document.getElementById('deuda-total-cliente').innerText = "S/ " + deudaTotal.toFixed(2);
-        }
-
-        filtroClienteInput.addEventListener('input', function() {
-            let filtro = this.value.trim().toUpperCase();
-            
-            if (filtro === "") {
-                seccionTablaHistorial.style.display = 'none';
-                contenedorSaldoDeuda.style.display = 'none';
-                return;
-            }
-
-            seccionTablaHistorial.style.display = 'block';
-            contenedorSaldoDeuda.style.display = 'block';
-
-            let filtrados = historialVentas.filter(v => v.cliente.includes(filtro));
-            renderizarHistorial(filtrados);
-        });
-
-        window.verDetalleVenta = function(index) {
-            let v = historialVentas[index];
-            document.getElementById('modal-titulo-boleta').innerText = `NOTA DE VENTA N° ${v.comprobante}`;
-            document.getElementById('modal-fecha').innerText = formatearFecha(v.fecha);
-            document.getElementById('modal-cliente').innerText = v.cliente;
-            document.getElementById('modal-doc').innerText = v.doc || '-';
-            document.getElementById('modal-medio').innerText = v.medio;
-
-            let listaItemsHTML = '';
-            v.items.forEach(i => {
-                listaItemsHTML += `
-                    <tr>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color);">${i.cantidad}</td>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color);">${i.producto}</td>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: right;">S/ ${i.precio.toFixed(2)}</td>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: bold;">S/ ${i.subtotal.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
-            document.getElementById('modal-items-lista').innerHTML = listaItemsHTML;
-
-            document.getElementById('modal-total').innerText = v.total.toFixed(2);
-            document.getElementById('modal-abonado').innerText = v.abonado.toFixed(2);
-            document.getElementById('modal-saldo').innerText = v.saldo.toFixed(2);
-
-            document.getElementById('modal-detalle-venta').style.display = 'flex';
-        };
-
-        document.getElementById('btn-cerrar-modal-detalle').addEventListener('click', function() {
-            document.getElementById('modal-detalle-venta').style.display = 'none';
-        });
-
-        let indiceAEditar = null;
-        window.pedirEditarVenta = function(index) {
-            indiceAEditar = index;
-            document.getElementById('modal-editar-venta').style.display = 'flex';
-        };
-
-        document.getElementById('btn-confirmar-editar').addEventListener('click', function() {
-            if (indiceAEditar !== null) {
-                let v = historialVentas[indiceAEditar];
-                document.getElementById('cliente').value = v.cliente;
-                document.getElementById('doc-identidad').value = v.doc;
-                document.getElementById('comprobante').value = v.comprobante;
-                document.getElementById('monto-abonado').value = v.abonado;
-                document.getElementById('fecha-operacion').value = v.fecha;
-                document.getElementById('medio-pago').value = v.medio;
-
-                carrito = [...v.items];
-                actualizarTablaCarrito();
-
-                historialVentas.splice(indiceAEditar, 1);
-                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-                document.getElementById('modal-editar-venta').style.display = 'none';
-                filtroClienteInput.dispatchEvent(new Event('input'));
-                indiceAEditar = null;
-            }
-        });
-
-        document.getElementById('btn-cancelar-editar').addEventListener('click', function() {
-            indiceAEditar = null;
-            document.getElementById('modal-editar-venta').style.display = 'none';
-        });
-
-        let indiceAEliminar = null;
-        window.pedirEliminarVenta = function(index) {
-            indiceAEliminar = index;
-            document.getElementById('modal-eliminar-venta').style.display = 'flex';
-        };
-
-        document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
-            if (indiceAEliminar !== null) {
-                historialVentas.splice(indiceAEliminar, 1);
-                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-                document.getElementById('modal-eliminar-venta').style.display = 'none';
-                filtroClienteInput.dispatchEvent(new Event('input'));
-                indiceAEliminar = null;
-            }
-        });
-
-        document.getElementById('btn-cancelar-eliminar').addEventListener('click', function() {
-            indiceAEliminar = null;
-            document.getElementById('modal-eliminar-venta').style.display = 'none';
-        });
     </script>
-
 </body>
 </html>

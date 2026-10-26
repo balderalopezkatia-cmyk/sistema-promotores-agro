@@ -9,37 +9,25 @@
         body { padding: 16px; }
         .main-content { width: 100%; max-width: 1400px; margin: 0 auto; overflow-x: hidden; }
         
-        /* Ajuste de la barra superior para acomodar el logo grande y el eslogan debajo */
         .top-navbar { padding: 14px 20px; }
         .logo-container-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
         .logo-container-top img { height: 75px; width: auto; object-fit: contain; }
         .logo-slogan-italic { font-size: 10px; font-style: italic; color: var(--text-secondary); margin-left: 2px; letter-spacing: 0.3px; }
 
-        /* Layout Principal */
         .main-layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; align-items: start; }
-
-        /* Panel Izquierdo de Filtros */
         .sidebar-filters { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 18px; }
         .filter-group { display: flex; flex-direction: column; gap: 8px; }
         .filter-label { font-size: 10px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
         
         .chips-container { display: flex; flex-wrap: wrap; gap: 6px; }
         .chip { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; transition: 0.2s; }
-        .chip:hover { border-color: var(--green-primary); }
         .chip.active { background: var(--bg-main); color: var(--green-primary); border-color: var(--green-primary); }
         .chip-badge { background: var(--bg-main); padding: 2px 8px; border-radius: 10px; font-size: 10px; color: var(--text-secondary); border: 1px solid var(--border-color); }
 
         .select-box, .input-box { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 9px 12px; border-radius: 8px; font-size: 12px; outline: none; width: 100%; text-transform: uppercase; }
-        .select-box:focus, .input-box:focus { border-color: var(--green-primary); }
-        .input-box::placeholder { color: var(--text-secondary); }
-
         .reset-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; padding: 4px; }
-        .reset-btn:hover { color: var(--text-white); }
 
-        /* Panel Derecho */
         .content-panel { display: flex; flex-direction: column; gap: 12px; }
-
-        /* Cabecera de Productos */
         .products-top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 20px; }
         .title-group h2 { font-size: 16px; color: var(--text-white); font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
         .title-group span { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
@@ -47,95 +35,52 @@
         .toolbar-right { display: flex; align-items: center; gap: 8px; }
         .search-field { display: flex; align-items: center; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; width: 220px; gap: 8px; }
         .search-field input { background: transparent; border: none; outline: none; color: var(--text-white); font-size: 11px; width: 100%; text-transform: uppercase; }
-        .search-field input::placeholder { color: var(--text-secondary); }
 
-        .btn-tool { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 7px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .btn-tool:hover { background: #1a2a3a; border-color: var(--green-primary); }
-        
-        .btn-add-main { background: var(--green-primary); border: none; color: var(--bg-main); padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: 0.2s; box-shadow: 0 0 10px rgba(13, 242, 153, 0.3); text-decoration: none; }
-        .btn-add-main:hover { background: #35f5aa; }
-
-        /* Tarjeta de Resumen de Monto Total del Stock */
+        .btn-add-main { background: var(--green-primary); border: none; color: var(--bg-main); padding: 8px 16px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; text-transform: uppercase; text-decoration: none; }
         .stock-summary-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--green-primary); }
-        .stock-summary-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; }
+        .stock-summary-title { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
         .stock-summary-value { font-size: 18px; font-weight: 700; color: var(--green-primary); }
 
-        /* Barra de Selección Masiva */
-        .selection-bar { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
-        .selection-left { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; color: var(--text-white); cursor: pointer; }
-        .selection-right { display: flex; gap: 8px; }
-        
-        .btn-action-dark { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-action-dark:hover { background: #1a2a3a; border-color: var(--green-primary); color: var(--green-primary); }
-        
-        .btn-action-red { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--red-alert); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-action-red:hover { border-color: var(--red-alert); background: rgba(255, 14, 85, 0.1); }
-
-        /* Tarjetas de Producto */
-        .product-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
-        .product-card:hover { border-color: var(--green-primary); }
-
+        .product-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
         .card-left { display: flex; align-items: center; gap: 14px; }
-        .checkbox-item { width: 16px; height: 16px; accent-color: var(--green-primary); cursor: pointer; }
-        
-        .thumb-box { width: 64px; height: 64px; background: var(--bg-main); border: 1px solid var(--green-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; flex-shrink: 0; position: relative; }
+        .thumb-box { width: 64px; height: 64px; background: var(--bg-main); border: 1px solid var(--green-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; position: relative; }
         .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
-        .thumb-box span { font-size: 24px; color: var(--green-primary); }
-        .thumb-box:hover::after { content: '🔍'; position: absolute; background: rgba(0,0,0,0.5); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        
         .card-info h3 { font-size: 14px; font-weight: 700; color: var(--text-white); text-transform: uppercase; margin-bottom: 5px; }
         .card-meta { display: flex; gap: 8px; font-size: 11px; color: var(--text-white); text-transform: uppercase; align-items: center; }
-        
         .tag-lab { background: var(--bg-main); border: 1px solid var(--blue-tag); color: var(--blue-tag); padding: 3px 10px; border-radius: 6px; font-weight: 600; }
         .tag-stock { background: var(--bg-main); border: 1px solid var(--green-primary); color: var(--green-primary); padding: 3px 10px; border-radius: 6px; font-weight: 600; }
-        .tag-stock-low { background: var(--bg-main); border: 1px solid var(--red-alert); color: var(--red-alert); padding: 3px 10px; border-radius: 6px; font-weight: 600; }
 
         .card-right { display: flex; align-items: center; gap: 24px; }
         .price-col { text-align: right; }
-        .price-lbl { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 2px; }
+        .price-lbl { font-size: 9px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
         .price-val { font-size: 14px; font-weight: 700; color: var(--text-white); }
-        
-        .btn-dots { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; }
-        .btn-dots:hover { border-color: var(--green-primary); color: var(--green-primary); }
+        .btn-dots { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); width: 36px; height: 36px; border-radius: 8px; cursor: pointer; }
 
-        /* Modales Flotantes Arrastrables */
+        /* MODALES */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-box { background: var(--bg-card); padding: 24px; border-radius: 12px; max-width: 450px; width: 90%; border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; position: absolute; box-shadow: 0 20px 25px rgba(0,0,0,0.6); }
+        .modal-box { background: var(--bg-card); padding: 24px; border-radius: 12px; max-width: 450px; width: 90%; border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; position: absolute; }
         .modal-header-drag { cursor: move; background: #1a2a3a; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .modal-header-drag h3 { color: var(--green-primary); font-size: 13px; text-transform: uppercase; font-weight: 700; margin: 0; }
-        .modal-box p { font-size: 12px; color: var(--text-white); margin-bottom: 20px; line-height: 1.4; text-transform: uppercase; font-weight: 600; }
-        
         .btn-modal-action { background: var(--green-primary); border: none; color: var(--bg-main); padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px; text-transform: uppercase; }
-        .btn-modal-action:hover { background: #35f5aa; }
-        .btn-modal-cancel { background: var(--border-color); border: none; color: var(--text-white); padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px; text-transform: uppercase; margin-right: 8px; }
-        .btn-modal-cancel:hover { background: #2c3e50; }
+        .btn-modal-cancel { background: var(--border-color); border: none; color: var(--text-white); padding: 9px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px; text-transform: uppercase; }
+        .btn-view-large { background: #1a2a3a; border: 1px solid var(--green-primary); color: var(--green-primary); padding: 10px 14px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; }
 
-        .btn-view-large {
-            background: #1a2a3a;
-            border: 1px solid var(--green-primary);
-            color: var(--green-primary);
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: 0.2s;
+        /* Visor de Zoom con movimiento fluido tipo Arrastre (Pan/Grab) */
+        #contenedor-imagen-zoom {
+            width: 100%; height: 70vh; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; background: #0b131e; border-radius: 8px; border: 1px solid var(--border-color);
+            position: relative; cursor: grab;
         }
-        .btn-view-large:hover {
-            background: var(--green-primary);
-            color: var(--bg-main);
+        #contenedor-imagen-zoom:active { cursor: grabbing; }
+        #img-ampliada-grande {
+            position: absolute; transform-origin: center center; user-select: none; max-width: none; max-height: none;
+            transition: transform 0.1s ease-out;
         }
     </style>
 </head>
 <body>
 
-    <!-- Barra Superior con Logo Grande, Eslogan y Menú Unificado -->
+    <!-- Barra Superior con pestaña STOCK marcada como activa -->
     <div class="top-navbar">
         <div class="nav-left">
             <div class="logo-container-top">
@@ -155,73 +100,24 @@
         </div>
         <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
             <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
-            <div class="icon-btn" title="Notificaciones">
-                🔔
-                <span class="notification-dot"></span>
-            </div>
-            <button class="user-avatar" title="Cerrar Sesión / Cambiar Perfil" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
+            <button class="user-avatar" title="Cerrar Sesión" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
         </div>
     </div>
 
     <!-- Layout Principal -->
     <div class="main-content">
         <div class="main-layout">
-
-            <!-- Panel Izquierdo de Filtros -->
             <div class="sidebar-filters">
                 <div class="filter-group">
                     <span class="filter-label">Estado del producto</span>
                     <div class="chips-container">
                         <div class="chip active" onclick="filtrarEstado('todos', this)">Todos <span class="chip-badge" id="badge-todos">0</span></div>
                         <div class="chip" onclick="filtrarEstado('activos', this)">Activos <span class="chip-badge" id="badge-activos">0</span></div>
-                        <div class="chip" onclick="filtrarEstado('inactivos', this)">Inactivos <span class="chip-badge" id="badge-inactivos">0</span></div>
                     </div>
                 </div>
-
-                <div class="filter-group">
-                    <span class="filter-label">Tipo de producto</span>
-                    <div class="chips-container">
-                        <div class="chip active" onclick="alternarChipTipo(this)">Agroquímicos</div>
-                        <div class="chip" onclick="alternarChipTipo(this)">Semillas</div>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <span class="filter-label">Ordenar por</span>
-                    <select id="select-ordenar-stock" class="select-box" onchange="aplicarFiltrosYOrdenamiento()">
-                        <option value="az">Alfabético: A - Z</option>
-                        <option value="za">Alfabético: Z - A</option>
-                        <option value="stock-alto">Saldo Stock (Mayor a Menor)</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <span class="filter-label">Alerta de existencias</span>
-                    <select id="select-alerta-stock" class="select-box" onchange="aplicarFiltrosYOrdenamiento()">
-                        <option value="todos">Todas las existencias</option>
-                        <option value="bajo">Stock bajo (&le; 3)</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <span class="filter-label">Categoría</span>
-                    <select id="select-categoria" class="select-box" onchange="aplicarFiltrosYOrdenamiento()">
-                        <option value="todos">Todos los productos</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <span class="filter-label">Precio</span>
-                    <input type="number" id="input-precio-min" class="input-box" placeholder="Precio mínimo (S/)" oninput="aplicarFiltrosYOrdenamiento()">
-                    <input type="number" id="input-precio-max" class="input-box" placeholder="Precio máximo (S/)" style="margin-top: 6px;" oninput="aplicarFiltrosYOrdenamiento()">
-                </div>
-
-                <button type="button" class="reset-btn" onclick="restablecerFiltros()">
-                    🔄 Restablecer filtros
-                </button>
+                <button type="button" class="reset-btn" onclick="restablecerFiltros()">🔄 Restablecer filtros</button>
             </div>
 
-            <!-- Panel Derecho Principal -->
             <div class="content-panel">
                 <div class="products-top-bar">
                     <div class="title-group">
@@ -233,166 +129,70 @@
                             <span>🔍</span>
                             <input type="text" id="input-buscar-stock" placeholder="Buscar producto..." oninput="aplicarFiltrosYOrdenamiento()">
                         </div>
-                        <button class="btn-tool" onclick="mostrarAlerta('Escáner de código de barras activado.')">📷 Escanear</button>
                         <a href="/compras" class="btn-add-main">+ Agregar producto</a>
                     </div>
                 </div>
 
-                <!-- Tarjeta de Resumen: Monto Total del Stock -->
                 <div class="stock-summary-card">
                     <div>
                         <div class="stock-summary-title">Monto Total del Stock (Valorizado al Costo)</div>
-                        <div style="font-size: 10px; color: var(--text-secondary); text-transform: uppercase;">Suma total de existencias actuales</div>
                     </div>
                     <div class="stock-summary-value" id="val-monto-total-stock">S/ 0.00</div>
                 </div>
 
-                <!-- Barra de Selección Masiva -->
-                <div class="selection-bar">
-                    <div class="selection-left">
-                        <input type="checkbox" class="checkbox-item" id="checkbox-seleccionar-todos" onclick="toggleSeleccionarTodos(this)">
-                        <span id="texto-seleccionados">Seleccionados (0)</span>
-                    </div>
-                    <div class="selection-right">
-                        <button class="btn-action-dark" onclick="compararGraficoExistencias()">Comparar gráfico</button>
-                        <button class="btn-action-dark" onclick="ocultarSeleccionados()">Ocultar</button>
-                        <button class="btn-action-red" onclick="eliminarSeleccionados()">Eliminar</button>
-                    </div>
-                </div>
-
-                <!-- Listado Dinámico de Tarjetas -->
-                <div id="contenedor-tarjetas-stock" style="display: flex; flex-direction: column; gap: 10px;">
-                    <!-- Inyectado dinámicamente -->
-                </div>
+                <div id="contenedor-tarjetas-stock" style="display: flex; flex-direction: column; gap: 10px;"></div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE ALERTA GENERAL -->
-    <div id="modal-alerta" class="modal-overlay">
-        <div class="modal-box" id="card-alerta">
-            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-alerta')">
-                <h3>PROMOTORES DEL AGRO</h3>
-                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-alerta')">✕</span>
-            </div>
-            <p id="modal-mensaje" style="margin: 12px 0;"></p>
-            <div style="text-align: right;">
-                <button type="button" class="btn-modal-action" onclick="cerrarModal('modal-alerta')">ACEPTAR</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE GESTIÓN DE IMAGEN DE PRODUCTO -->
-    <div id="modal-imagen" class="modal-overlay">
-        <div class="modal-box" id="card-imagen" style="max-width: 480px;">
-            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-imagen')">
-                <h3>GESTIONAR IMAGEN DE PRODUCTO</h3>
-                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-imagen')">✕</span>
-            </div>
-            <p id="nombre-prod-imagen" style="color: var(--green-primary); font-weight: bold; margin-bottom: 12px;"></p>
-            
-            <div style="display: flex; flex-direction: column; gap: 14px; text-align: left; margin-bottom: 20px;">
-                <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary);">1. Subir imagen desde la computadora:</label>
-                <input type="file" id="input-archivo-img" accept="image/*" class="input-box" style="padding: 6px;">
-
-                <label style="font-size: 11px; font-weight: bold; color: var(--text-secondary);">2. O pegar enlace de internet (URL):</label>
-                <input type="text" id="input-url-img" class="input-box" placeholder="https://ejemplo.com/producto.jpg">
-
-                <label style="font-size: 11px; font-weight: bold; color: var(--green-primary);">3. Visualización de la imagen:</label>
-                <button type="button" class="btn-view-large" onclick="verImagenCompletaDesdeModal()">
-                    🔍 VER IMAGEN COMPLETA DEL PRODUCTO (SUPER GRANDE)
-                </button>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modal-imagen')">Cancelar</button>
-                <button type="button" class="btn-modal-action" onclick="guardarImagenProducto()">Guardar Imagen</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL PARA VER IMAGEN SUPER GRANDE (MOVIBLE Y AMPLIA CON ZOOM) -->
+    <!-- MODAL IMAGEN GRANDE CON ZOOM Y ARRASTRE FLUIDO -->
     <div id="modal-ver-imagen" class="modal-overlay">
         <div class="modal-box" id="card-ver-imagen" style="max-width: 900px; width: 95%; padding: 18px;">
-            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-ver-imagen')">
-                <h3 id="titulo-ver-imagen">VISUALIZACIÓN DE IMAGEN EN TAMAÑO COMPLETO</h3>
+            <div class="modal-header-drag" onmousedown="iniciarArrastreModal(event, 'card-ver-imagen')">
+                <h3 id="titulo-ver-imagen">VISUALIZACIÓN DE IMAGEN</h3>
                 <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-ver-imagen')">✕</span>
             </div>
             <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 10px;">
-                <button type="button" class="btn-modal-action" onclick="ajustarZoomImagen(0.2)" style="padding: 5px 12px; font-size: 12px;">➕ ACERCAR ZOOM</button>
-                <button type="button" class="btn-modal-action" onclick="ajustarZoomImagen(-0.2)" style="padding: 5px 12px; font-size: 12px;">➖ ALEJAR ZOOM</button>
-                <button type="button" class="btn-modal-cancel" onclick="restaurarZoomImagen()" style="padding: 5px 12px; font-size: 12px; margin: 0;">↺ RESTAURAR</button>
+                <button type="button" class="btn-modal-action" onclick="ajustarZoomImagen(0.3)">➕ ACERCAR</button>
+                <button type="button" class="btn-modal-action" onclick="ajustarZoomImagen(-0.3)">➖ ALEJAR</button>
+                <button type="button" class="btn-modal-cancel" onclick="restaurarZoomImagen()">↺ CENTRAR Y RESTAURAR</button>
             </div>
-            <div id="contenedor-imagen-zoom" style="width: 100%; height: 70vh; display: flex; align-items: center; justify-content: center; overflow: auto; background: #0b131e; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px; cursor: grab;">
-                <img id="img-ampliada-grande" src="" alt="Imagen Completa del Producto" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; transition: transform 0.2s ease; transform: scale(1);">
+            <div id="contenedor-imagen-zoom">
+                <img id="img-ampliada-grande" src="" alt="Imagen Completa">
             </div>
             <div style="text-align: right; margin-top: 15px;">
-                <button type="button" class="btn-modal-action" onclick="cerrarModal('modal-ver-imagen')">CERRAR VISUALIZACIÓN</button>
+                <button type="button" class="btn-modal-action" onclick="cerrarModal('modal-ver-imagen')">CERRAR</button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE CONFIRMACIÓN -->
-    <div id="modal-confirmacion" class="modal-overlay">
-        <div class="modal-box" id="card-confirmacion">
-            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-confirmacion')">
-                <h3 id="conf-titulo">CONFIRMACIÓN</h3>
-                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-confirmacion')">✕</span>
+    <!-- MODAL GESTIÓN DE IMAGEN -->
+    <div id="modal-imagen" class="modal-overlay">
+        <div class="modal-box" id="card-imagen" style="max-width: 480px;">
+            <div class="modal-header-drag" onmousedown="iniciarArrastreModal(event, 'card-imagen')">
+                <h3>GESTIONAR IMAGEN</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-imagen')">✕</span>
             </div>
-            <p id="conf-mensaje"></p>
+            <p id="nombre-prod-imagen" style="color: var(--green-primary); font-weight: bold; margin-bottom: 12px;"></p>
+            <input type="file" id="input-archivo-img" accept="image/*" class="input-box" style="margin-bottom: 10px;">
+            <input type="text" id="input-url-img" class="input-box" placeholder="https://ejemplo.com/foto.jpg" style="margin-bottom: 15px;">
+            <button type="button" class="btn-view-large" onclick="verImagenCompletaDesdeModal()" style="margin-bottom: 15px;">🔍 VER IMAGEN COMPLETA</button>
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modal-confirmacion')">Cancelar</button>
-                <button type="button" class="btn-modal-action" id="btn-conf-aceptar">Sí, Proceder</button>
+                <button type="button" class="btn-modal-cancel" onclick="cerrarModal('modal-imagen')">Cancelar</button>
+                <button type="button" class="btn-modal-action" onclick="guardarImagenProducto()">Guardar</button>
             </div>
         </div>
     </div>
 
     <script>
         let listaStockCache = [];
-        let estadoFiltroActual = 'todos';
         let productoSeleccionadoParaImagen = null;
-        let callbackConfirmacion = null;
-        let escalaZoomActual = 1;
+        let escalaZoom = 1;
+        let posX = 0, posY = 0;
+        let estaArrastrando = false;
+        let inicioX = 0, inicioY = 0;
 
-        function iniciarArrastre(e, cardId) {
-            const card = document.getElementById(cardId);
-            let startX = e.clientX, startY = e.clientY;
-            const rect = card.getBoundingClientRect();
-            card.style.position = 'absolute';
-            card.style.left = rect.left + 'px';
-            card.style.top = rect.top + 'px';
-            card.style.transform = 'none';
-
-            function onMouseMove(moveEvent) {
-                card.style.left = (rect.left + (moveEvent.clientX - startX)) + 'px';
-                card.style.top = (rect.top + (moveEvent.clientY - startY)) + 'px';
-            }
-            function onMouseUp() {
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            }
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-        }
-
-        function mostrarAlerta(msj) {
-            document.getElementById('modal-mensaje').innerText = msj;
-            document.getElementById('modal-alerta').style.display = 'flex';
-        }
-        function cerrarModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function abrirConfirmacion(titulo, mensaje, callback) {
-            document.getElementById('conf-titulo').innerText = titulo;
-            document.getElementById('conf-mensaje').innerText = mensaje;
-            callbackConfirmacion = callback;
-            document.getElementById('modal-confirmacion').style.display = 'flex';
-        }
-        document.getElementById('btn-conf-aceptar').onclick = function() {
-            cerrarModal('modal-confirmacion');
-            if (typeof callbackConfirmacion === 'function') callbackConfirmacion();
-        };
+        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function cargarStockGeneral() {
             let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
@@ -403,30 +203,14 @@
             historialCompras.forEach(compra => {
                 if (compra.items) {
                     compra.items.forEach(item => {
-                        let nombreProd = item.producto ? item.producto.trim().toUpperCase() : '';
-                        if (!nombreProd) return;
-                        let costoProd = parseFloat(item.costo) || 0;
-                        let key = nombreProd + '_' + costoProd;
-
+                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                        if (!nombre) return;
+                        let costo = parseFloat(item.costo) || 0;
+                        let key = nombre + '_' + costo;
                         if (!mapaStock[key]) {
-                            mapaStock[key] = {
-                                producto: nombreProd,
-                                laboratorio: item.laboratorio ? item.laboratorio.trim().toUpperCase() : '-',
-                                costo: costoProd,
-                                compras: 0,
-                                ventas: 0,
-                                sugerido: parseFloat(item.sugerido) || 0,
-                                imagen: imagenesGuardadas[nombreProd] || '',
-                                estado: 'activo'
-                            };
+                            mapaStock[key] = { producto: nombre, laboratorio: item.laboratorio ? item.laboratorio.toUpperCase() : '-', costo, compras: 0, ventas: 0, sugerido: parseFloat(item.sugerido) || 0, imagen: imagenesGuardadas[nombre] || '', estado: 'activo' };
                         }
                         mapaStock[key].compras += parseFloat(item.cantidad) || 0;
-                        if (item.laboratorio && mapaStock[key].laboratorio === '-') {
-                            mapaStock[key].laboratorio = item.laboratorio.trim().toUpperCase();
-                        }
-                        if (item.sugerido && parseFloat(item.sugerido) > 0) {
-                            mapaStock[key].sugerido = parseFloat(item.sugerido);
-                        }
                     });
                 }
             });
@@ -434,288 +218,148 @@
             historialVentas.forEach(venta => {
                 if (venta.items) {
                     venta.items.forEach(item => {
-                        let nombreProd = item.producto ? item.producto.trim().toUpperCase() : '';
-                        if (!nombreProd) return;
-                        let cantVenta = parseFloat(item.cantidad) || 0;
-                        let keysCoincidentes = Object.keys(mapaStock).filter(k => mapaStock[k].producto === nombreProd);
-
-                        if (keysCoincidentes.length > 0) {
-                            mapaStock[keysCoincidentes[0]].ventas += cantVenta;
-                        } else {
-                            let costoVenta = parseFloat(item.costo) || 0;
-                            let keyOut = nombreProd + '_' + costoVenta;
-                            if (!mapaStock[keyOut]) {
-                                mapaStock[keyOut] = {
-                                    producto: nombreProd,
-                                    laboratorio: '-',
-                                    costo: costoVenta,
-                                    compras: 0,
-                                    ventas: 0,
-                                    sugerido: parseFloat(item.sugerido) || 0,
-                                    imagen: imagenesGuardadas[nombreProd] || '',
-                                    estado: 'activo'
-                                };
-                            }
-                            mapaStock[keyOut].ventas += cantVenta;
-                        }
+                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                        let keys = Object.keys(mapaStock).filter(k => mapaStock[k].producto === nombre);
+                        if (keys.length > 0) mapaStock[keys[0]].ventas += parseFloat(item.cantidad) || 0;
                     });
                 }
             });
 
             listaStockCache = Object.values(mapaStock);
             calcularMontoTotalStockGeneral();
-            aplicarFiltrosYOrdenamiento();
+            renderizarTarjetasStock(listaStockCache);
         }
 
         function calcularMontoTotalStockGeneral() {
-            let montoTotalValorizado = 0;
-            listaStockCache.forEach(item => {
-                let saldoStock = Math.max(0, item.compras - item.ventas);
-                montoTotalValorizado += (saldoStock * item.costo);
-            });
-            document.getElementById('val-monto-total-stock').innerText = `S/ ${montoTotalValorizado.toFixed(2)}`;
-        }
-
-        function filtrarEstado(estado, elemento) {
-            estadoFiltroActual = estado;
-            document.querySelectorAll('.sidebar-filters .chip').forEach(c => c.classList.remove('active'));
-            elemento.classList.add('active');
-            aplicarFiltrosYOrdenamiento();
-        }
-
-        function alternarChipTipo(elemento) {
-            elemento.classList.toggle('active');
-            aplicarFiltrosYOrdenamiento();
-        }
-
-        function restablecerFiltros() {
-            document.getElementById('input-buscar-stock').value = '';
-            document.getElementById('select-ordenar-stock').value = 'az';
-            document.getElementById('select-alerta-stock').value = 'todos';
-            document.getElementById('select-categoria').value = 'todos';
-            document.getElementById('input-precio-min').value = '';
-            document.getElementById('input-precio-max').value = '';
-            estadoFiltroActual = 'todos';
-            document.querySelectorAll('.sidebar-filters .chip')[0].click();
-            cargarStockGeneral();
-        }
-
-        function aplicarFiltrosYOrdenamiento() {
-            let textoBusqueda = document.getElementById('input-buscar-stock').value.toUpperCase().trim();
-            let criterioOrden = document.getElementById('select-ordenar-stock').value;
-            let filtroAlerta = document.getElementById('select-alerta-stock').value;
-            let precioMin = parseFloat(document.getElementById('input-precio-min').value) || 0;
-            let precioMax = parseFloat(document.getElementById('input-precio-max').value) || 999999;
-
-            let filtrados = listaStockCache.filter(item => {
-                let saldoStock = Math.max(0, item.compras - item.ventas);
-                let cumpleBusqueda = item.producto.includes(textoBusqueda) || item.laboratorio.includes(textoBusqueda);
-                let cumpleEstado = (estadoFiltroActual === 'todos') || 
-                                   (estadoFiltroActual === 'activos' && item.estado === 'activo') || 
-                                   (estadoFiltroActual === 'inactivos' && item.estado === 'inactivo');
-                let cumpleAlerta = (filtroAlerta === 'todos') || (filtroAlerta === 'bajo' && saldoStock <= 3);
-                let cumplePrecio = item.sugerido >= precioMin && item.sugerido <= precioMax;
-
-                return cumpleBusqueda && cumpleEstado && cumpleAlerta && cumplePrecio;
-            });
-
-            if (criterioOrden === 'az') {
-                filtrados.sort((a, b) => a.producto.localeCompare(b.producto));
-            } else if (criterioOrden === 'za') {
-                filtrados.sort((a, b) => b.producto.localeCompare(a.producto));
-            } else if (criterioOrden === 'stock-alto') {
-                filtrados.sort((a, b) => (b.compras - b.ventas) - (a.compras - a.ventas));
-            }
-
-            renderizarTarjetasStock(filtrados);
+            let totalVal = 0;
+            listaStockCache.forEach(i => { totalVal += Math.max(0, i.compras - i.ventas) * i.costo; });
+            document.getElementById('val-monto-total-stock').innerText = `S/ ${totalVal.toFixed(2)}`;
         }
 
         function renderizarTarjetasStock(datos) {
             let contenedor = document.getElementById('contenedor-tarjetas-stock');
-            document.getElementById('contador-productos-total').innerText = listaStockCache.length + " productos en total";
-            document.getElementById('badge-todos').innerText = listaStockCache.length;
-            document.getElementById('badge-activos').innerText = listaStockCache.filter(i => i.estado === 'activo').length;
-            document.getElementById('badge-inactivos').innerText = listaStockCache.filter(i => i.estado === 'inactivo').length;
+            document.getElementById('contador-productos-total').innerText = datos.length + " productos en total";
+            document.getElementById('badge-todos').innerText = datos.length;
 
             if (datos.length === 0) {
-                contenedor.innerHTML = `<div style="background: var(--bg-card); padding: 24px; text-align: center; border-radius: 12px; color: var(--text-secondary); border: 1px solid var(--border-color);">No se encontraron productos registrados en el stock. Ingresa compras primero para verlos aquí.</div>`;
+                contenedor.innerHTML = `<div style="background:var(--bg-card); padding:24px; text-align:center; border-radius:12px; color:var(--text-secondary); border:1px solid var(--border-color);">No hay productos registrados. Realiza una compra primero.</div>`;
                 return;
             }
 
             let fragment = document.createDocumentFragment();
-
-            datos.forEach((item) => {
-                let saldoStock = Math.max(0, item.compras - item.ventas);
-                let stockClass = saldoStock <= 3 ? "tag-stock-low" : "tag-stock";
-                let stockText = saldoStock <= 3 ? `${saldoStock.toFixed(2)} en stock - bajo` : `${saldoStock.toFixed(2)} en stock`;
+            datos.forEach(item => {
+                let saldo = Math.max(0, item.compras - item.ventas);
+                let thumb = item.imagen ? `<img src="${item.imagen}" onclick="event.stopPropagation(); abrirImagenGrande('${item.imagen}', '${item.producto}')">` : `<span onclick="event.stopPropagation(); abrirModalImagen('${item.producto}')">🌱</span>`;
                 
-                let thumbContent = '';
-                if (item.imagen) {
-                    thumbContent = `<img src="${item.imagen}" alt="${item.producto}" onclick="event.stopPropagation(); abrirImagenGrande('${item.imagen}', '${item.producto}')" title="Haz clic para ver imagen grande">`;
-                } else {
-                    thumbContent = `<span onclick="event.stopPropagation(); abrirModalImagen('${item.producto}')" title="Haz clic para cargar foto">🌱</span>`;
-                }
-
                 let card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
                     <div class="card-left">
-                        <input type="checkbox" class="checkbox-item producto-checkbox" data-producto="${item.producto}" onclick="actualizarContadorSeleccionados()">
-                        <div class="thumb-box" title="Gestionar foto" onclick="abrirModalImagen('${item.producto}')">
-                            ${thumbContent}
-                        </div>
+                        <div class="thumb-box">${thumb}</div>
                         <div class="card-info">
                             <h3>${item.producto}</h3>
                             <div class="card-meta">
                                 <span class="tag-lab">${item.laboratorio}</span>
-                                <span class="${stockClass}">${stockText}</span>
+                                <span class="tag-stock">${saldo.toFixed(2)} en stock</span>
                             </div>
                         </div>
                     </div>
                     <div class="card-right">
-                        <div class="price-col">
-                            <div class="price-lbl">P. Costo</div>
-                            <div class="price-val">S/ ${item.costo.toFixed(2)}</div>
-                        </div>
-                        <div class="price-col">
-                            <div class="price-lbl">P. Sugerido</div>
-                            <div class="price-val" style="color: var(--green-primary);">S/ ${item.sugerido.toFixed(2)}</div>
-                        </div>
-                        <button class="btn-dots" onclick="abrirOpcionesProducto('${item.producto}')" title="Opciones de producto">•••</button>
+                        <div class="price-col"><div class="price-lbl">Costo</div><div class="price-val">S/ ${item.costo.toFixed(2)}</div></div>
+                        <div class="price-col"><div class="price-lbl">Sugerido</div><div class="price-val" style="color:var(--green-primary);">S/ ${item.sugerido.toFixed(2)}</div></div>
+                        <button class="btn-dots" onclick="abrirModalImagen('${item.producto}')">•••</button>
                     </div>
                 `;
                 fragment.appendChild(card);
             });
-
             contenedor.innerHTML = '';
             contenedor.appendChild(fragment);
-            actualizarContadorSeleccionados();
         }
 
-        function abrirImagenGrande(urlImagen, nombreProducto) {
-            escalaZoomActual = 1;
-            let imgElem = document.getElementById('img-ampliada-grande');
-            imgElem.style.transform = `scale(${escalaZoomActual})`;
-            document.getElementById('titulo-ver-imagen').innerText = `IMAGEN COMPLETA: ${nombreProducto}`;
-            imgElem.src = urlImagen;
+        // LÓGICA DE ZOOM Y MOVIMIENTO FLUIDO (ARRASTRE CON EL MOUSE)
+        const imgZoom = document.getElementById('img-ampliada-grande');
+        const contZoom = document.getElementById('contenedor-imagen-zoom');
+
+        function abrirImagenGrande(url, nombre) {
+            escalaZoom = 1; posX = 0; posY = 0;
+            imgZoom.src = url;
+            document.getElementById('titulo-ver-imagen').innerText = `IMAGEN: ${nombre}`;
+            actualizarTransformacionImagen();
             document.getElementById('modal-ver-imagen').style.display = 'flex';
         }
 
-        function ajustarZoomImagen(cambio) {
-            escalaZoomActual += cambio;
-            if (escalaZoomActual < 0.4) escalaZoomActual = 0.4;
-            if (escalaZoomActual > 4) escalaZoomActual = 4;
-            document.getElementById('img-ampliada-grande').style.transform = `scale(${escalaZoomActual})`;
+        function ajustarZoom(delta) {
+            escalaZoom += delta;
+            if (escalaZoom < 0.5) escalaZoom = 0.5;
+            if (escalaZoom > 5) escalaZoom = 5;
+            actualizarTransformacionImagen();
         }
 
-        function restaurarZoomImagen() {
-            escalaZoomActual = 1;
-            document.getElementById('img-ampliada-grande').style.transform = `scale(${escalaZoomActual})`;
+        function restaurarZoom() {
+            escalaZoom = 1; posX = 0; posY = 0;
+            actualizarTransformacionImagen();
         }
 
-        function verImagenCompletaDesdeModal() {
-            let imagenesGuardadas = JSON.parse(localStorage.getItem('imagenes_productos_agro')) || {};
-            let urlGuardada = imagenesGuardadas[productoSeleccionadoParaImagen];
-            let urlInput = document.getElementById('input-url-img').value.trim();
-            let fileInput = document.getElementById('input-archivo-img');
-
-            if (fileInput.files && fileInput.files[0]) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    abrirImagenGrande(e.target.result, productoSeleccionadoParaImagen);
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else if (urlInput !== '') {
-                abrirImagenGrande(urlInput, productoSeleccionadoParaImagen);
-            } else if (urlGuardada) {
-                abrirImagenGrande(urlGuardada, productoSeleccionadoParaImagen);
-            } else {
-                mostrarAlerta('No hay ninguna imagen cargada o seleccionada para este producto.');
-            }
+        function actualizarTransformacionImagen() {
+            imgZoom.style.transform = `translate(${posX}px, ${posY}px) scale(${escalaZoom})`;
         }
 
-        function abrirModalImagen(nombreProducto) {
-            productoSeleccionadoParaImagen = nombreProducto;
-            document.getElementById('nombre-prod-imagen').innerText = "Producto: " + nombreProducto;
-            document.getElementById('input-archivo-img').value = '';
-            document.getElementById('input-url-img').value = '';
+        contZoom.addEventListener('mousedown', (e) => {
+            estaArrastrando = true;
+            inicioX = e.clientX - posX;
+            inicioY = e.clientY - posY;
+            contZoom.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mouseup', () => {
+            estaArrastrando = false;
+            contZoom.style.cursor = 'grab';
+        });
+
+        contZoom.addEventListener('mousemove', (e) => {
+            if (!estaArrastrando) return;
+            posX = e.clientX - inicioX;
+            posY = e.clientY - inicioY;
+            actualizarTransformacionImagen();
+        });
+
+        function abrirModalImagen(prod) {
+            productoSeleccionadoParaImagen = prod;
+            document.getElementById('nombre-prod-imagen').innerText = "Producto: " + prod;
             document.getElementById('modal-imagen').style.display = 'flex';
         }
 
         function guardarImagenProducto() {
-            let urlInput = document.getElementById('input-url-img').value.trim();
+            let url = document.getElementById('input-url-img').value.trim();
             let fileInput = document.getElementById('input-archivo-img');
-            let imagenesGuardadas = JSON.parse(localStorage.getItem('imagenes_productos_agro')) || {};
+            let imgs = JSON.parse(localStorage.getItem('imagenes_productos_agro')) || {};
 
             if (fileInput.files && fileInput.files[0]) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
-                    imagenesGuardadas[productoSeleccionadoParaImagen] = e.target.result;
-                    localStorage.setItem('imagenes_productos_agro', JSON.stringify(imagenesGuardadas));
-                    cerrarModal('modal-imagen');
-                    cargarStockGeneral();
-                    mostrarAlerta(`Imagen de la computadora asignada exitosamente a ${productoSeleccionadoParaImagen}`);
+                    imgs[productoSeleccionadoParaImagen] = e.target.result;
+                    localStorage.setItem('imagenes_productos_agro', JSON.stringify(imgs));
+                    cerrarModal('modal-imagen'); cargarStockGeneral();
                 };
                 reader.readAsDataURL(fileInput.files[0]);
-            } else if (urlInput !== '') {
-                imagenesGuardadas[productoSeleccionadoParaImagen] = urlInput;
-                localStorage.setItem('imagenes_productos_agro', JSON.stringify(imagenesGuardadas));
-                cerrarModal('modal-imagen');
-                cargarStockGeneral();
-                mostrarAlerta(`Imagen Web URL guardada exitosamente para ${productoSeleccionadoParaImagen}`);
-            } else {
-                mostrarAlerta('Selecciona un archivo de imagen o pega una URL válida.');
+            } else if (url) {
+                imgs[productoSeleccionadoParaImagen] = url;
+                localStorage.setItem('imagenes_productos_agro', JSON.stringify(imgs));
+                cerrarModal('modal-imagen'); cargarStockGeneral();
             }
         }
 
-        function toggleSeleccionarTodos(masterCheckbox) {
-            let checkboxes = document.querySelectorAll('.producto-checkbox');
-            checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
-            actualizarContadorSeleccionados();
+        function iniciarArrastreModal(e, id) {
+            const card = document.getElementById(id);
+            let startX = e.clientX, startY = e.clientY;
+            const rect = card.getBoundingClientRect();
+            card.style.position = 'absolute';
+            card.style.left = rect.left + 'px'; card.style.top = rect.top + 'px'; card.style.transform = 'none';
+            function onMove(me) { card.style.left = (rect.left + (me.clientX - startX)) + 'px'; card.style.top = (rect.top + (me.clientY - startY)) + 'px'; }
+            function onUp() { document.removemousemove; document.removeEventListener('mouseup', onUp); }
+            document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
         }
 
-        function actualizarContadorSeleccionados() {
-            let checkboxes = document.querySelectorAll('.producto-checkbox:checked');
-            document.getElementById('texto-seleccionados').innerText = `Seleccionados (${checkboxes.length})`;
-        }
-
-        function compararGraficoExistencias() {
-            let checkboxes = document.querySelectorAll('.producto-checkbox:checked');
-            if (checkboxes.length === 0) {
-                mostrarAlerta('Selecciona al menos un producto para comparar su gráfico de existencias.');
-                return;
-            }
-            mostrarAlerta(`Generando gráfico comparativo de existencias para ${checkboxes.length} productos seleccionados.`);
-        }
-
-        function ocultarSeleccionados() {
-            let checkboxes = document.querySelectorAll('.producto-checkbox:checked');
-            if (checkboxes.length === 0) {
-                mostrarAlerta('Selecciona los elementos que deseas ocultar.');
-                return;
-            }
-            mostrarAlerta(`${checkboxes.length} productos ocultados de la vista.`);
-        }
-
-        function eliminarSeleccionados() {
-            let checkboxes = document.querySelectorAll('.producto-checkbox:checked');
-            if (checkboxes.length === 0) {
-                mostrarAlerta('Selecciona los elementos a eliminar.');
-                return;
-            }
-            abrirConfirmacion("ELIMINAR PRODUCTOS", `¿Está seguro de eliminar del registro los ${checkboxes.length} productos seleccionados?`, function() {
-                mostrarAlerta('Productos eliminados exitosamente.');
-            });
-        }
-
-        function abrirOpcionesProducto(nombreProducto) {
-            abrirConfirmacion("GESTIÓN DE PRODUCTO", `¿Deseas gestionar o cambiar la imagen de ${nombreProducto}?`, function() {
-                abrirModalImagen(nombreProducto);
-            });
-            document.getElementById('btn-conf-aceptar').innerText = "Cambiar Foto";
-        }
-
-        // Cargar stock automáticamente al abrir la página
         cargarStockGeneral();
     </script>
 </body>
