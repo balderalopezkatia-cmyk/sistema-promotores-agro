@@ -488,19 +488,28 @@
         let carrito = [];
         let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
 
+        // Lógica corregida del correlativo: busca el primer número faltante (huecos por eliminaciones) o continúa con el siguiente
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
             if (historialVentas.length === 0) {
                 campoComprobante.value = "01";
-            } else {
-                let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n));
-                if (numeros.length === 0) {
-                    campoComprobante.value = "01";
-                } else {
-                    let siguiente = Math.max(...numeros) + 1;
-                    campoComprobante.value = siguiente < 10 ? "0" + siguiente : "" + siguiente;
+                return;
+            }
+            let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n)).sort((a, b) => a - b);
+            if (numeros.length === 0) {
+                campoComprobante.value = "01";
+                return;
+            }
+            
+            let siguiente = 1;
+            for (let i = 0; i < numeros.length; i++) {
+                if (numeros[i] === siguiente) {
+                    siguiente++;
+                } else if (numeros[i] > siguiente) {
+                    break;
                 }
             }
+            campoComprobante.value = siguiente < 10 ? "0" + siguiente : "" + siguiente;
         }
         calcularCorrelativoComprobante();
 
@@ -769,17 +778,25 @@
             document.getElementById('modal-imprimir-ticket').style.display = 'flex';
         });
 
-        // Ejecutar Confirmación y Guardado de Venta
+        // Ejecutar Confirmación y Guardado de Venta (AHORA MANTIENE LOS DATOS EN PANTALLA)
         document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
-            guardarVentaEnSistema();
+            guardarVentaEnSistemaSinLimpiar();
             document.getElementById('modal-confirmar-venta').style.display = 'none';
             mostrarAlerta('¡VENTA GUARDADA Y REGISTRADA EXITOSAMENTE EN EL SISTEMA!');
         });
 
-        // Ejecutar Impresión de Ticket
+        // Ejecutar Impresión de Ticket (IMPRIME Y LUEGO LIMPIA EL FORMULARIO PARA LA SIGUIENTE VENTA)
         document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
             prepararYImprimirTicket();
-            guardarVentaEnSistema();
+            // Si la venta no se había guardado antes, la guardamos ahora al imprimir
+            let cliente = document.getElementById('cliente').value.trim().toUpperCase();
+            let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
+            let yaRegistrada = historialVentas.some(v => v.comprobante === comprobante && v.cliente === cliente);
+            if (!yaRegistrada) {
+                guardarVentaEnSistema();
+            } else {
+                limpiarFormularioVenta();
+            }
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
 
@@ -834,7 +851,7 @@
             window.print();
         }
 
-        function guardarVentaEnSistema() {
+        function guardarVentaEnSistemaSinLimpiar() {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let doc = document.getElementById('doc-identidad').value.trim();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
@@ -844,17 +861,29 @@
             let medio = document.getElementById('medio-pago').value;
             let saldo = Math.max(0, total - abonado);
 
-            let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
-            historialVentas.push(nuevaVenta);
-            localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+            // Evitar duplicados si ya está guardado
+            let existe = historialVentas.some(v => v.comprobante === comprobante);
+            if (!existe) {
+                let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
+                historialVentas.push(nuevaVenta);
+                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+            }
 
+            document.getElementById('filtro-cliente-input').value = cliente;
+            document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
+        }
+
+        function guardarVentaEnSistema() {
+            guardarVentaEnSistemaSinLimpiar();
+            limpiarFormularioVenta();
+        }
+
+        function limpiarFormularioVenta() {
             carrito = [];
             actualizarTablaCarrito();
             document.getElementById('cliente').value = '';
             document.getElementById('doc-identidad').value = '';
             calcularCorrelativoComprobante();
-            document.getElementById('filtro-cliente-input').value = cliente;
-            document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
         }
 
         const filtroClienteInput = document.getElementById('filtro-cliente-input');
@@ -972,6 +1001,7 @@
                 localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
                 filtroClienteInput.dispatchEvent(new Event('input'));
+                calcularCorrelativoComprobante(); // Actualiza el correlativo si se eliminó una boleta para rellenar huecos
                 indiceAEliminar = null;
             }
         });
