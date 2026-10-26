@@ -69,8 +69,6 @@
         .modal-card h3 { color: var(--green-primary); font-size: 18px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; text-transform: uppercase; font-weight: bold; }
         .modal-card p { font-size: 13px; color: var(--text-white); margin-bottom: 8px; line-height: 1.4; text-transform: uppercase; font-weight: normal; }
         .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; }
-        .btn-modal-danger { background: var(--red-alert); color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; margin-right: 8px; }
-        .btn-modal-secondary { background: var(--border-color); color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; }
 
         /* MODAL DETALLE DE VENTA */
         .modal-detalle-card {
@@ -93,7 +91,7 @@
         .modal-detalle-resumen-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
         .modal-detalle-resumen-row:last-child { margin-bottom: 0; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 15px; font-weight: bold; }
 
-        /* Ocultar ticket por defecto */
+        /* Ticket Térmico oculto por defecto para impresión */
         #ticket-impresion { display: none; }
 
         @media print {
@@ -109,7 +107,7 @@
 </head>
 <body>
 
-    <!-- Barra Superior con menú unificado y pestaña VENTAS marcada como activa -->
+    <!-- Barra Superior -->
     <div class="top-navbar">
         <div class="nav-left">
             <div class="logo-container-top">
@@ -129,10 +127,6 @@
         </div>
         <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
             <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
-            <div class="icon-btn" title="Notificaciones">
-                🔔
-                <span class="notification-dot"></span>
-            </div>
             <button class="user-avatar" title="Cerrar Sesión" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
         </div>
     </div>
@@ -198,9 +192,7 @@
                                 <th>Acción</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Ítems agregados dinámicamente -->
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
 
@@ -231,26 +223,6 @@
                     </div>
                 </div>
 
-                <!-- Sección para Pago Mixto -->
-                <div id="seccion-pago-mixto" style="display: none; background: #1a2a3a; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
-                    <div class="form-row row-2" style="margin-bottom: 0;">
-                        <div class="form-group">
-                            <label>MONTO EFECTIVO (S/):</label>
-                            <input type="number" id="monto-efectivo-mixto" value="0.00" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label>MONTO DIGITAL / YAPE / PLIN / BCP (S/):</label>
-                            <input type="number" id="monto-digital-mixto" value="0.00" step="0.01">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Resumen Dinámico Vuelto / Saldo -->
-                <div style="background: #1a2a3a; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; display: flex; justify-content: space-between; border: 1px solid var(--border-color);">
-                    <span id="label-info-pago" style="font-weight: bold; color: var(--green-primary); text-transform: uppercase;">VUELTO / SALDO:</span>
-                    <span id="valor-info-pago" style="font-weight: bold; color: var(--text-white);">S/ 0.00</span>
-                </div>
-
                 <div style="margin-top: 15px;">
                     <button type="button" class="btn-confirm-all" id="btn-confirmar-e-imprimir">
                         🖨️ CONFIRMAR VENTA E IMPRIMIR TICKET
@@ -268,7 +240,7 @@
                 <div class="form-row row-search-historial" style="margin-bottom: 15px;">
                     <div class="form-group">
                         <label>NOMBRE DE CLIENTE / EMPRESA:</label>
-                        <input type="text" id="filtro-cliente-input" placeholder="ESCRIBE EL NOMBRE PARA BUSCAR..." style="text-transform: uppercase;">
+                        <input type="text" id="filtro-cliente-input" placeholder="ESCRIBE EL NOMBRE PARA BUSCAR TODAS SUS BOLETAS..." style="text-transform: uppercase;">
                     </div>
                     <div style="text-align: right;">
                         <div id="contenedor-saldo-deuda" style="display: none;">
@@ -293,9 +265,7 @@
                                 <th>Acción</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Historial dinámico -->
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
 
@@ -304,7 +274,7 @@
 
     </div>
 
-    <!-- Modales -->
+    <!-- Modal para Avisos y Alertas -->
     <div id="modal-alerta-general" class="modal-overlay">
         <div class="modal-card">
             <h3 style="font-weight: bold;">PROMOTORES DEL AGRO</h3>
@@ -313,7 +283,58 @@
         </div>
     </div>
 
-    <!-- Ticket Térmico POS-80 -->
+    <!-- MODAL DETALLE DE VENTA (AL HACER CLIC EN EL NÚMERO DE BOLETA) -->
+    <div id="modal-detalle-venta" class="modal-overlay">
+        <div class="modal-detalle-card">
+            <div class="modal-detalle-header">
+                <span id="modal-titulo-boleta">NOTA DE VENTA N° --</span>
+                <span style="font-size: 12px; background: #1a2a3a; color: var(--green-primary); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color);">DETALLE DE VENTA</span>
+            </div>
+            
+            <div class="modal-detalle-grid">
+                <div><span>FECHA:</span> <span id="modal-fecha" style="font-weight: normal; color: var(--text-white);"></span></div>
+                <div><span>MEDIO PAGO:</span> <span id="modal-medio" style="font-weight: normal; color: var(--text-white);"></span></div>
+                <div><span>CLIENTE:</span> <span id="modal-cliente" style="font-weight: normal; color: var(--text-white);"></span></div>
+                <div><span>DNI / RUC:</span> <span id="modal-doc" style="font-weight: normal; color: var(--text-white);"></span></div>
+            </div>
+
+            <label style="font-size: 12px; font-weight: bold; color: var(--green-primary); margin-bottom: 6px; display: block; text-transform: uppercase;">Productos de la Venta:</label>
+            <div class="modal-detalle-tabla-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px;">CANT</th>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px;">PRODUCTO</th>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px; text-align: right;">P. UNI</th>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px; text-align: right;">SUBTOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-items-lista"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-detalle-resumen">
+                <div class="modal-detalle-resumen-row">
+                    <span>Total a Pagar:</span>
+                    <span>S/ <span id="modal-total">0.00</span></span>
+                </div>
+                <div class="modal-detalle-resumen-row">
+                    <span>Monto Abonado:</span>
+                    <span>S/ <span id="modal-abonado">0.00</span></span>
+                </div>
+                <div class="modal-detalle-resumen-row" style="color: var(--red-alert);">
+                    <span>Saldo Pendiente:</span>
+                    <span>S/ <span id="modal-saldo">0.00</span></span>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="btn-modal-close" id="btn-cerrar-modal-detalle">CERRAR VENTANA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Térmico POS-80 para impresión directa -->
     <div id="ticket-impresion">
         <div style="text-align: center; margin-bottom: 4px;">
             <strong style="font-size: 13px;">PROMOTORES DEL AGRO JK E.I.R.L.</strong><br>
@@ -367,7 +388,7 @@
             });
         }
 
-        // ENLACE PERFECTO CON EL STOCK Y COMPRAS REALES
+        // ENLACE CON EL STOCK REAL
         function obtenerInventarioDesdeStock() {
             let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
             let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
@@ -420,19 +441,11 @@
         inputProducto.addEventListener('input', function() {
             let filtro = this.value.trim().toUpperCase();
             dropdownProductos.innerHTML = '';
-
-            if (filtro === '') {
-                dropdownProductos.style.display = 'none';
-                return;
-            }
+            if (filtro === '') { dropdownProductos.style.display = 'none'; return; }
 
             let productosInventario = obtenerInventarioDesdeStock();
             let coincidencia = productosInventario.filter(p => p.nombre.includes(filtro));
-
-            if (coincidencia.length === 0) {
-                dropdownProductos.style.display = 'none';
-                return;
-            }
+            if (coincidencia.length === 0) { dropdownProductos.style.display = 'none'; return; }
 
             coincidencia.forEach(p => {
                 let item = document.createElement('div');
@@ -449,7 +462,6 @@
                 });
                 dropdownProductos.appendChild(item);
             });
-
             dropdownProductos.style.display = 'block';
         });
 
@@ -473,11 +485,9 @@
             let prodInv = productosInventario.find(p => p.nombre.toUpperCase() === nombreProducto);
             let codigo = codigoInput || (prodInv ? prodInv.codigo : 'GEN');
 
-            if (prodInv && prodInv.stock !== undefined) {
-                if (cantidad > prodInv.stock) {
-                    mostrarAlerta(`¡STOCK INSUFICIENTE! SOLO HAY ${prodInv.stock.toFixed(2)} DISPONIBLES.`);
-                    return;
-                }
+            if (prodInv && prodInv.stock !== undefined && cantidad > prodInv.stock) {
+                mostrarAlerta(`¡STOCK INSUFICIENTE! SOLO HAY ${prodInv.stock.toFixed(2)} DISPONIBLES.`);
+                return;
             }
 
             let subtotal = cantidad * precio;
@@ -510,23 +520,161 @@
                 tbody.appendChild(tr);
             });
             document.getElementById('total-pagar').value = totalGeneral.toFixed(2);
+            document.getElementById('monto-abonado').value = totalGeneral.toFixed(2);
         }
 
+        // CONFIRMAR VENTA, GUARDAR E IMPRIMIR
         document.getElementById('btn-confirmar-e-imprimir').addEventListener('click', function() {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
+            let doc = document.getElementById('doc-identidad').value.trim();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
             let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+            let abonado = parseFloat(document.getElementById('monto-abonado').value) || total;
+            let fecha = document.getElementById('fecha-operacion').value;
+            let medio = document.getElementById('medio-pago').value;
+
             if (!cliente || !comprobante || carrito.length === 0) {
-                mostrarAlerta('COMPLETE CLIENTE, COMPROBANTE Y AGREGUE PRODUCTOS.');
+                mostrarAlerta('POR FAVOR COMPLETE EL CLIENTE, N° DE COMPROBANTE Y AGREGUE PRODUCTOS.');
                 return;
             }
+
+            let saldo = Math.max(0, total - abonado);
+
+            // Preparar ticket térmico
+            document.getElementById('t-fecha').innerText = fecha;
+            document.getElementById('t-hora').innerText = new Date().toLocaleTimeString();
+            document.getElementById('t-cliente').innerText = cliente;
+            document.getElementById('t-doc').innerText = doc || '-';
+            document.getElementById('t-comprobante').innerText = comprobante;
+            document.getElementById('t-mediopago').innerText = medio;
+
+            let tbodyTicket = document.getElementById('t-cuerpo-items');
+            tbodyTicket.innerHTML = '';
+            carrito.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 2px 0;">${item.cantidad}</td>
+                    <td style="padding: 2px 0;">${item.producto}</td>
+                    <td style="text-align: right; padding: 2px 0;">${item.precio.toFixed(2)}</td>
+                    <td style="text-align: right; padding: 2px 0;">${item.subtotal.toFixed(2)}</td>
+                `;
+                tbodyTicket.appendChild(tr);
+            });
+
+            document.getElementById('t-total').innerText = total.toFixed(2);
+            document.getElementById('t-abonado').innerText = abonado.toFixed(2);
+            if (abonado >= total) {
+                document.getElementById('t-etiqueta-vuelto-saldo').innerText = "VUELTO:";
+                document.getElementById('t-vuelto-saldo').innerText = (abonado - total).toFixed(2);
+            } else {
+                document.getElementById('t-etiqueta-vuelto-saldo').innerText = "SALDO PENDIENTE:";
+                document.getElementById('t-vuelto-saldo').innerText = saldo.toFixed(2);
+            }
+
+            // Disparar ventana de impresión
             window.print();
-            let nuevaVenta = { fecha: document.getElementById('fecha-operacion').value, comprobante, cliente, total, items: [...carrito] };
+
+            // GUARDAR EN EL HISTORIAL PERSISTENTE
+            let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
             historialVentas.push(nuevaVenta);
             localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+
+            // Limpiar formulario
             carrito = [];
             actualizarTablaCarrito();
+            document.getElementById('cliente').value = '';
+            document.getElementById('doc-identidad').value = '';
+            document.getElementById('comprobante').value = '';
+            document.getElementById('filtro-cliente-input').value = cliente;
+            document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
         });
+
+        // FILTRAR HISTORIAL Y MOSTRAR TODAS LAS BOLETAS DEL CLIENTE
+        const filtroClienteInput = document.getElementById('filtro-cliente-input');
+        const seccionTablaHistorial = document.getElementById('seccion-tabla-historial');
+        const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
+
+        function formatearFecha(fechaStr) {
+            if (!fechaStr || fechaStr.indexOf('-') === -1) return fechaStr;
+            let p = fechaStr.split('-');
+            return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+
+        filtroClienteInput.addEventListener('input', function() {
+            let filtro = this.value.trim().toUpperCase();
+            if (filtro === "") {
+                seccionTablaHistorial.style.display = 'none';
+                contenedorSaldoDeuda.style.display = 'none';
+                return;
+            }
+
+            seccionTablaHistorial.style.display = 'block';
+            contenedorSaldoDeuda.style.display = 'block';
+
+            let filtrados = historialVentas.filter(v => v.cliente.includes(filtro));
+            let tbodyHistorial = document.querySelector('#tabla-historial tbody');
+            tbodyHistorial.innerHTML = '';
+            let deudaTotal = 0;
+
+            filtrados.forEach((venta) => {
+                deudaTotal += venta.saldo || 0;
+                let realIndex = historialVentas.indexOf(venta);
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${formatearFecha(venta.fecha)}</td>
+                    <td><a class="link-action" onclick="verDetalleVenta(${realIndex})">${venta.comprobante}</a></td>
+                    <td>${venta.cliente}</td>
+                    <td>S/ ${venta.total.toFixed(2)}</td>
+                    <td>S/ ${venta.abonado.toFixed(2)}</td>
+                    <td class="${(venta.saldo || 0) > 0 ? 'text-red' : 'text-green'}">S/ ${(venta.saldo || 0).toFixed(2)}</td>
+                    <td><a class="link-danger" onclick="eliminarVenta(${realIndex})">ELIMINAR</a></td>
+                `;
+                tbodyHistorial.appendChild(tr);
+            });
+
+            document.getElementById('deuda-total-cliente').innerText = "S/ " + deudaTotal.toFixed(2);
+        });
+
+        // MODAL DE DETALLE AL HACER CLIC EN EL NÚMERO DE BOLETA
+        window.verDetalleVenta = function(index) {
+            let v = historialVentas[index];
+            document.getElementById('modal-titulo-boleta').innerText = `NOTA DE VENTA N° ${v.comprobante}`;
+            document.getElementById('modal-fecha').innerText = formatearFecha(v.fecha);
+            document.getElementById('modal-cliente').innerText = v.cliente;
+            document.getElementById('modal-doc').innerText = v.doc || '-';
+            document.getElementById('modal-medio').innerText = v.medio || 'CONTADO';
+
+            let listaItemsHTML = '';
+            v.items.forEach(i => {
+                listaItemsHTML += `
+                    <tr>
+                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color);">${i.cantidad}</td>
+                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color);">${i.producto}</td>
+                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: right;">S/ ${i.precio.toFixed(2)}</td>
+                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: bold;">S/ ${i.subtotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('modal-items-lista').innerHTML = listaItemsHTML;
+            document.getElementById('modal-total').innerText = v.total.toFixed(2);
+            document.getElementById('modal-abonado').innerText = v.abonado.toFixed(2);
+            document.getElementById('modal-saldo').innerText = (v.saldo || 0).toFixed(2);
+
+            document.getElementById('modal-detalle-venta').style.display = 'flex';
+        };
+
+        document.getElementById('btn-cerrar-modal-detalle').addEventListener('click', function() {
+            document.getElementById('modal-detalle-venta').style.display = 'none';
+        });
+
+        window.eliminarVenta = function(index) {
+            if (confirm("¿ESTÁ SEGURO DE ELIMINAR ESTE REGISTRO DE VENTA?")) {
+                historialVentas.splice(index, 1);
+                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+                filtroClienteInput.dispatchEvent(new Event('input'));
+            }
+        };
     </script>
 </body>
 </html>
