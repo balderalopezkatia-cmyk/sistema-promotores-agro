@@ -9,7 +9,7 @@
         body { padding: 16px; }
         .main-content { width: 100%; max-width: 1400px; margin: 0 auto; }
         
-        /* Ajuste de la barra superior para acomodar el logo grande y el eslogan debajo */
+        /* Barra superior */
         .top-navbar { padding: 14px 20px; }
         .logo-container-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
         .logo-container-top img { height: 75px; width: auto; object-fit: contain; }
@@ -63,15 +63,15 @@
         /* Caja de Deuda */
         .deuda-box-short { background-color: rgba(255, 14, 85, 0.1); border: 1px solid var(--red-alert); color: var(--red-alert); padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; text-align: center; text-transform: uppercase; display: inline-block; min-width: 180px; }
 
-        /* Modales Arrastrables con Barra de Función Clara */
+        /* Modales Arrastrables */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        
         .modal-card { background: var(--bg-card); padding: 20px; border-radius: 12px; max-width: 480px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; position: absolute; }
-        
         .modal-header-drag { cursor: move; background: #1a2a3a; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .modal-header-drag h3 { color: var(--green-primary); font-size: 13px; text-transform: uppercase; font-weight: 700; margin: 0; }
         
         .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; }
+        .btn-modal-danger { background: var(--red-alert); color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; margin-right: 8px; }
+        .btn-modal-secondary { background: var(--border-color); color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; }
 
         /* MODAL DETALLE DE VENTA ARRASTRABLE */
         .modal-detalle-card {
@@ -89,7 +89,6 @@
         .modal-detalle-resumen-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
         .modal-detalle-resumen-row:last-child { margin-bottom: 0; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 15px; font-weight: bold; }
 
-        /* Ticket Térmico oculto por defecto para impresión */
         #ticket-impresion { display: none; }
 
         @media print {
@@ -272,7 +271,7 @@
 
     </div>
 
-    <!-- MODAL DE ALERTA GENERAL (ARRASTRABLE E INDICANDO FUNCIÓN) -->
+    <!-- MODAL DE ALERTA GENERAL -->
     <div id="modal-alerta-general" class="modal-overlay">
         <div class="modal-card" id="card-alerta">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-alerta')">
@@ -286,7 +285,7 @@
         </div>
     </div>
 
-    <!-- MODAL DETALLE DE VENTA (ARRASTRABLE E INDICANDO FUNCIÓN) -->
+    <!-- MODAL DETALLE DE VENTA -->
     <div id="modal-detalle-venta" class="modal-overlay">
         <div class="modal-detalle-card" id="card-detalle">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-detalle')">
@@ -337,6 +336,36 @@
         </div>
     </div>
 
+    <!-- MODAL CONFIRMACIÓN DE EDICIÓN -->
+    <div id="modal-editar-venta" class="modal-overlay">
+        <div class="modal-card" id="card-editar">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-editar')">
+                <h3>MODIFICACIÓN Y EDICIÓN DE VENTA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-editar-venta')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿DESEA EDITAR ESTE REGISTRO DE VENTA Y CARGAR SUS DATOS AL FORMULARIO PRINCIPAL?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-confirmar-editar" style="background-color: var(--green-primary); color: var(--bg-main);">ACEPTAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-editar-venta')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN DE ELIMINACIÓN -->
+    <div id="modal-eliminar-venta" class="modal-overlay">
+        <div class="modal-card" id="card-eliminar">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-eliminar')">
+                <h3>ELIMINACIÓN DE REGISTRO DE VENTA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-eliminar-venta')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿ESTÁ SEGURO DE ELIMINAR ESTE REGISTRO DE VENTA PERMANENTEMENTE?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-confirmar-eliminar">ACEPTAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-eliminar-venta')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Ticket Térmico POS-80 para impresión directa -->
     <div id="ticket-impresion">
         <div style="text-align: center; margin-bottom: 4px;">
@@ -379,7 +408,6 @@
         let carrito = [];
         let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
 
-        // FUNCIÓN CORRELATIVO AUTOMÁTICO PARA EL COMPROBANTE
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
             if (historialVentas.length === 0) {
@@ -396,7 +424,6 @@
         }
         calcularCorrelativoComprobante();
 
-        // FUNCIONALIDAD DE MODALES ARRASTRABLES (MOVIBLES)
         function iniciarArrastre(e, cardId) {
             const card = document.getElementById(cardId);
             let startX = e.clientX, startY = e.clientY;
@@ -432,7 +459,6 @@
             }
         }
 
-        // ENLACE CON EL STOCK REAL
         function obtenerInventarioDesdeStock() {
             let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
             let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
@@ -567,7 +593,6 @@
             document.getElementById('monto-abonado').value = totalGeneral.toFixed(2);
         }
 
-        // CONFIRMAR VENTA, GUARDAR E IMPRIMIR
         document.getElementById('btn-confirmar-e-imprimir').addEventListener('click', function() {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let doc = document.getElementById('doc-identidad').value.trim();
@@ -584,7 +609,6 @@
 
             let saldo = Math.max(0, total - abonado);
 
-            // Preparar ticket térmico
             document.getElementById('t-fecha').innerText = fecha;
             document.getElementById('t-hora').innerText = new Date().toLocaleTimeString();
             document.getElementById('t-cliente').innerText = cliente;
@@ -615,15 +639,12 @@
                 document.getElementById('t-vuelto-saldo').innerText = saldo.toFixed(2);
             }
 
-            // Disparar ventana de impresión
             window.print();
 
-            // GUARDAR EN EL HISTORIAL PERSISTENTE
             let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
             historialVentas.push(nuevaVenta);
             localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
 
-            // Limpiar formulario y actualizar correlativo
             carrito = [];
             actualizarTablaCarrito();
             document.getElementById('cliente').value = '';
@@ -633,7 +654,6 @@
             document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
         });
 
-        // FILTRAR HISTORIAL Y MOSTRAR TODAS LAS BOLETAS DEL CLIENTE
         const filtroClienteInput = document.getElementById('filtro-cliente-input');
         const seccionTablaHistorial = document.getElementById('seccion-tabla-historial');
         const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
@@ -672,7 +692,10 @@
                     <td>S/ ${venta.total.toFixed(2)}</td>
                     <td>S/ ${venta.abonado.toFixed(2)}</td>
                     <td class="${(venta.saldo || 0) > 0 ? 'text-red' : 'text-green'}">S/ ${(venta.saldo || 0).toFixed(2)}</td>
-                    <td><a class="link-danger" onclick="eliminarVenta(${realIndex})">ELIMINAR</a></td>
+                    <td>
+                        <a class="link-action" onclick="pedirEditarVenta(${realIndex})">EDITAR</a>
+                        <a class="link-danger" onclick="pedirEliminarVenta(${realIndex})">ELIMINAR</a>
+                    </td>
                 `;
                 tbodyHistorial.appendChild(tr);
             });
@@ -680,7 +703,6 @@
             document.getElementById('deuda-total-cliente').innerText = "S/ " + deudaTotal.toFixed(2);
         });
 
-        // MODAL DE DETALLE AL HACER CLIC EN EL NÚMERO DE BOLETA
         window.verDetalleVenta = function(index) {
             let v = historialVentas[index];
             document.getElementById('modal-titulo-boleta').innerText = `CONSULTA DE DETALLE DE VENTA N° ${v.comprobante}`;
@@ -708,13 +730,48 @@
             document.getElementById('modal-detalle-venta').style.display = 'flex';
         };
 
-        window.eliminarVenta = function(index) {
-            if (confirm("¿ESTÁ SEGURO DE ELIMINAR ESTE REGISTRO DE VENTA?")) {
-                historialVentas.splice(index, 1);
-                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-                filtroClienteInput.dispatchEvent(new Event('input'));
-            }
+        let indiceAEditar = null;
+        window.pedirEditarVenta = function(index) {
+            indiceAEditar = index;
+            document.getElementById('modal-editar-venta').style.display = 'flex';
         };
+
+        document.getElementById('btn-confirmar-editar').addEventListener('click', function() {
+            if (indiceAEditar !== null) {
+                let v = historialVentas[indiceAEditar];
+                document.getElementById('cliente').value = v.cliente;
+                document.getElementById('doc-identidad').value = v.doc;
+                document.getElementById('comprobante').value = v.comprobante;
+                document.getElementById('monto-abonado').value = v.abonado;
+                document.getElementById('fecha-operacion').value = v.fecha;
+                document.getElementById('medio-pago').value = v.medio || 'CONTADO';
+
+                carrito = [...v.items];
+                actualizarTablaCarrito();
+
+                historialVentas.splice(indiceAEditar, 1);
+                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+                document.getElementById('modal-editar-venta').style.display = 'none';
+                filtroClienteInput.dispatchEvent(new Event('input'));
+                indiceAEditar = null;
+            }
+        });
+
+        let indiceAEliminar = null;
+        window.pedirEliminarVenta = function(index) {
+            indiceAEliminar = index;
+            document.getElementById('modal-eliminar-venta').style.display = 'flex';
+        };
+
+        document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
+            if (indiceAEliminar !== null) {
+                historialVentas.splice(indiceAEliminar, 1);
+                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+                document.getElementById('modal-eliminar-venta').style.display = 'none';
+                filtroClienteInput.dispatchEvent(new Event('input'));
+                indiceAEliminar = null;
+            }
+        });
     </script>
 </body>
 </html>
