@@ -25,6 +25,7 @@
         .row-3 { grid-template-columns: 2fr 1fr 1fr; }
         .row-3-btn { grid-template-columns: 2fr 1fr 1fr auto; }
         .row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .row-2 { grid-template-columns: 1fr 1fr; }
         .row-2-buttons { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         .row-search-historial { grid-template-columns: 1fr auto; align-items: center; }
 
@@ -32,6 +33,16 @@
         .form-group label { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
         .form-group input, .form-group select { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 9px 12px; border-radius: 8px; font-size: 14px; outline: none; }
         .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); }
+
+        /* Sección de Pago Mixto Oculta/Visible */
+        #seccion-pago-mixto {
+            background: #1a2a3a;
+            border: 1px solid var(--green-primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
 
         /* Desplegable de Sugerencias */
         .dropdown-suggestions {
@@ -221,6 +232,21 @@
                     <div class="form-group">
                         <label>FECHA DE OPERACIÓN:</label>
                         <input type="date" id="fecha-operacion">
+                    </div>
+                </div>
+
+                <!-- SECCIÓN DINÁMICA DE PAGO MIXTO (EFECTIVO + DIGITAL) -->
+                <div id="seccion-pago-mixto">
+                    <label style="font-size: 12px; font-weight: bold; color: var(--green-primary); margin-bottom: 8px; display: block; text-transform: uppercase;">Detalle de Pago Mixto:</label>
+                    <div class="form-row row-2" style="margin-bottom: 0;">
+                        <div class="form-group">
+                            <label>MONTO EN EFECTIVO (S/):</label>
+                            <input type="number" id="mixto-efectivo" value="0.00" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>MONTO DIGITAL / YAPE / PLIN (S/):</label>
+                            <input type="number" id="mixto-digital" value="0.00" step="0.01" placeholder="0.00">
+                        </div>
                     </div>
                 </div>
 
@@ -458,6 +484,7 @@
         <div style="margin-bottom: 6px;">
             FECHA: <span id="t-fecha"></span> HORA: <span id="t-hora"></span><br>
             PAGO: <span id="t-mediopago"></span> &nbsp; USUARIO: KATIA<br>
+            <span id="t-detalle-mixto-print" style="display:none;">EFECTIVO: S/ <span id="t-mixto-efectivo">0.00</span> | DIGITAL: S/ <span id="t-mixto-digital">0.00</span><br></span>
             CLIENTE: <span id="t-cliente"></span><br>
             N° DOC: <span id="t-doc"></span> | COMPR: <span id="t-comprobante"></span><br>
             ----------------------------------------
@@ -488,7 +515,6 @@
         let carrito = [];
         let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
 
-        // Lógica corregida y robusta del correlativo (rellena huecos si se eliminaron boletas)
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
             if (historialVentas.length === 0) {
@@ -683,16 +709,42 @@
             });
             document.getElementById('total-pagar').value = totalGeneral.toFixed(2);
             document.getElementById('monto-abonado').value = totalGeneral.toFixed(2);
+            document.getElementById('mixto-efectivo').value = totalGeneral.toFixed(2);
+            document.getElementById('mixto-digital').value = "0.00";
             actualizarCalculoVueltoSaldo();
         }
 
+        // Control de visibilidad para la sección de Pago Mixto
+        const medioPagoSelect = document.getElementById('medio-pago');
+        const seccionPagoMixto = document.getElementById('seccion-pago-mixto');
+
+        medioPagoSelect.addEventListener('change', function() {
+            if (this.value === 'PAGO MIXTO') {
+                seccionPagoMixto.style.display = 'block';
+                let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+                document.getElementById('mixto-efectivo').value = total.toFixed(2);
+                document.getElementById('mixto-digital').value = "0.00";
+            } else {
+                seccionPagoMixto.style.display = 'none';
+            }
+            actualizarCalculoVueltoSaldo();
+        });
+
         document.getElementById('monto-abonado').addEventListener('input', actualizarCalculoVueltoSaldo);
-        document.getElementById('medio-pago').addEventListener('change', actualizarCalculoVueltoSaldo);
+        document.getElementById('mixto-efectivo').addEventListener('input', sincronizarPagoMixto);
+        document.getElementById('mixto-digital').addEventListener('input', sincronizarPagoMixto);
+
+        function sincronizarPagoMixto() {
+            let efec = parseFloat(document.getElementById('mixto-efectivo').value) || 0;
+            let dig = parseFloat(document.getElementById('mixto-digital').value) || 0;
+            document.getElementById('monto-abonado').value = (efec + dig).toFixed(2);
+            actualizarCalculoVueltoSaldo();
+        }
 
         function actualizarCalculoVueltoSaldo() {
             let total = parseFloat(document.getElementById('total-pagar').value) || 0;
             let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
-            let medio = document.getElementById('medio-pago').value;
+            let medio = medioPagoSelect.value;
             let labelText = document.getElementById('label-vuelto-saldo-texto');
             let displayVal = document.getElementById('valor-vuelto-saldo-display');
 
@@ -757,7 +809,6 @@
             }
         });
 
-        // Apertura de modales para los botones separados
         document.getElementById('btn-abrir-modal-confirmar').addEventListener('click', function() {
             let cliente = document.getElementById('cliente').value.trim();
             let comprobante = document.getElementById('comprobante').value.trim();
@@ -778,26 +829,20 @@
             document.getElementById('modal-imprimir-ticket').style.display = 'flex';
         });
 
-        // 1. CONFIRMAR VENTA: Guarda la venta en el sistema PERO MANTIENE los datos en pantalla para poder imprimir luego
         document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
             guardarVentaEnSistemaSinLimpiar();
             document.getElementById('modal-confirmar-venta').style.display = 'none';
             mostrarAlerta('¡VENTA GUARDADA Y REGISTRADA EXITOSAMENTE EN EL SISTEMA!');
         });
 
-        // 2. IMPRIMIR TICKET: Imprime el ticket térmico y LUEGO limpia el formulario y actualiza el correlativo para la siguiente venta
         document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
             prepararYImprimirTicket();
-            
-            // Asegurar que quede guardada si no se le dio antes a confirmar
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
             let yaRegistrada = historialVentas.some(v => v.comprobante === comprobante && v.cliente === cliente);
             if (!yaRegistrada) {
                 guardarVentaEnSistemaSinLimpiar();
             }
-
-            // Limpiar formulario y avanzar al siguiente correlativo
             limpiarFormularioVenta();
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
@@ -809,7 +854,7 @@
             let total = parseFloat(document.getElementById('total-pagar').value) || 0;
             let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
             let fecha = document.getElementById('fecha-operacion').value;
-            let medio = document.getElementById('medio-pago').value;
+            let medio = medioPagoSelect.value;
             let saldo = Math.max(0, total - abonado);
 
             document.getElementById('t-fecha').innerText = fecha;
@@ -818,6 +863,14 @@
             document.getElementById('t-doc').innerText = doc || '-';
             document.getElementById('t-comprobante').innerText = comprobante;
             document.getElementById('t-mediopago').innerText = medio;
+
+            if (medio === 'PAGO MIXTO') {
+                document.getElementById('t-mixto-efectivo').innerText = (parseFloat(document.getElementById('mixto-efectivo').value) || 0).toFixed(2);
+                document.getElementById('t-mixto-digital').innerText = (parseFloat(document.getElementById('mixto-digital').value) || 0).toFixed(2);
+                document.getElementById('t-detalle-mixto-print').style.display = 'block';
+            } else {
+                document.getElementById('t-detalle-mixto-print').style.display = 'none';
+            }
 
             let tbodyTicket = document.getElementById('t-cuerpo-items');
             tbodyTicket.innerHTML = '';
@@ -860,12 +913,19 @@
             let total = parseFloat(document.getElementById('total-pagar').value) || 0;
             let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
             let fecha = document.getElementById('fecha-operacion').value;
-            let medio = document.getElementById('medio-pago').value;
+            let medio = medioPagoSelect.value;
             let saldo = Math.max(0, total - abonado);
+            
+            let pagoMixtoDetalle = null;
+            if (medio === 'PAGO MIXTO') {
+                pagoMixtoDetalle = {
+                    efectivo: parseFloat(document.getElementById('mixto-efectivo').value) || 0,
+                    digital: parseFloat(document.getElementById('mixto-digital').value) || 0
+                };
+            }
 
-            // Evitar duplicados si ya está guardado con el mismo número de comprobante
             let indexExistente = historialVentas.findIndex(v => v.comprobante === comprobante);
-            let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio };
+            let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio, pagoMixtoDetalle };
             
             if (indexExistente !== -1) {
                 historialVentas[indexExistente] = nuevaVenta;
@@ -884,6 +944,8 @@
             actualizarTablaCarrito();
             document.getElementById('cliente').value = '';
             document.getElementById('doc-identidad').value = '';
+            medioPagoSelect.value = 'CONTADO';
+            seccionPagoMixto.style.display = 'none';
             calcularCorrelativoComprobante();
             document.getElementById('fecha-operacion').valueAsDate = new Date();
         }
@@ -939,11 +1001,16 @@
 
         window.verDetalleVenta = function(index) {
             let v = historialVentas[index];
+            let medioTexto = v.medio || 'CONTADO';
+            if (v.medio === 'PAGO MIXTO' && v.pagoMixtoDetalle) {
+                medioTexto += ` (Efectivo: S/ ${v.pagoMixtoDetalle.efectivo.toFixed(2)} | Digital: S/ ${v.pagoMixtoDetalle.digital.toFixed(2)})`;
+            }
+
             document.getElementById('modal-titulo-boleta').innerText = `CONSULTA DE DETALLE DE VENTA N° ${v.comprobante}`;
             document.getElementById('modal-fecha').innerText = formatearFecha(v.fecha);
             document.getElementById('modal-cliente').innerText = v.cliente;
             document.getElementById('modal-doc').innerText = v.doc || '-';
-            document.getElementById('modal-medio').innerText = v.medio || 'CONTADO';
+            document.getElementById('modal-medio').innerText = medioTexto;
 
             let listaItemsHTML = '';
             v.items.forEach(i => {
@@ -978,7 +1045,15 @@
                 document.getElementById('comprobante').value = v.comprobante;
                 document.getElementById('monto-abonado').value = v.abonado;
                 document.getElementById('fecha-operacion').value = v.fecha;
-                document.getElementById('medio-pago').value = v.medio || 'CONTADO';
+                medioPagoSelect.value = v.medio || 'CONTADO';
+
+                if (v.medio === 'PAGO MIXTO' && v.pagoMixtoDetalle) {
+                    seccionPagoMixto.style.display = 'block';
+                    document.getElementById('mixto-efectivo').value = v.pagoMixtoDetalle.efectivo.toFixed(2);
+                    document.getElementById('mixto-digital').value = v.pagoMixtoDetalle.digital.toFixed(2);
+                } else {
+                    seccionPagoMixto.style.display = 'none';
+                }
 
                 carrito = [...v.items];
                 actualizarTablaCarrito();
@@ -1004,7 +1079,7 @@
                 localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
                 filtroClienteInput.dispatchEvent(new Event('input'));
-                calcularCorrelativoComprobante(); // Actualiza el correlativo para rellenar huecos si se eliminó una boleta
+                calcularCorrelativoComprobante();
                 indiceAEliminar = null;
             }
         });
