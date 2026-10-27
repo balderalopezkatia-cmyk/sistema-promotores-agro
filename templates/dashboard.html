@@ -755,28 +755,150 @@
             );
         };
 
+        // CARGA Y CÁLCULO AUTOMÁTICO DE DATOS DESDE LOCALSTORAGE
         function cargarResumenDashboard() {
-            fetch('/api/dashboard/resumen')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) return;
+            let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
+            let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
+            let historialGastos = JSON.parse(localStorage.getItem('historial_gastos_agro')) || [];
+            let historialCreditos = JSON.parse(localStorage.getItem('historial_creditos_agro')) || [];
 
-                    document.getElementById('val-ventas-dia').innerText = `S/ ${(data.ventas_dia || 0).toFixed(2)}`;
-                    document.getElementById('val-ventas-mes').innerText = `S/ ${(data.ventas_mes || 0).toFixed(2)}`;
-                    document.getElementById('val-deudas-cobrar').innerText = `S/ ${(data.deudas_cobrar || 0).toFixed(2)}`;
-                    
-                    let ventasMes = data.ventas_mes || 0;
-                    let gananciaMes = ventasMes * 0.15;
-                    let reinversion = gananciaMes * 0.50;
-                    let reservaEmpleado = gananciaMes * 0.20;
-                    let reservaGastos = gananciaMes * 0.30;
+            let hoyStr = new Date().toISOString().split('T')[0];
+            let mesActualStr = hoyStr.substring(0, 7); // YYYY-MM
 
-                    document.getElementById('val-ganancia-mes').innerText = `S/ ${gananciaMes.toFixed(2)}`;
-                    document.getElementById('val-reinversion').innerText = `S/ ${reinversion.toFixed(2)}`;
-                    document.getElementById('val-reserva-empleado').innerText = `S/ ${reservaEmpleado.toFixed(2)}`;
-                    document.getElementById('val-reserva-gastos').innerText = `S/ ${reservaGastos.toFixed(2)}`;
-                })
-                .catch(error => console.error("Error al actualizar el dashboard:", error));
+            let ventasDia = 0;
+            let ventasMes = 0;
+            let pagosDigitalesDia = 0;
+            let abonosEfectivoHoy = 0;
+            let ventasEfectivoHoy = 0;
+
+            // Calcular mapa de costos por producto desde compras
+            let costosProductos = {};
+            historialCompras.forEach(c => {
+                if (c.items) {
+                    c.items.forEach(i => {
+                        let pNombre = i.producto ? i.producto.trim().toUpperCase() : '';
+                        let costoUnit = parseFloat(i.costo) || 0;
+                        if (pNombre && costoUnit > 0) {
+                            costosProductos[pNombre] = costoUnit;
+                        }
+                    });
+                }
+            });
+
+            let costoVentasDia = 0;
+            let costoVentasMes = 0;
+
+            historialVentas.forEach(v => {
+                let vFecha = v.fecha || '';
+                let vTotal = parseFloat(v.total) || 0;
+                let vAbonado = parseFloat(v.abonado) || 0;
+                let vMedio = (v.medio || 'CONTADO').toUpperCase();
+
+                // Calcular costo de los items vendidos en esta venta
+                let costoVentaActual = 0;
+                if (v.items) {
+                    v.items.forEach(item => {
+                        let iNombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                        let iCant = parseFloat(item.cantidad) || 0;
+                        let cUnit = costosProductos[iNombre] || parseFloat(item.precio) * 0.75; // Estimación si no hay costo
+                        costoVentaActual += iCant * cUnit;
+                    });
+                }
+
+                if (vFecha === hoyStr) {
+                    ventasDia += vTotal;
+                    costoVentasDia += costoVentaActual;
+
+                    if (vMedio.includes('YAPE') || vMedio.includes('PLIN') || vMedio.includes('BCP') || vMedio.includes('DIGITAL') || (v.pagoMixtoDetalle && v.pagoMixtoDetalle.digital > 0)) {
+                        let digMonto = v.pagoMixtoDetalle ? v.pagoMixtoDetalle.digital : (vMedio !== 'CONTADO' ? vTotal : 0);
+                        pagosDigitalesDia += digMonto;
+                    }
+
+                    if (vMedio === 'CONTADO' || vMedio.includes('EFECTIVO')) {
+                        ventasEfectivoHoy += vTotal;
+                    } else if (v.pagoMixtoDetalle) {
+                        ventasEfectivoHoy += v.pagoMixtoDetalle.efectivo || 0;
+                    }
+                }
+
+                if (vFecha.startsWith(mesActualStr)) {
+                    ventasMes += vTotal;
+                    costoVentasMes += costoVentaActual;
+                }
+            });
+
+            // Gastos Operativos
+            let gastosDia = 0;
+            let gastosMes = 0;
+            let gastosEfectivoHoy = 0;
+
+            historialGastos.forEach(g => {
+                let gFecha = g.fecha || '';
+                let gMonto = parseFloat(g.monto) || 0;
+                let gTipoPago = (g.medio || '').toUpperCase();
+
+                if (gFecha === hoyStr) {
+                    gastosDia += gMonto;
+                    if (!gTipoPago.includes('DIGITAL') && !gTipoPago.includes('YAPE')) {
+                        gastosEfectivoHoy += gMonto;
+                    }
+                }
+                if (gFecha.startsWith(mesActualStr)) {
+                    gastosMes += gMonto;
+                }
+            });
+
+            // Amortizaciones y Créditos Hoy
+            let amortizacionesDia = 0;
+            let deudasTotalesCobrar = 0;
+
+            historialVentas.forEach(v => {
+                let saldoVenta = parseFloat(v.saldo) || 0;
+                deudasTotalesCobrar += saldoVenta;
+            });
+
+            historialCreditos.forEach(cred => {
+                if (cred.abonos) {
+                    cred.abonos.forEach(ab => {
+                        if (ab.fecha === hoyStr) {
+                            amortizacionesDia += parseFloat(ab.monto) || 0;
+                            abonosEfectivoHoy += parseFloat(ab.monto) || 0;
+                        }
+                    });
+                }
+            });
+
+            // Ganancias / Utilidades Netas
+            let gananciaDia = (ventasDia - costoVentasDia) - gastosDia;
+            let gananciaMes = (ventasMes - costoVentasMes) - gastosMes;
+            if (gananciaMes < 0) gananciaMes = 0;
+            if (gananciaDia < 0) gananciaDia = 0;
+
+            // Caja Física (Efectivo Neto Hoy)
+            let cajaFisicaHoy = (ventasEfectivoHoy + abonosEfectivoHoy) - gastosEfectivoHoy;
+
+            // Proyecciones (50%, 20%, 30%)
+            let reinversion = gananciaMes * 0.50;
+            let reservaEmpleado = gananciaMes * 0.20;
+            let reservaGastos = gananciaMes * 0.30;
+
+            // Inyectar en el DOM del Dashboard
+            document.getElementById('val-ventas-dia').innerText = `S/ ${ventasDia.toFixed(2)}`;
+            document.getElementById('val-ganancia-dia').innerText = `S/ ${gananciaDia.toFixed(2)}`;
+            document.getElementById('val-gastos-dia').innerText = `S/ ${gastosDia.toFixed(2)}`;
+            document.getElementById('val-amortizaciones-dia').innerText = `S/ ${amortizacionesDia.toFixed(2)}`;
+
+            document.getElementById('val-caja-fisica').innerText = `S/ ${cajaFisicaHoy.toFixed(2)}`;
+            document.getElementById('val-pagos-digitales').innerText = `S/ ${pagosDigitalesDia.toFixed(2)}`;
+
+            document.getElementById('val-ventas-mes').innerText = `S/ ${ventasMes.toFixed(2)}`;
+            document.getElementById('val-ganancia-mes').innerText = `S/ ${gananciaMes.toFixed(2)}`;
+            document.getElementById('val-gastos-mes').innerText = `S/ ${gastosMes.toFixed(2)}`;
+            document.getElementById('val-deudas-cobrar').innerText = `S/ ${deudasTotalesCobrar.toFixed(2)}`;
+
+            document.getElementById('val-reinversion').innerText = `S/ ${reinversion.toFixed(2)}`;
+            document.getElementById('val-reserva-empleado').innerText = `S/ ${reservaEmpleado.toFixed(2)}`;
+            document.getElementById('val-reserva-gastos').innerText = `S/ ${reservaGastos.toFixed(2)}`;
         }
 
         function verificarAlertasDelDia() {
