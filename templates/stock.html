@@ -69,12 +69,12 @@
         #contenedor-imagen-zoom {
             width: 100%; height: 70vh; display: flex; align-items: center; justify-content: center;
             overflow: hidden; background: #0b131e; border-radius: 8px; border: 1px solid var(--border-color);
-            position: relative; cursor: grab;
+            position: relative; cursor: grab; user-select: none;
         }
         #contenedor-imagen-zoom:active { cursor: grabbing; }
         #img-ampliada-grande {
             position: absolute; transform-origin: center center; user-select: none; max-width: none; max-height: none;
-            transition: transform 0.1s ease-out;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -288,14 +288,14 @@
             document.getElementById('modal-ver-imagen').style.display = 'flex';
         }
 
-        function ajustarZoom(delta) {
+        function ajustarZoomImagen(delta) {
             escalaZoom += delta;
             if (escalaZoom < 0.5) escalaZoom = 0.5;
             if (escalaZoom > 5) escalaZoom = 5;
             actualizarTransformacionImagen();
         }
 
-        function restaurarZoom() {
+        function restaurarZoomImagen() {
             escalaZoom = 1; posX = 0; posY = 0;
             actualizarTransformacionImagen();
         }
@@ -309,6 +309,7 @@
             inicioX = e.clientX - posX;
             inicioY = e.clientY - posY;
             contZoom.style.cursor = 'grabbing';
+            e.preventDefault();
         });
 
         window.addEventListener('mouseup', () => {
@@ -322,6 +323,15 @@
             posY = e.clientY - inicioY;
             actualizarTransformacionImagen();
         });
+
+        function verImagenCompletaDesdeModal() {
+            cerrarModal('modal-imagen');
+            let imgs = JSON.parse(localStorage.getItem('imagenes_productos_agro')) || {};
+            let url = imgs[productoSeleccionadoParaImagen] || document.getElementById('input-url-img').value.trim();
+            if (url) {
+                abrirImagenGrande(url, productoSeleccionadoParaImagen);
+            }
+        }
 
         function abrirModalImagen(prod) {
             productoSeleccionadoParaImagen = prod;
@@ -356,7 +366,7 @@
             card.style.position = 'absolute';
             card.style.left = rect.left + 'px'; card.style.top = rect.top + 'px'; card.style.transform = 'none';
             function onMove(me) { card.style.left = (rect.left + (me.clientX - startX)) + 'px'; card.style.top = (rect.top + (me.clientY - startY)) + 'px'; }
-            function onUp() { document.removemousemove; document.removeEventListener('mouseup', onUp); }
+            function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
             document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
         }
 
