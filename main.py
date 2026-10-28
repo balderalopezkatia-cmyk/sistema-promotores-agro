@@ -120,6 +120,7 @@ def api_dashboard_resumen():
             'deudas_cobrar': 0.0
         })
 
+# API CENTRALIZADA PARA VENTAS
 @app.route('/api/ventas/guardar', methods=['POST'])
 def api_guardar_venta():
     if 'rol' not in session:
@@ -134,7 +135,6 @@ def api_guardar_venta():
             return jsonify({'error': 'Error de conexion'}), 500
             
         cursor = conexion.cursor()
-        
         comprobante = data.get('comprobante', '')
         cliente = data.get('cliente', '')
         doc = data.get('doc', '')
@@ -148,7 +148,6 @@ def api_guardar_venta():
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
         cursor.execute(query, (comprobante, cliente, doc, fecha, medio, total, abonado, saldo))
         conexion.commit()
-        
         cursor.close()
         conexion.close()
         
@@ -156,6 +155,22 @@ def api_guardar_venta():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/ventas/listar', methods=['GET'])
+def api_listar_ventas():
+    try:
+        conexion = obtener_conexion()
+        if not conexion:
+            return jsonify([])
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM ventas ORDER BY id DESC")
+        resultados = cursor.fetchall()
+        cursor.close()
+        conexion.close()
+        return jsonify(resultados)
+    except Exception as e:
+        return jsonify([])
+
+# RUTAS DE NAVEGACIÓN
 @app.route('/ventas')
 def ventas():
     if 'rol' not in session:
