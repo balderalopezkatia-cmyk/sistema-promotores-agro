@@ -20,34 +20,6 @@ def obtener_conexion():
         print("Aviso de conexión a la base de datos en la nube:", e)
         return None
 
-# CREAR TABLA AUTOMÁTICAMENTE EN LA NUBE SI NO EXISTE
-def inicializar_tabla():
-    conexion = obtener_conexion()
-    if conexion:
-        try:
-            cursor = conexion.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS ventas (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    comprobante VARCHAR(50),
-                    cliente VARCHAR(100),
-                    doc VARCHAR(50),
-                    fecha VARCHAR(50),
-                    medio VARCHAR(50),
-                    total DECIMAL(10,2),
-                    abonado DECIMAL(10,2),
-                    saldo_pendiente DECIMAL(10,2)
-                )
-            """)
-            conexion.commit()
-            cursor.close()
-            conexion.close()
-            print("Tabla 'ventas' verificada o creada con éxito.")
-        except Exception as e:
-            print("Error creando tabla automática:", e)
-
-inicializar_tabla()
-
 def render_template_con_branding(template_name, **kwargs):
     html_content = render_template(template_name, **kwargs)
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -219,7 +191,7 @@ def creditos():
 
 @app.route('/tesoreria')
 def tesoreria():
-    if session.get('rol'] != 'gerente':
+    if session.get('rol') != 'gerente':
         return redirect(url_for('ventas'))
     return render_template_con_branding('tesoreria.html')
 
