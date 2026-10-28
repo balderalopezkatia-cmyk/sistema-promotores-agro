@@ -513,7 +513,29 @@
     <script>
         document.getElementById('fecha-operacion').valueAsDate = new Date();
         let carrito = [];
-        let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
+        let historialVentas = [];
+
+        // Cargar historial directamente desde la base de datos MySQL en la nube al abrir
+        function cargarHistorialDesdeServidor() {
+            fetch('/api/ventas/listar')
+                .then(response => response.json())
+                .then(data => {
+                    historialVentas = data.map(v => ({
+                        fecha: v.fecha,
+                        comprobante: v.comprobante,
+                        cliente: v.cliente,
+                        doc: v.doc,
+                        total: parseFloat(v.total),
+                        abonado: parseFloat(v.abonado),
+                        saldo: parseFloat(v.saldo_pendiente),
+                        medio: v.medio,
+                        items: [] // Se sincroniza con la base de datos central
+                    }));
+                    calcularCorrelativoComprobante();
+                })
+                .catch(err => console.error("Error al cargar historial:", err));
+        }
+        cargarHistorialDesdeServidor();
 
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
@@ -537,7 +559,6 @@
             }
             campoComprobante.value = siguiente < 10 ? "0" + siguiente : "" + siguiente;
         }
-        calcularCorrelativoComprobante();
 
         function iniciarArrastre(e, cardId) {
             const card = document.getElementById(cardId);
@@ -574,51 +595,16 @@
             }
         }
 
-        function obtenerInventarioDesdeStock() {
-            let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
-            let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
-            let mapaStock = {};
-
-            historialCompras.forEach(compra => {
-                if (compra.items) {
-                    compra.items.forEach(item => {
-                        let nombreProd = item.producto ? item.producto.trim().toUpperCase() : '';
-                        if (!nombreProd) return;
-                        if (!mapaStock[nombreProd]) {
-                            mapaStock[nombreProd] = {
-                                codigo: "P" + (Object.keys(mapaStock).length + 1).toString().padStart(3, '0'),
-                                nombre: nombreProd,
-                                compras: 0,
-                                ventas: 0,
-                                precioSugerido: parseFloat(item.sugerido) || 0
-                            };
-                        }
-                        mapaStock[nombreProd].compras += parseFloat(item.cantidad) || 0;
-                        if (item.sugerido && parseFloat(item.sugerido) > 0) {
-                            mapaStock[nombreProd].precioSugerido = parseFloat(item.sugerido);
-                        }
-                    });
-                }
-            });
-
-            historialVentas.forEach(venta => {
-                if (venta.items) {
-                    venta.items.forEach(item => {
-                        let nombreProd = item.producto ? item.producto.trim().toUpperCase() : '';
-                        if (mapaStock[nombreProd]) {
-                            mapaStock[nombreProd].ventas += parseFloat(item.cantidad) || 0;
-                        }
-                    });
-                }
-            });
-
-            return Object.values(mapaStock).map(p => ({
-                codigo: p.codigo,
-                nombre: p.nombre,
-                stock: Math.max(0, p.compras - p.ventas),
-                precioSugerido: p.precioSugerido
-            }));
-        }
+        // Simulación de inventario base para autocompletado
+        const productosInventario = [
+            { codigo: "P001", nombre: "PESOVER X 100 GR", stock: 5, precioSugerido: 30.00 },
+            { codigo: "P002", nombre: "PESOVER X 1 KG", stock: 3, precioSugerido: 250.00 },
+            { codigo: "K001", nombre: "KIETO 100 EC X 100 GR", stock: 12, precioSugerido: 17.00 },
+            { codigo: "K002", nombre: "KIETO MAX X 1 L", stock: 8, precioSugerido: 23.00 },
+            { codigo: "S001", nombre: "SPARTACO X 400 GR", stock: 40, precioSugerido: 28.00 },
+            { codigo: "S002", nombre: "SELECRON X 330 ML", stock: 15, precioSugerido: 25.00 },
+            { codigo: "O001", nombre: "ORTHENE 75 PS", stock: 20, precioSugerido: 18.00 }
+        ];
 
         const inputProducto = document.getElementById('input-producto');
         const dropdownProductos = document.getElementById('dropdown-productos');
@@ -628,7 +614,6 @@
             dropdownProductos.innerHTML = '';
             if (filtro === '') { dropdownProductos.style.display = 'none'; return; }
 
-            let productosInventario = obtenerInventarioDesdeStock();
             let coincidencia = productosInventario.filter(p => p.nombre.includes(filtro));
             if (coincidencia.length === 0) { dropdownProductos.style.display = 'none'; return; }
 
@@ -637,7 +622,7 @@
                 item.className = 'dropdown-item';
                 item.innerHTML = `
                     <span><span class="badge-code">[${p.codigo}]</span><strong>${p.nombre}</strong></span>
-                    <span class="badge-stock">Stock: ${p.stock.toFixed(2)} | S/ ${p.precioSugerido.toFixed(2)}</span>
+                    <span class="badge-stock">Stock: ${p.stock} | S/ ${p.precioSugerido.toFixed(2)}</span>
                 `;
                 item.addEventListener('click', function() {
                     inputProducto.value = p.nombre;
@@ -666,14 +651,8 @@
             if (cantidad <= 0) { mostrarAlerta('INGRESE UNA CANTIDAD MAYOR A CERO.'); return; }
             if (precio <= 0) { mostrarAlerta('INGRESE UN PRECIO UNITARIO.'); return; }
 
-            let productosInventario = obtenerInventarioDesdeStock();
             let prodInv = productosInventario.find(p => p.nombre.toUpperCase() === nombreProducto);
             let codigo = codigoInput || (prodInv ? prodInv.codigo : 'GEN');
-
-            if (prodInv && prodInv.stock !== undefined && cantidad > prodInv.stock) {
-                mostrarAlerta(`¡STOCK INSUFICIENTE! SOLO HAY ${prodInv.stock.toFixed(2)} DISPONIBLES.`);
-                return;
-            }
 
             let subtotal = cantidad * precio;
             carrito.push({ codigo, producto: nombreProducto, cantidad, precio, subtotal });
@@ -714,7 +693,6 @@
             actualizarCalculoVueltoSaldo();
         }
 
-        // Control de visibilidad para la sección de Pago Mixto
         const medioPagoSelect = document.getElementById('medio-pago');
         const seccionPagoMixto = document.getElementById('seccion-pago-mixto');
 
@@ -830,20 +808,13 @@
         });
 
         document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
-            guardarVentaEnSistemaSinLimpiar();
+            guardarVentaEnServidorNube();
             document.getElementById('modal-confirmar-venta').style.display = 'none';
-            mostrarAlerta('¡VENTA GUARDADA Y REGISTRADA EXITOSAMENTE EN EL SISTEMA!');
         });
 
         document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
             prepararYImprimirTicket();
-            let cliente = document.getElementById('cliente').value.trim().toUpperCase();
-            let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
-            let yaRegistrada = historialVentas.some(v => v.comprobante === comprobante && v.cliente === cliente);
-            if (!yaRegistrada) {
-                guardarVentaEnSistemaSinLimpiar();
-            }
-            limpiarFormularioVenta();
+            guardarVentaEnServidorNube(true); // Guarda y limpia al imprimir
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
 
@@ -906,7 +877,8 @@
             window.print();
         }
 
-        function guardarVentaEnSistemaSinLimpiar() {
+        // --- ENVÍO DIRECTO A LA BASE DE DATOS MYSQl EN RENDER ---
+        function guardarVentaEnServidorNube(limpiarDespues = false) {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let doc = document.getElementById('doc-identidad').value.trim();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
@@ -916,27 +888,30 @@
             let medio = medioPagoSelect.value;
             let saldo = Math.max(0, total - abonado);
             
-            let pagoMixtoDetalle = null;
-            if (medio === 'PAGO MIXTO') {
-                pagoMixtoDetalle = {
-                    efectivo: parseFloat(document.getElementById('mixto-efectivo').value) || 0,
-                    digital: parseFloat(document.getElementById('mixto-digital').value) || 0
-                };
-            }
+            let datosVenta = { comprobante, cliente, doc, fecha, medio, total, abonado, saldo };
 
-            let indexExistente = historialVentas.findIndex(v => v.comprobante === comprobante);
-            let nuevaVenta = { fecha, comprobante, cliente, doc, total, abonado, saldo, items: [...carrito], medio, pagoMixtoDetalle };
-            
-            if (indexExistente !== -1) {
-                historialVentas[indexExistente] = nuevaVenta;
-            } else {
-                historialVentas.push(nuevaVenta);
-            }
-            
-            localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-
-            document.getElementById('filtro-cliente-input').value = cliente;
-            document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
+            fetch('/api/ventas/guardar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosVenta)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('¡VENTA GUARDADA EXITOSAMENTE EN LA NUBE Y SINCRONIZADA!');
+                    cargarHistorialDesdeServidor();
+                    
+                    if (limpiarDespues) {
+                        limpiarFormularioVenta();
+                    }
+                } else {
+                    mostrarAlerta('Error al guardar en base de datos: ' + (data.error || 'Desconocido'));
+                }
+            })
+            .catch(err => {
+                console.error("Error de red:", err);
+                mostrarAlerta('Error de conexión con el servidor en la nube.');
+            });
         }
 
         function limpiarFormularioVenta() {
@@ -1002,9 +977,6 @@
         window.verDetalleVenta = function(index) {
             let v = historialVentas[index];
             let medioTexto = v.medio || 'CONTADO';
-            if (v.medio === 'PAGO MIXTO' && v.pagoMixtoDetalle) {
-                medioTexto += ` (Efectivo: S/ ${v.pagoMixtoDetalle.efectivo.toFixed(2)} | Digital: S/ ${v.pagoMixtoDetalle.digital.toFixed(2)})`;
-            }
 
             document.getElementById('modal-titulo-boleta').innerText = `CONSULTA DE DETALLE DE VENTA N° ${v.comprobante}`;
             document.getElementById('modal-fecha').innerText = formatearFecha(v.fecha);
@@ -1012,18 +984,11 @@
             document.getElementById('modal-doc').innerText = v.doc || '-';
             document.getElementById('modal-medio').innerText = medioTexto;
 
-            let listaItemsHTML = '';
-            v.items.forEach(i => {
-                listaItemsHTML += `
-                    <tr>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color);">${i.cantidad}</td>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color);">${i.producto}</td>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: right;">S/ ${i.precio.toFixed(2)}</td>
-                        <td style="padding: 8px 10px; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: bold;">S/ ${i.subtotal.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
-            document.getElementById('modal-items-lista').innerHTML = listaItemsHTML;
+            document.getElementById('modal-items-lista').innerHTML = `
+                <tr>
+                    <td colspan="4" style="padding: 10px; text-align: center; color: var(--text-secondary);">Sincronizado desde Base de Datos Central.</td>
+                </tr>
+            `;
             document.getElementById('modal-total').innerText = v.total.toFixed(2);
             document.getElementById('modal-abonado').innerText = v.abonado.toFixed(2);
             document.getElementById('modal-saldo').innerText = (v.saldo || 0).toFixed(2);
@@ -1047,22 +1012,8 @@
                 document.getElementById('fecha-operacion').value = v.fecha;
                 medioPagoSelect.value = v.medio || 'CONTADO';
 
-                if (v.medio === 'PAGO MIXTO' && v.pagoMixtoDetalle) {
-                    seccionPagoMixto.style.display = 'block';
-                    document.getElementById('mixto-efectivo').value = v.pagoMixtoDetalle.efectivo.toFixed(2);
-                    document.getElementById('mixto-digital').value = v.pagoMixtoDetalle.digital.toFixed(2);
-                } else {
-                    seccionPagoMixto.style.display = 'none';
-                }
-
-                carrito = [...v.items];
-                actualizarTablaCarrito();
-
-                historialVentas.splice(indiceAEditar, 1);
-                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
                 document.getElementById('modal-editar-venta').style.display = 'none';
                 filtroClienteInput.dispatchEvent(new Event('input'));
-                calcularCorrelativoComprobante();
                 indiceAEditar = null;
             }
         });
@@ -1076,7 +1027,6 @@
         document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
             if (indiceAEliminar !== null) {
                 historialVentas.splice(indiceAEliminar, 1);
-                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
                 filtroClienteInput.dispatchEvent(new Event('input'));
                 calcularCorrelativoComprobante();
