@@ -20,7 +20,6 @@ def obtener_conexion():
         print("Aviso de conexión a la base de datos en la nube:", e)
         return None
 
-# Función para inyectar automáticamente el título, limpiar iconos y forzar la actualización en Chrome
 def render_template_con_branding(template_name, **kwargs):
     html_content = render_template(template_name, **kwargs)
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -60,7 +59,6 @@ def index():
 @app.route('/login', methods=['POST'])
 def login():
     perfil = request.form.get('perrol')
-    
     if perfil == 'gerente':
         password = request.form.get('password', '')
         if password == 'Tubandera2714':  
@@ -122,7 +120,42 @@ def api_dashboard_resumen():
             'deudas_cobrar': 0.0
         })
 
-# MÓDULOS DE ACCESO GENERAL / EMPLEADO (Ventas y Amortizaciones)
+@app.route('/api/ventas/guardar', methods=['POST'])
+def api_guardar_venta():
+    if 'rol' not in session:
+        return jsonify({'error': 'No autorizado'}), 403
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Sin datos'}), 400
+        
+        conexion = obtener_conexion()
+        if not conexion:
+            return jsonify({'error': 'Error de conexion'}), 500
+            
+        cursor = conexion.cursor()
+        
+        comprobante = data.get('comprobante', '')
+        cliente = data.get('cliente', '')
+        doc = data.get('doc', '')
+        fecha = data.get('fecha', '')
+        medio = data.get('medio', '')
+        total = float(data.get('total', 0))
+        abonado = float(data.get('abonado', 0))
+        saldo = float(data.get('saldo', 0))
+        
+        query = """INSERT INTO ventas (comprobante, cliente, doc, fecha, medio, total, abonado, saldo_pendiente) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+        cursor.execute(query, (comprobante, cliente, doc, fecha, medio, total, abonado, saldo))
+        conexion.commit()
+        
+        cursor.close()
+        conexion.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/ventas')
 def ventas():
     if 'rol' not in session:
@@ -135,7 +168,6 @@ def amortizaciones():
         return redirect(url_for('index'))
     return render_template_con_branding('amortizaciones.html')
 
-# MÓDULOS EXCLUSIVOS PARA GERENTE (Acceso total a gestión, stock, compras, tesorería, etc.)
 @app.route('/creditos')
 def creditos():
     if session.get('rol') != 'gerente':
