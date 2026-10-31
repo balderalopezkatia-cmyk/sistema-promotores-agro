@@ -81,7 +81,7 @@
         /* Modales Arrastrables */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .modal-card { background: var(--bg-card); padding: 20px; border-radius: 12px; max-width: 480px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; position: absolute; }
-        .modal-header-drag { cursor: move; background: #1a2a3a; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header-drag { cursor: move; background: #1a2a3a; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; user-select: none; }
         .modal-header-drag h3 { color: var(--green-primary); font-size: 13px; text-transform: uppercase; font-weight: 700; margin: 0; }
         
         .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; }
@@ -277,7 +277,7 @@
                 <div class="form-row row-search-historial" style="margin-bottom: 15px;">
                     <div class="form-group">
                         <label>NOMBRE DE CLIENTE / EMPRESA:</label>
-                        <input type="text" id="filtro-cliente-input" placeholder="ESCRIBE EL NOMBRE PARA BUSCAR TODAS SUS BOLETAS..." style="text-transform: uppercase;">
+                        <input type="text" id="filtro-cliente-input" placeholder="ESCRIBE EL CLIENTE PARA VER TODAS SUS BOLETAS..." style="text-transform: uppercase;">
                     </div>
                     <div style="text-align: right;">
                         <div id="contenedor-saldo-deuda" style="display: none;">
@@ -295,10 +295,8 @@
                             <tr>
                                 <th>Fecha</th>
                                 <th>N° Comprobante</th>
-                                <th>Cliente</th>
-                                <th>Total</th>
-                                <th>Abonado</th>
-                                <th>Saldo</th>
+                                <th>Cliente / Empresa</th>
+                                <th>Saldo Pendiente Actual</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
@@ -521,6 +519,7 @@
                 .then(response => response.json())
                 .then(data => {
                     historialVentas = data.map(v => ({
+                        id: v.id,
                         fecha: v.fecha,
                         comprobante: v.comprobante,
                         cliente: v.cliente,
@@ -529,9 +528,13 @@
                         abonado: parseFloat(v.abonado),
                         saldo: parseFloat(v.saldo_pendiente),
                         medio: v.medio,
-                        items: [] // Se sincroniza con la base de datos central
+                        items: []
                     }));
                     calcularCorrelativoComprobante();
+                    // Si ya hay un filtro escrito, refrescar la tabla automáticamente
+                    if (document.getElementById('filtro-cliente-input').value.trim() !== '') {
+                        document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
+                    }
                 })
                 .catch(err => console.error("Error al cargar historial:", err));
         }
@@ -814,7 +817,7 @@
 
         document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
             prepararYImprimirTicket();
-            guardarVentaEnServidorNube(true); // Guarda y limpia al imprimir
+            guardarVentaEnServidorNube(true);
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
 
@@ -877,7 +880,7 @@
             window.print();
         }
 
-        // --- ENVÍO DIRECTO A LA BASE DE DATOS MYSQl EN RENDER ---
+        // --- ENVÍO DIRECTO A LA BASE DE DATOS MYSQL EN RENDER ---
         function guardarVentaEnServidorNube(limpiarDespues = false) {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let doc = document.getElementById('doc-identidad').value.trim();
@@ -951,6 +954,12 @@
             tbodyHistorial.innerHTML = '';
             let deudaTotal = 0;
 
+            if (filtrados.length === 0) {
+                tbodyHistorial.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 15px; color: var(--text-secondary);">No se encontraron comprobantes para este cliente.</td></tr>`;
+                document.getElementById('deuda-total-cliente').innerText = "S/ 0.00";
+                return;
+            }
+
             filtrados.forEach((venta) => {
                 deudaTotal += venta.saldo || 0;
                 let realIndex = historialVentas.indexOf(venta);
@@ -960,8 +969,6 @@
                     <td>${formatearFecha(venta.fecha)}</td>
                     <td><a class="link-action" onclick="verDetalleVenta(${realIndex})">${venta.comprobante}</a></td>
                     <td>${venta.cliente}</td>
-                    <td>S/ ${venta.total.toFixed(2)}</td>
-                    <td>S/ ${venta.abonado.toFixed(2)}</td>
                     <td class="${(venta.saldo || 0) > 0 ? 'text-red' : 'text-green'}">S/ ${(venta.saldo || 0).toFixed(2)}</td>
                     <td>
                         <a class="link-action" onclick="pedirEditarVenta(${realIndex})">EDITAR</a>
@@ -1026,10 +1033,33 @@
 
         document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
             if (indiceAEliminar !== null) {
-                historialVentas.splice(indiceAEliminar, 1);
+                let v = historialVentas[indiceAEliminar];
+                
+                // Petición al servidor para eliminar de MySQL
+                fetch(`/api/ventas/eliminar/${v.id || v.comprobante}`, {
+                    method: 'DELETE'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE.');
+                        cargarHistorialDesdeServidor();
+                    } else {
+                        // Fallback local si el ID no está sincronizado
+                        historialVentas.splice(indiceAEliminar, 1);
+                        filtroClienteInput.dispatchEvent(new Event('input'));
+                        calcularCorrelativoComprobante();
+                        mostrarAlerta('REGISTRO ELIMINADO LOCALMENTE.');
+                    }
+                })
+                .catch(err => {
+                    historialVentas.splice(indiceAEliminar, 1);
+                    filtroClienteInput.dispatchEvent(new Event('input'));
+                    calcularCorrelativoComprobante();
+                    mostrarAlerta('REGISTRO ELIMINADO LOCALMENTE.');
+                });
+
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
-                filtroClienteInput.dispatchEvent(new Event('input'));
-                calcularCorrelativoComprobante();
                 indiceAEliminar = null;
             }
         });
