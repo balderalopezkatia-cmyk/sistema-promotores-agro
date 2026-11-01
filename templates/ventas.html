@@ -559,7 +559,6 @@
             let selectCliente = document.getElementById('filtro-cliente-select');
             let selectComprobante = document.getElementById('filtro-comprobante-select');
 
-            // Guardar selecciones actuales si las hubiera
             let clienteActual = selectCliente.value;
             let comprobanteActual = selectComprobante.value;
 
@@ -1002,7 +1001,7 @@
             document.getElementById('fecha-operacion').valueAsDate = new Date();
         }
 
-        // LÓGICA DE CONSULTA DE HISTORIAL CON LOS SELECTORES
+        // LÓGICA DE CONSULTA DE HISTORIAL CON FORMATO DE FECHA CORREGIDO (DD/MM/YYYY)
         const filtroClienteSelect = document.getElementById('filtro-cliente-select');
         const filtroComprobanteSelect = document.getElementById('filtro-comprobante-select');
         const btnConsultarHistorial = document.getElementById('btn-consultar-historial');
@@ -1010,9 +1009,16 @@
         const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
 
         function formatearFecha(fechaStr) {
-            if (!fechaStr || fechaStr.indexOf('-') === -1) return fechaStr;
-            let p = fechaStr.split('-');
-            return `${p[2]}/${p[1]}/${p[0]}`;
+            if (!fechaStr) return '';
+            // Si viene con formato ISO o fecha de base de datos (ej. 2026-11-01 o con hora)
+            let soloFecha = fechaStr.split('T')[0].split(' ')[0];
+            if (soloFecha.indexOf('-') !== -1) {
+                let p = soloFecha.split('-');
+                if (p.length === 3) {
+                    return `${p[2]}/${p[1]}/${p[0]}`; // DD/MM/YYYY
+                }
+            }
+            return fechaStr;
         }
 
         btnConsultarHistorial.addEventListener('click', function() {
