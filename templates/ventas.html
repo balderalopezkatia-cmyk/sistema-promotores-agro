@@ -28,7 +28,7 @@
         .row-2 { grid-template-columns: 1fr 1fr; }
         .row-2-buttons { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
         
-        /* Estilo idéntico al de compras de la captura para el historial */
+        /* Estilo idéntico al de compras para el historial */
         .row-search-historial { grid-template-columns: 2fr 2fr auto; align-items: end; gap: 15px; }
 
         .form-group { display: flex; flex-direction: column; position: relative; }
@@ -54,7 +54,6 @@
         .dropdown-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 13px; text-transform: uppercase; color: var(--text-white); }
         .dropdown-item:hover { background-color: #1a2a3a; }
         .dropdown-item .badge-stock { background: var(--green-primary); color: var(--bg-main); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .dropdown-item .badge-code { color: var(--text-secondary); font-size: 11px; margin-right: 5px; }
 
         /* Botones */
         .btn-add { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 18px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
@@ -240,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- SECCIÓN DINÁMICA DE PAGO MIXTO (EFECTIVO + DIGITAL) -->
+                <!-- SECCIÓN DINÁMICA DE PAGO MIXTO -->
                 <div id="seccion-pago-mixto">
                     <label style="font-size: 12px; font-weight: bold; color: var(--green-primary); margin-bottom: 8px; display: block; text-transform: uppercase;">Detalle de Pago Mixto:</label>
                     <div class="form-row row-2" style="margin-bottom: 0;">
@@ -340,7 +339,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIRMAR VENTA (ARRASTRABLE) -->
+    <!-- MODAL CONFIRMAR VENTA -->
     <div id="modal-confirmar-venta" class="modal-overlay">
         <div class="modal-card" id="card-conf-venta">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-conf-venta')">
@@ -355,7 +354,7 @@
         </div>
     </div>
 
-    <!-- MODAL IMPRIMIR TICKET (ARRASTRABLE) -->
+    <!-- MODAL IMPRIMIR TICKET -->
     <div id="modal-imprimir-ticket" class="modal-overlay">
         <div class="modal-card" id="card-imp-ticket">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-imp-ticket')">
@@ -457,7 +456,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIRMACIÓN DE EDICIÓN HISTORIAL -->
+    <!-- MODAL EDITAR VENTA HISTORIAL -->
     <div id="modal-editar-venta" class="modal-overlay">
         <div class="modal-card" id="card-editar">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-editar')">
@@ -472,7 +471,7 @@
         </div>
     </div>
 
-    <!-- MODAL CONFIRMACIÓN DE ELIMINACIÓN HISTORIAL -->
+    <!-- MODAL ELIMINAR VENTA HISTORIAL -->
     <div id="modal-eliminar-venta" class="modal-overlay">
         <div class="modal-card" id="card-eliminar">
             <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-eliminar')">
@@ -487,7 +486,7 @@
         </div>
     </div>
 
-    <!-- Ticket Térmico POS-80 para impresión directa -->
+    <!-- Ticket Térmico POS-80 -->
     <div id="ticket-impresion">
         <div style="text-align: center; margin-bottom: 4px;">
             <strong style="font-size: 13px;">PROMOTORES DEL AGRO JK E.I.R.L.</strong><br>
@@ -527,34 +526,21 @@
     </div>
 
     <script>
-        // Establecer la fecha actual por defecto en formato correcto YYYY-MM-DD
         document.getElementById('fecha-operacion').valueAsDate = new Date();
         
         let carrito = [];
         let historialVentas = [];
         let inventarioStockCache = [];
 
-        // 1. CARGAR HISTORIAL DE VENTAS DESDE MYSQL (NUBE) Y LLENAR SELECTORES
-        function cargarHistorialDesdeServidor() {
-            fetch('/api/ventas/listar')
-                .then(response => response.json())
-                .then(data => {
-                    historialVentas = data.map(v => ({
-                        id: v.id,
-                        fecha: v.fecha,
-                        comprobante: v.comprobante,
-                        cliente: v.cliente,
-                        doc: v.doc,
-                        total: parseFloat(v.total),
-                        abonado: parseFloat(v.abonado),
-                        saldo: parseFloat(v.saldo_pendiente),
-                        medio: v.medio,
-                        items: v.items ? JSON.parse(v.items) : []
-                    }));
-                    calcularCorrelativoComprobante();
-                    poblarSelectoresFiltro();
-                })
-                .catch(err => console.error("Error al cargar historial:", err));
+        function cargarHistorialLocal() {
+            try {
+                let datos = localStorage.getItem('historial_ventas_agro');
+                historialVentas = datos ? JSON.parse(datos) : [];
+            } catch (e) {
+                historialVentas = [];
+            }
+            calcularCorrelativoComprobante();
+            poblarSelectoresFiltro();
         }
 
         function poblarSelectoresFiltro() {
@@ -588,7 +574,6 @@
             selectComprobante.value = comprobanteActual;
         }
 
-        // 2. CARGAR PRODUCTOS DESDE EL STOCK REAL REGISTRADO EN COMPRAS
         function cargarInventarioStock() {
             let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
             let mapaStock = {};
@@ -604,9 +589,8 @@
                         let key = nombre;
                         
                         if (!mapaStock[key]) {
-                            mapaStock[key] = { producto: nombre, laboratorio: laboratorio, precioSugerido: sugerido, costo: costo, compras: 0, ventas: 0 };
+                            mapaStock[key] = { producto: nombre, laboratorio: laboratorio, precioSugerido: sugerido, costo: costo };
                         }
-                        mapaStock[key].compras += parseFloat(item.cantidad) || 0;
                     });
                 }
             });
@@ -615,27 +599,21 @@
         }
 
         cargarInventarioStock();
-        cargarHistorialDesdeServidor();
+        cargarHistorialLocal();
 
-        // LÓGICA CORREGIDA PARA EVITAR REPETICIÓN DE BOLETAS
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
             if (historialVentas.length === 0) {
                 campoComprobante.value = "01";
                 return;
             }
-            // Extraer todos los números de comprobantes existentes en formato numérico puro
             let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n));
-            
             if (numeros.length === 0) {
                 campoComprobante.value = "01";
                 return;
             }
-            
-            // Obtener el número máximo registrado y sumarle 1 para que nunca se repita
             let maximo = Math.max(...numeros);
             let siguiente = maximo + 1;
-            
             campoComprobante.value = siguiente < 10 ? "0" + siguiente : "" + siguiente;
         }
 
@@ -674,7 +652,6 @@
             }
         }
 
-        // BÚSQUEDA DINÁMICA DE PRODUCTOS EN EL STOCK REAL
         const inputProducto = document.getElementById('input-producto');
         const dropdownProductos = document.getElementById('dropdown-productos');
 
@@ -874,13 +851,13 @@
         });
 
         document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
-            guardarVentaEnServidorNube();
+            guardarVentaLocal();
             document.getElementById('modal-confirmar-venta').style.display = 'none';
         });
 
         document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
             prepararYImprimirTicket();
-            guardarVentaEnServidorNube(true);
+            guardarVentaLocal(true);
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
 
@@ -944,8 +921,7 @@
             window.print();
         }
 
-        // --- ENVÍO DIRECTO A LA BASE DE DATOS MYSQL EN LA NUBE ---
-        function guardarVentaEnServidorNube(limpiarDespues = false) {
+        function guardarVentaLocal(limpiarDespues = false) {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let doc = document.getElementById('doc-identidad').value.trim();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
@@ -955,7 +931,8 @@
             let medio = medioPagoSelect.value;
             let saldo = Math.max(0, total - abonado);
             
-            let datosVenta = { 
+            let nuevaVenta = { 
+                id: Date.now(),
                 comprobante, 
                 cliente, 
                 doc, 
@@ -964,31 +941,18 @@
                 total, 
                 abonado, 
                 saldo, 
-                items: JSON.stringify(carrito) 
+                items: [...carrito] 
             };
 
-            fetch('/api/ventas/guardar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datosVenta)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    mostrarAlerta('¡VENTA GUARDADA EXITOSAMENTE EN LA NUBE Y SINCRONIZADA!');
-                    cargarHistorialDesdeServidor();
-                    
-                    if (limpiarDespues) {
-                        limpiarFormularioVenta();
-                    }
-                } else {
-                    mostrarAlerta('Error al guardar en base de datos: ' + (data.error || 'Desconocido'));
-                }
-            })
-            .catch(err => {
-                console.error("Error de red:", err);
-                mostrarAlerta('Error de conexión con el servidor en la nube.');
-            });
+            historialVentas.push(nuevaVenta);
+            localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+            
+            mostrarAlerta('¡VENTA GUARDADA EXITOSAMENTE EN EL SISTEMA!');
+            cargarHistorialLocal();
+            
+            if (limpiarDespues) {
+                limpiarFormularioVenta();
+            }
         }
 
         function limpiarFormularioVenta() {
@@ -1002,7 +966,6 @@
             document.getElementById('fecha-operacion').valueAsDate = new Date();
         }
 
-        // LÓGICA DE CONSULTA DE HISTORIAL CON FORMATO DE FECHA ESTRICTO EN CASTELLANO (DD/MM/YYYY)
         const filtroClienteSelect = document.getElementById('filtro-cliente-select');
         const filtroComprobanteSelect = document.getElementById('filtro-comprobante-select');
         const btnConsultarHistorial = document.getElementById('btn-consultar-historial');
@@ -1015,10 +978,7 @@
             let p = soloFecha.split('-');
             if (p.length === 3) {
                 if (p[0].length === 4) {
-                    return `${p[2]}/${p[1]}/${p[0]}`; // Formato DD/MM/YYYY exacto
-                }
-                if (p[2].length === 4) {
-                    return soloFecha;
+                    return `${p[2]}/${p[1]}/${p[0]}`;
                 }
             }
             return soloFecha;
@@ -1100,7 +1060,7 @@
                     tbodyItems.appendChild(tr);
                 });
             } else {
-                tbodyItems.innerHTML = `<tr><td colspan="4" style="padding: 10px; text-align: center; color: var(--text-secondary);">Sincronizado desde Base de Datos Central.</td></tr>`;
+                tbodyItems.innerHTML = `<tr><td colspan="4" style="padding: 10px; text-align: center; color: var(--text-secondary);">Sin detalles registrados.</td></tr>`;
             }
 
             document.getElementById('modal-total').innerText = v.total.toFixed(2);
@@ -1142,30 +1102,15 @@
             document.getElementById('modal-eliminar-venta').style.display = 'flex';
         };
 
-        // ELIMINACIÓN REAL Y PERMANENTE EN EL SERVIDOR NUBE CON LIMPIEZA DE INTERFAZ
         document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
             if (indiceAEliminar !== null) {
-                let v = historialVentas[indiceAEliminar];
+                historialVentas.splice(indiceAEliminar, 1);
+                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
                 
-                fetch(`/api/ventas/eliminar/${v.id || v.comprobante}`, {
-                    method: 'DELETE'
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE DE LA NUBE.');
-                        cargarHistorialDesdeServidor();
-                        // Ocultar la tabla y limpiar para que no queden datos fantasma al refrescar
-                        document.getElementById('seccion-tabla-historial').style.display = 'none';
-                        document.getElementById('contenedor-saldo-deuda').style.display = 'none';
-                    } else {
-                        mostrarAlerta('Error al eliminar en base de datos: ' + (data.error || 'Desconocido'));
-                    }
-                })
-                .catch(err => {
-                    console.error("Error de red:", err);
-                    mostrarAlerta('Error de conexión con el servidor en la nube.');
-                });
+                mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE.');
+                cargarHistorialLocal();
+                document.getElementById('seccion-tabla-historial').style.display = 'none';
+                document.getElementById('contenedor-saldo-deuda').style.display = 'none';
 
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
                 indiceAEliminar = null;
