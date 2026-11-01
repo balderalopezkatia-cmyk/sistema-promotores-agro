@@ -1002,7 +1002,7 @@
             document.getElementById('fecha-operacion').valueAsDate = new Date();
         }
 
-        // LÓGICA DE CONSULTA DE HISTORIAL CON FORMATO DE FECHA LIMPIO (DD/MM/YYYY)
+        // LÓGICA DE CONSULTA DE HISTORIAL CON FORMATO DE FECHA ESTRICTO EN CASTELLANO (DD/MM/YYYY)
         const filtroClienteSelect = document.getElementById('filtro-cliente-select');
         const filtroComprobanteSelect = document.getElementById('filtro-comprobante-select');
         const btnConsultarHistorial = document.getElementById('btn-consultar-historial');
@@ -1011,15 +1011,17 @@
 
         function formatearFecha(fechaStr) {
             if (!fechaStr) return '';
-            // Si la fecha viene en formato ISO estándar (YYYY-MM-DD) o con hora de base de datos
             let soloFecha = fechaStr.split('T')[0].split(' ')[0];
-            if (soloFecha.indexOf('-') !== -1) {
-                let p = soloFecha.split('-');
-                if (p.length === 3) {
-                    return `${p[2]}/${p[1]}/${p[0]}`; // Formato DD/MM/YYYY
+            let p = soloFecha.split('-');
+            if (p.length === 3) {
+                if (p[0].length === 4) {
+                    return `${p[2]}/${p[1]}/${p[0]}`; // Formato DD/MM/YYYY exacto
+                }
+                if (p[2].length === 4) {
+                    return soloFecha;
                 }
             }
-            return fechaStr;
+            return soloFecha;
         }
 
         btnConsultarHistorial.addEventListener('click', function() {
@@ -1140,6 +1142,7 @@
             document.getElementById('modal-eliminar-venta').style.display = 'flex';
         };
 
+        // ELIMINACIÓN REAL Y PERMANENTE EN EL SERVIDOR NUBE CON LIMPIEZA DE INTERFAZ
         document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
             if (indiceAEliminar !== null) {
                 let v = historialVentas[indiceAEliminar];
@@ -1150,22 +1153,18 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE.');
+                        mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE DE LA NUBE.');
                         cargarHistorialDesdeServidor();
+                        // Ocultar la tabla y limpiar para que no queden datos fantasma al refrescar
+                        document.getElementById('seccion-tabla-historial').style.display = 'none';
+                        document.getElementById('contenedor-saldo-deuda').style.display = 'none';
                     } else {
-                        historialVentas.splice(indiceAEliminar, 1);
-                        poblarSelectoresFiltro();
-                        btnConsultarHistorial.click();
-                        calcularCorrelativoComprobante();
-                        mostrarAlerta('REGISTRO ELIMINADO LOCALMENTE.');
+                        mostrarAlerta('Error al eliminar en base de datos: ' + (data.error || 'Desconocido'));
                     }
                 })
                 .catch(err => {
-                    historialVentas.splice(indiceAEliminar, 1);
-                    poblarSelectoresFiltro();
-                    btnConsultarHistorial.click();
-                    calcularCorrelativoComprobante();
-                    mostrarAlerta('REGISTRO ELIMINADO LOCALMENTE.');
+                    console.error("Error de red:", err);
+                    mostrarAlerta('Error de conexión con el servidor en la nube.');
                 });
 
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
