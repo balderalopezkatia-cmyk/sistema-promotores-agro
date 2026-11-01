@@ -850,14 +850,15 @@
             document.getElementById('modal-imprimir-ticket').style.display = 'flex';
         });
 
+        // 1. CONFIRMAR VENTA: Guarda la venta en el sistema y limpia el formulario
         document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
-            guardarVentaLocal();
+            guardarVentaLocal(true);
             document.getElementById('modal-confirmar-venta').style.display = 'none';
         });
 
+        // 2. IMPRIMIR TICKET: Solo imprime el ticket sin volver a guardar la venta
         document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
             prepararYImprimirTicket();
-            guardarVentaLocal(true);
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
 
