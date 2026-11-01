@@ -156,9 +156,9 @@
                         <label>NOMBRE DE CLIENTE / EMPRESA:</label>
                         <input type="text" id="cliente" list="lista-clientes" placeholder="ESCRIBIR NOMBRE" style="text-transform: uppercase;">
                         <datalist id="lista-clientes">
-                            <option value="KATIA BALDERA" data-doc="77044985">
-                            <option value="JUAN SUCLUPE" data-doc="44112233">
-                            <option value="MANFREDO DIAZ" data-doc="10293847">
+                            <option value="KATIA BALDERA">
+                            <option value="JUAN SUCLUPE">
+                            <option value="MANFREDO DIAZ">
                         </datalist>
                     </div>
                     <div class="form-group">
@@ -167,7 +167,7 @@
                     </div>
                     <div class="form-group">
                         <label>N° COMPROBANTE / BOLETA / FACTURA (CORRELATIVO):</label>
-                        <input type="text" id="comprobante" placeholder="EJ. 07" style="text-transform: uppercase;" readonly>
+                        <input type="text" id="comprobante" placeholder="EJ. 01" style="text-transform: uppercase;" readonly>
                     </div>
                 </div>
 
@@ -196,8 +196,8 @@
                         <thead>
                             <tr>
                                 <th>Item</th>
-                                <th>Código</th>
                                 <th>Producto</th>
+                                <th>Laboratorio</th>
                                 <th>Cantidad</th>
                                 <th>Precio Unitario</th>
                                 <th>Subtotal</th>
@@ -491,9 +491,10 @@
             <thead>
                 <tr style="border-bottom: 1px dashed #000;">
                     <th style="text-align: left; width: 10%;">CANT</th>
-                    <th style="text-align: left; width: 50%;">PRODUCTO</th>
-                    <th style="text-align: right; width: 20%;">P.UNI</th>
-                    <th style="text-align: right; width: 20%;">IMPORTE</th>
+                    <th style="text-align: left; width: 40%;">PRODUCTO</th>
+                    <th style="text-align: left; width: 25%;">LAB</th>
+                    <th style="text-align: right; width: 12%;">P.UNI</th>
+                    <th style="text-align: right; width: 13%;">IMP</th>
                 </tr>
             </thead>
             <tbody id="t-cuerpo-items"></tbody>
@@ -512,8 +513,9 @@
         document.getElementById('fecha-operacion').valueAsDate = new Date();
         let carrito = [];
         let historialVentas = [];
+        let inventarioStockCache = [];
 
-        // Cargar historial directamente desde la base de datos MySQL en la nube al abrir
+        // 1. CARGAR HISTORIAL DE VENTAS DESDE MYSQL (NUBE)
         function cargarHistorialDesdeServidor() {
             fetch('/api/ventas/listar')
                 .then(response => response.json())
@@ -528,16 +530,43 @@
                         abonado: parseFloat(v.abonado),
                         saldo: parseFloat(v.saldo_pendiente),
                         medio: v.medio,
-                        items: []
+                        items: v.items ? JSON.parse(v.items) : []
                     }));
                     calcularCorrelativoComprobante();
-                    // Si ya hay un filtro escrito, refrescar la tabla automáticamente
                     if (document.getElementById('filtro-cliente-input').value.trim() !== '') {
                         document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
                     }
                 })
                 .catch(err => console.error("Error al cargar historial:", err));
         }
+
+        // 2. CARGAR PRODUCTOS DESDE EL STOCK REAL REGISTRADO EN COMPRAS
+        function cargarInventarioStock() {
+            let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
+            let mapaStock = {};
+
+            historialCompras.forEach(compra => {
+                if (compra.items) {
+                    compra.items.forEach(item => {
+                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                        if (!nombre) return;
+                        let laboratorio = item.laboratorio ? item.laboratorio.trim().toUpperCase() : '-';
+                        let sugerido = parseFloat(item.sugerido) || 0;
+                        let costo = parseFloat(item.costo) || 0;
+                        let key = nombre;
+                        
+                        if (!mapaStock[key]) {
+                            mapaStock[key] = { producto: nombre, laboratorio: laboratorio, precioSugerido: sugerido, costo: costo, compras: 0, ventas: 0 };
+                        }
+                        mapaStock[key].compras += parseFloat(item.cantidad) || 0;
+                    });
+                }
+            });
+
+            inventarioStockCache = Object.values(mapaStock);
+        }
+
+        cargarInventarioStock();
         cargarHistorialDesdeServidor();
 
         function calcularCorrelativoComprobante() {
@@ -598,17 +627,7 @@
             }
         }
 
-        // Simulación de inventario base para autocompletado
-        const productosInventario = [
-            { codigo: "P001", nombre: "PESOVER X 100 GR", stock: 5, precioSugerido: 30.00 },
-            { codigo: "P002", nombre: "PESOVER X 1 KG", stock: 3, precioSugerido: 250.00 },
-            { codigo: "K001", nombre: "KIETO 100 EC X 100 GR", stock: 12, precioSugerido: 17.00 },
-            { codigo: "K002", nombre: "KIETO MAX X 1 L", stock: 8, precioSugerido: 23.00 },
-            { codigo: "S001", nombre: "SPARTACO X 400 GR", stock: 40, precioSugerido: 28.00 },
-            { codigo: "S002", nombre: "SELECRON X 330 ML", stock: 15, precioSugerido: 25.00 },
-            { codigo: "O001", nombre: "ORTHENE 75 PS", stock: 20, precioSugerido: 18.00 }
-        ];
-
+        // BÚSQUEDA DINÁMICA DE PRODUCTOS EN EL STOCK REAL
         const inputProducto = document.getElementById('input-producto');
         const dropdownProductos = document.getElementById('dropdown-productos');
 
@@ -617,19 +636,18 @@
             dropdownProductos.innerHTML = '';
             if (filtro === '') { dropdownProductos.style.display = 'none'; return; }
 
-            let coincidencia = productosInventario.filter(p => p.nombre.includes(filtro));
+            let coincidencia = inventarioStockCache.filter(p => p.producto.includes(filtro));
             if (coincidencia.length === 0) { dropdownProductos.style.display = 'none'; return; }
 
             coincidencia.forEach(p => {
                 let item = document.createElement('div');
                 item.className = 'dropdown-item';
                 item.innerHTML = `
-                    <span><span class="badge-code">[${p.codigo}]</span><strong>${p.nombre}</strong></span>
-                    <span class="badge-stock">Stock: ${p.stock} | S/ ${p.precioSugerido.toFixed(2)}</span>
+                    <span><strong>${p.producto}</strong> <small style="color:var(--text-secondary);">(${p.laboratorio})</small></span>
+                    <span class="badge-stock">Sugerido: S/ ${p.precioSugerido.toFixed(2)}</span>
                 `;
                 item.addEventListener('click', function() {
-                    inputProducto.value = p.nombre;
-                    document.getElementById('input-producto-codigo').value = p.codigo;
+                    inputProducto.value = p.producto;
                     document.getElementById('input-precio').value = p.precioSugerido.toFixed(2);
                     dropdownProductos.style.display = 'none';
                 });
@@ -646,7 +664,6 @@
 
         document.getElementById('btn-agregar').addEventListener('click', function() {
             let nombreProducto = inputProducto.value.trim().toUpperCase();
-            let codigoInput = document.getElementById('input-producto-codigo').value;
             let cantidad = parseFloat(document.getElementById('input-cantidad').value) || 0;
             let precio = parseFloat(document.getElementById('input-precio').value) || 0;
 
@@ -654,15 +671,14 @@
             if (cantidad <= 0) { mostrarAlerta('INGRESE UNA CANTIDAD MAYOR A CERO.'); return; }
             if (precio <= 0) { mostrarAlerta('INGRESE UN PRECIO UNITARIO.'); return; }
 
-            let prodInv = productosInventario.find(p => p.nombre.toUpperCase() === nombreProducto);
-            let codigo = codigoInput || (prodInv ? prodInv.codigo : 'GEN');
+            let prodData = inventarioStockCache.find(p => p.producto.toUpperCase() === nombreProducto);
+            let laboratorio = prodData ? prodData.laboratorio : '-';
 
             let subtotal = cantidad * precio;
-            carrito.push({ codigo, producto: nombreProducto, cantidad, precio, subtotal });
+            carrito.push({ producto: nombreProducto, laboratorio, cantidad, precio, subtotal });
             actualizarTablaCarrito();
 
             inputProducto.value = '';
-            document.getElementById('input-producto-codigo').value = '';
             document.getElementById('input-cantidad').value = '1';
             document.getElementById('input-precio').value = '0.00';
             inputProducto.focus();
@@ -677,8 +693,8 @@
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${index + 1}</td>
-                    <td><small>${item.codigo}</small></td>
                     <td>${item.producto}</td>
+                    <td>${item.laboratorio}</td>
                     <td>${item.cantidad}</td>
                     <td>S/ ${item.precio.toFixed(2)}</td>
                     <td>S/ ${item.subtotal.toFixed(2)}</td>
@@ -853,6 +869,7 @@
                 tr.innerHTML = `
                     <td style="padding: 2px 0;">${item.cantidad}</td>
                     <td style="padding: 2px 0;">${item.producto}</td>
+                    <td style="padding: 2px 0;">${item.laboratorio}</td>
                     <td style="text-align: right; padding: 2px 0;">${item.precio.toFixed(2)}</td>
                     <td style="text-align: right; padding: 2px 0;">${item.subtotal.toFixed(2)}</td>
                 `;
@@ -880,7 +897,7 @@
             window.print();
         }
 
-        // --- ENVÍO DIRECTO A LA BASE DE DATOS MYSQL EN RENDER ---
+        // --- ENVÍO DIRECTO A LA BASE DE DATOS MYSQL EN LA NUBE ---
         function guardarVentaEnServidorNube(limpiarDespues = false) {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let doc = document.getElementById('doc-identidad').value.trim();
@@ -891,7 +908,17 @@
             let medio = medioPagoSelect.value;
             let saldo = Math.max(0, total - abonado);
             
-            let datosVenta = { comprobante, cliente, doc, fecha, medio, total, abonado, saldo };
+            let datosVenta = { 
+                comprobante, 
+                cliente, 
+                doc, 
+                fecha, 
+                medio, 
+                total, 
+                abonado, 
+                saldo, 
+                items: JSON.stringify(carrito) 
+            };
 
             fetch('/api/ventas/guardar', {
                 method: 'POST',
@@ -991,11 +1018,24 @@
             document.getElementById('modal-doc').innerText = v.doc || '-';
             document.getElementById('modal-medio').innerText = medioTexto;
 
-            document.getElementById('modal-items-lista').innerHTML = `
-                <tr>
-                    <td colspan="4" style="padding: 10px; text-align: center; color: var(--text-secondary);">Sincronizado desde Base de Datos Central.</td>
-                </tr>
-            `;
+            let tbodyItems = document.getElementById('modal-items-lista');
+            tbodyItems.innerHTML = '';
+            
+            if (v.items && v.items.length > 0) {
+                v.items.forEach(item => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 6px 10px;">${item.cantidad}</td>
+                        <td style="padding: 6px 10px;">${item.producto}</td>
+                        <td style="padding: 6px 10px; text-align: right;">S/ ${item.precio.toFixed(2)}</td>
+                        <td style="padding: 6px 10px; text-align: right;">S/ ${item.subtotal.toFixed(2)}</td>
+                    `;
+                    tbodyItems.appendChild(tr);
+                });
+            } else {
+                tbodyItems.innerHTML = `<tr><td colspan="4" style="padding: 10px; text-align: center; color: var(--text-secondary);">Sincronizado desde Base de Datos Central.</td></tr>`;
+            }
+
             document.getElementById('modal-total').innerText = v.total.toFixed(2);
             document.getElementById('modal-abonado').innerText = v.abonado.toFixed(2);
             document.getElementById('modal-saldo').innerText = (v.saldo || 0).toFixed(2);
@@ -1018,6 +1058,10 @@
                 document.getElementById('monto-abonado').value = v.abonado;
                 document.getElementById('fecha-operacion').value = v.fecha;
                 medioPagoSelect.value = v.medio || 'CONTADO';
+                if (v.items) {
+                    carrito = [...v.items];
+                    actualizarTablaCarrito();
+                }
 
                 document.getElementById('modal-editar-venta').style.display = 'none';
                 filtroClienteInput.dispatchEvent(new Event('input'));
@@ -1035,7 +1079,6 @@
             if (indiceAEliminar !== null) {
                 let v = historialVentas[indiceAEliminar];
                 
-                // Petición al servidor para eliminar de MySQL
                 fetch(`/api/ventas/eliminar/${v.id || v.comprobante}`, {
                     method: 'DELETE'
                 })
@@ -1045,7 +1088,6 @@
                         mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE.');
                         cargarHistorialDesdeServidor();
                     } else {
-                        // Fallback local si el ID no está sincronizado
                         historialVentas.splice(indiceAEliminar, 1);
                         filtroClienteInput.dispatchEvent(new Event('input'));
                         calcularCorrelativoComprobante();
