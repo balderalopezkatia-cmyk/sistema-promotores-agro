@@ -127,7 +127,8 @@
                     <div class="toolbar-right">
                         <div class="search-field">
                             <span>🔍</span>
-                            <input type="text" id="input-buscar-stock" placeholder="Buscar producto..." oninput="aplicarFiltrosYOrdenamiento()">
+                            <!-- Se añadió el evento onkeydown para detectar la tecla ENTER -->
+                            <input type="text" id="input-buscar-stock" placeholder="Buscar producto..." oninput="aplicarBusquedaStock()" onkeydown="manejarEnterBusqueda(event)">
                         </div>
                         <a href="/compras" class="btn-add-main">+ Agregar producto</a>
                     </div>
@@ -240,9 +241,10 @@
             let contenedor = document.getElementById('contenedor-tarjetas-stock');
             document.getElementById('contador-productos-total').innerText = datos.length + " productos en total";
             document.getElementById('badge-todos').innerText = datos.length;
+            document.getElementById('badge-activos').innerText = datos.length;
 
             if (datos.length === 0) {
-                contenedor.innerHTML = `<div style="background:var(--bg-card); padding:24px; text-align:center; border-radius:12px; color:var(--text-secondary); border:1px solid var(--border-color);">No hay productos registrados. Realiza una compra primero.</div>`;
+                contenedor.innerHTML = `<div style="background:var(--bg-card); padding:24px; text-align:center; border-radius:12px; color:var(--text-secondary); border:1px solid var(--border-color);">No se encontraron productos coincidentes.</div>`;
                 return;
             }
 
@@ -274,6 +276,29 @@
             });
             contenedor.innerHTML = '';
             contenedor.appendChild(fragment);
+        }
+
+        // Lógica de búsqueda mejorada (filtra por texto al escribir y al presionar Enter)
+        function aplicarBusquedaStock() {
+            let texto = document.getElementById('input-buscar-stock').value.trim().toUpperCase();
+            if (texto === "") {
+                renderizarTarjetasStock(listaStockCache);
+                return;
+            }
+            let filtrados = listaStockCache.filter(item => item.producto.includes(texto) || item.laboratorio.includes(texto));
+            renderizarTarjetasStock(filtrados);
+        }
+
+        function manejarEnterBusqueda(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                aplicarBusquedaStock();
+            }
+        }
+
+        function restablecerFiltros() {
+            document.getElementById('input-buscar-stock').value = '';
+            renderizarTarjetasStock(listaStockCache);
         }
 
         // LÓGICA DE ZOOM Y MOVIMIENTO FLUIDO (ARRASTRE CON EL MOUSE)
