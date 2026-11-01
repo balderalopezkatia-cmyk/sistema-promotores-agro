@@ -527,7 +527,9 @@
     </div>
 
     <script>
+        // Establecer la fecha actual por defecto en formato correcto YYYY-MM-DD
         document.getElementById('fecha-operacion').valueAsDate = new Date();
+        
         let carrito = [];
         let historialVentas = [];
         let inventarioStockCache = [];
@@ -615,26 +617,25 @@
         cargarInventarioStock();
         cargarHistorialDesdeServidor();
 
+        // LÓGICA CORREGIDA PARA EVITAR REPETICIÓN DE BOLETAS
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
             if (historialVentas.length === 0) {
                 campoComprobante.value = "01";
                 return;
             }
-            let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n)).sort((a, b) => a - b);
+            // Extraer todos los números de comprobantes existentes en formato numérico puro
+            let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n));
+            
             if (numeros.length === 0) {
                 campoComprobante.value = "01";
                 return;
             }
             
-            let siguiente = 1;
-            for (let i = 0; i < numeros.length; i++) {
-                if (numeros[i] === siguiente) {
-                    siguiente++;
-                } else if (numeros[i] > siguiente) {
-                    break;
-                }
-            }
+            // Obtener el número máximo registrado y sumarle 1 para que nunca se repita
+            let maximo = Math.max(...numeros);
+            let siguiente = maximo + 1;
+            
             campoComprobante.value = siguiente < 10 ? "0" + siguiente : "" + siguiente;
         }
 
@@ -893,7 +894,7 @@
             let medio = medioPagoSelect.value;
             let saldo = Math.max(0, total - abonado);
 
-            document.getElementById('t-fecha').innerText = fecha;
+            document.getElementById('t-fecha').innerText = formatearFecha(fecha);
             document.getElementById('t-hora').innerText = new Date().toLocaleTimeString();
             document.getElementById('t-cliente').innerText = cliente;
             document.getElementById('t-doc').innerText = doc || '-';
@@ -1001,7 +1002,7 @@
             document.getElementById('fecha-operacion').valueAsDate = new Date();
         }
 
-        // LÓGICA DE CONSULTA DE HISTORIAL CON FORMATO DE FECHA CORREGIDO (DD/MM/YYYY)
+        // LÓGICA DE CONSULTA DE HISTORIAL CON FORMATO DE FECHA LIMPIO (DD/MM/YYYY)
         const filtroClienteSelect = document.getElementById('filtro-cliente-select');
         const filtroComprobanteSelect = document.getElementById('filtro-comprobante-select');
         const btnConsultarHistorial = document.getElementById('btn-consultar-historial');
@@ -1010,12 +1011,12 @@
 
         function formatearFecha(fechaStr) {
             if (!fechaStr) return '';
-            // Si viene con formato ISO o fecha de base de datos (ej. 2026-11-01 o con hora)
+            // Si la fecha viene en formato ISO estándar (YYYY-MM-DD) o con hora de base de datos
             let soloFecha = fechaStr.split('T')[0].split(' ')[0];
             if (soloFecha.indexOf('-') !== -1) {
                 let p = soloFecha.split('-');
                 if (p.length === 3) {
-                    return `${p[2]}/${p[1]}/${p[0]}`; // DD/MM/YYYY
+                    return `${p[2]}/${p[1]}/${p[0]}`; // Formato DD/MM/YYYY
                 }
             }
             return fechaStr;
@@ -1120,7 +1121,7 @@
                 document.getElementById('doc-identidad').value = v.doc;
                 document.getElementById('comprobante').value = v.comprobante;
                 document.getElementById('monto-abonado').value = v.abonado;
-                document.getElementById('fecha-operacion').value = v.fecha;
+                document.getElementById('fecha-operacion').value = v.fecha ? v.fecha.split('T')[0].split(' ')[0] : '';
                 medioPagoSelect.value = v.medio || 'CONTADO';
                 if (v.items) {
                     carrito = [...v.items];
