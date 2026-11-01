@@ -20,6 +20,37 @@ def obtener_conexion():
         print("Aviso de conexión a la base de datos en la nube:", e)
         return None
 
+# --- FUNCIÓN AUTOMÁTICA PARA CREAR LA TABLA VENTAS ---
+def inicializar_base_datos():
+    try:
+        conexion = obtener_conexion()
+        if conexion:
+            cursor = conexion.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS ventas (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    comprobante VARCHAR(50) NOT NULL,
+                    cliente VARCHAR(150) NOT NULL,
+                    doc VARCHAR(50),
+                    fecha DATE NOT NULL,
+                    medio VARCHAR(50) NOT NULL,
+                    total DECIMAL(10,2) NOT NULL,
+                    abonado DECIMAL(10,2) NOT NULL,
+                    saldo_pendiente DECIMAL(10,2) NOT NULL,
+                    items TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            conexion.commit()
+            cursor.close()
+            conexion.close()
+            print("Tabla 'ventas' verificada/creada correctamente en la nube.")
+    except Exception as e:
+        print("Aviso al inicializar la tabla ventas:", e)
+
+# Ejecutar al arrancar la aplicación
+inicializar_base_datos()
+
 def render_template_con_branding(template_name, **kwargs):
     html_content = render_template(template_name, **kwargs)
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -143,10 +174,11 @@ def api_guardar_venta():
         total = float(data.get('total', 0))
         abonado = float(data.get('abonado', 0))
         saldo = float(data.get('saldo', 0))
+        items = data.get('items', '[]')
         
-        query = """INSERT INTO ventas (comprobante, cliente, doc, fecha, medio, total, abonado, saldo_pendiente) 
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-        cursor.execute(query, (comprobante, cliente, doc, fecha, medio, total, abonado, saldo))
+        query = """INSERT INTO ventas (comprobante, cliente, doc, fecha, medio, total, abonado, saldo_pendiente, items) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        cursor.execute(query, (comprobante, cliente, doc, fecha, medio, total, abonado, saldo, items))
         conexion.commit()
         cursor.close()
         conexion.close()
