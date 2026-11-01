@@ -27,7 +27,9 @@
         .row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
         .row-2 { grid-template-columns: 1fr 1fr; }
         .row-2-buttons { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .row-search-historial { grid-template-columns: 1fr auto; align-items: center; }
+        
+        /* Estilo idéntico al de compras de la captura para el historial */
+        .row-search-historial { grid-template-columns: 2fr 2fr auto; align-items: end; gap: 15px; }
 
         .form-group { display: flex; flex-direction: column; position: relative; }
         .form-group label { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
@@ -63,6 +65,9 @@
 
         .btn-action-secondary { background-color: #1a2a3a; color: var(--green-primary); border: 1px solid var(--green-primary); padding: 13px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; }
         .btn-action-secondary:hover { background-color: rgba(46, 196, 182, 0.1); }
+
+        .btn-consultar-historial { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 18px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; height: 41px; }
+        .btn-consultar-historial:hover { background-color: #35f5aa; }
 
         /* Tablas */
         .table-container { margin: 15px 0 20px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
@@ -271,20 +276,32 @@
 
         <!-- MÓDULO 2: HISTORIAL -->
         <div class="card-box">
-            <div class="card-header">CONSULTA DE HISTORIAL</div>
+            <div class="card-header">CONSULTA DE HISTORIAL DE VENTAS POR CLIENTE / BOLETA / FACTURA</div>
             <div class="card-body">
                 
                 <div class="form-row row-search-historial" style="margin-bottom: 15px;">
                     <div class="form-group">
-                        <label>NOMBRE DE CLIENTE / EMPRESA:</label>
-                        <input type="text" id="filtro-cliente-input" placeholder="ESCRIBE EL CLIENTE PARA VER TODAS SUS BOLETAS..." style="text-transform: uppercase;">
+                        <label>BUSCAR POR CLIENTE / EMPRESA:</label>
+                        <select id="filtro-cliente-select">
+                            <option value="">-- SELECCIONAR CLIENTE --</option>
+                        </select>
                     </div>
-                    <div style="text-align: right;">
-                        <div id="contenedor-saldo-deuda" style="display: none;">
-                            <label style="font-size: 10px; font-weight: bold; margin-bottom: 3px; display: block; text-align: left; text-transform: uppercase; color: var(--text-secondary);">Saldo Deuda:</label>
-                            <div class="deuda-box-short">
-                                SALDO TOTAL: <span id="deuda-total-cliente">S/ 0.00</span>
-                            </div>
+                    <div class="form-group">
+                        <label>FILTRAR POR N° COMPROBANTE / BOLETA:</label>
+                        <select id="filtro-comprobante-select">
+                            <option value="">-- SELECCIONAR N° COMPROBANTE --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-consultar-historial" id="btn-consultar-historial">CONSULTAR HISTORIAL</button>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <div id="contenedor-saldo-deuda" style="display: none;">
+                        <label style="font-size: 10px; font-weight: bold; margin-bottom: 3px; display: block; text-align: left; text-transform: uppercase; color: var(--text-secondary);">Saldo Deuda:</label>
+                        <div class="deuda-box-short">
+                            SALDO TOTAL: <span id="deuda-total-cliente">S/ 0.00</span>
                         </div>
                     </div>
                 </div>
@@ -515,7 +532,7 @@
         let historialVentas = [];
         let inventarioStockCache = [];
 
-        // 1. CARGAR HISTORIAL DE VENTAS DESDE MYSQL (NUBE)
+        // 1. CARGAR HISTORIAL DE VENTAS DESDE MYSQL (NUBE) Y LLENAR SELECTORES
         function cargarHistorialDesdeServidor() {
             fetch('/api/ventas/listar')
                 .then(response => response.json())
@@ -533,11 +550,41 @@
                         items: v.items ? JSON.parse(v.items) : []
                     }));
                     calcularCorrelativoComprobante();
-                    if (document.getElementById('filtro-cliente-input').value.trim() !== '') {
-                        document.getElementById('filtro-cliente-input').dispatchEvent(new Event('input'));
-                    }
+                    poblarSelectoresFiltro();
                 })
                 .catch(err => console.error("Error al cargar historial:", err));
+        }
+
+        function poblarSelectoresFiltro() {
+            let selectCliente = document.getElementById('filtro-cliente-select');
+            let selectComprobante = document.getElementById('filtro-comprobante-select');
+
+            // Guardar selecciones actuales si las hubiera
+            let clienteActual = selectCliente.value;
+            let comprobanteActual = selectComprobante.value;
+
+            selectCliente.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>';
+            selectComprobante.innerHTML = '<option value="">-- SELECCIONAR N° COMPROBANTE --</option>';
+
+            let clientesUnicos = [...new Set(historialVentas.map(v => v.cliente))].sort();
+            let comprobantesUnicos = [...new Set(historialVentas.map(v => v.comprobante))].sort((a,b) => parseInt(a) - parseInt(b));
+
+            clientesUnicos.forEach(cli => {
+                let opt = document.createElement('option');
+                opt.value = cli;
+                opt.innerText = cli;
+                selectCliente.appendChild(opt);
+            });
+
+            comprobantesUnicos.forEach(comp => {
+                let opt = document.createElement('option');
+                opt.value = comp;
+                opt.innerText = "N° " + comp;
+                selectComprobante.appendChild(opt);
+            });
+
+            selectCliente.value = clienteActual;
+            selectComprobante.value = comprobanteActual;
         }
 
         // 2. CARGAR PRODUCTOS DESDE EL STOCK REAL REGISTRADO EN COMPRAS
@@ -955,7 +1002,10 @@
             document.getElementById('fecha-operacion').valueAsDate = new Date();
         }
 
-        const filtroClienteInput = document.getElementById('filtro-cliente-input');
+        // LÓGICA DE CONSULTA DE HISTORIAL CON LOS SELECTORES
+        const filtroClienteSelect = document.getElementById('filtro-cliente-select');
+        const filtroComprobanteSelect = document.getElementById('filtro-comprobante-select');
+        const btnConsultarHistorial = document.getElementById('btn-consultar-historial');
         const seccionTablaHistorial = document.getElementById('seccion-tabla-historial');
         const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
 
@@ -965,9 +1015,12 @@
             return `${p[2]}/${p[1]}/${p[0]}`;
         }
 
-        filtroClienteInput.addEventListener('input', function() {
-            let filtro = this.value.trim().toUpperCase();
-            if (filtro === "") {
+        btnConsultarHistorial.addEventListener('click', function() {
+            let clienteFiltro = filtroClienteSelect.value;
+            let comprobanteFiltro = filtroComprobanteSelect.value;
+
+            if (clienteFiltro === "" && comprobanteFiltro === "") {
+                mostrarAlerta('POR FAVOR SELECCIONE UN CLIENTE O UN N° DE COMPROBANTE PARA CONSULTAR.');
                 seccionTablaHistorial.style.display = 'none';
                 contenedorSaldoDeuda.style.display = 'none';
                 return;
@@ -976,13 +1029,18 @@
             seccionTablaHistorial.style.display = 'block';
             contenedorSaldoDeuda.style.display = 'block';
 
-            let filtrados = historialVentas.filter(v => v.cliente.includes(filtro));
+            let filtrados = historialVentas.filter(v => {
+                let matchCliente = clienteFiltro === "" || v.cliente === clienteFiltro;
+                let matchComprobante = comprobanteFiltro === "" || v.comprobante === comprobanteFiltro;
+                return matchCliente && matchComprobante;
+            });
+
             let tbodyHistorial = document.querySelector('#tabla-historial tbody');
             tbodyHistorial.innerHTML = '';
             let deudaTotal = 0;
 
             if (filtrados.length === 0) {
-                tbodyHistorial.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 15px; color: var(--text-secondary);">No se encontraron comprobantes para este cliente.</td></tr>`;
+                tbodyHistorial.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 15px; color: var(--text-secondary);">No se encontraron comprobantes con los filtros seleccionados.</td></tr>`;
                 document.getElementById('deuda-total-cliente').innerText = "S/ 0.00";
                 return;
             }
@@ -1064,7 +1122,7 @@
                 }
 
                 document.getElementById('modal-editar-venta').style.display = 'none';
-                filtroClienteInput.dispatchEvent(new Event('input'));
+                btnConsultarHistorial.click();
                 indiceAEditar = null;
             }
         });
@@ -1089,14 +1147,16 @@
                         cargarHistorialDesdeServidor();
                     } else {
                         historialVentas.splice(indiceAEliminar, 1);
-                        filtroClienteInput.dispatchEvent(new Event('input'));
+                        poblarSelectoresFiltro();
+                        btnConsultarHistorial.click();
                         calcularCorrelativoComprobante();
                         mostrarAlerta('REGISTRO ELIMINADO LOCALMENTE.');
                     }
                 })
                 .catch(err => {
                     historialVentas.splice(indiceAEliminar, 1);
-                    filtroClienteInput.dispatchEvent(new Event('input'));
+                    poblarSelectoresFiltro();
+                    btnConsultarHistorial.click();
                     calcularCorrelativoComprobante();
                     mostrarAlerta('REGISTRO ELIMINADO LOCALMENTE.');
                 });
