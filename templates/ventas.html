@@ -143,9 +143,10 @@
                 box-sizing: border-box;
             }
             #ticket-impresion img {
-                filter: grayscale(100%) contrast(500%) brightness(0%) !important;
                 max-width: 130px !important;
                 height: auto !important;
+                display: block !important;
+                margin: 0 auto 4px auto !important;
             }
             #ticket-impresion * {
                 color: #000 !important;
@@ -524,7 +525,7 @@
     <!-- Ticket Térmico POS-80 -->
     <div id="ticket-impresion">
         <div style="text-align: center; margin-bottom: 6px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Promotores del Agro" style="max-width: 130px; height: auto; display: block; margin: 0 auto 4px auto; filter: grayscale(100%) contrast(500%) brightness(0%);" onerror="this.style.display='none'"><br>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Promotores del Agro" style="max-width: 130px; height: auto; display: block; margin: 0 auto 4px auto;" onerror="this.style.display='none'"><br>
             <span style="font-size: 13px;">PROMOTORES DEL AGRO JK E.I.R.L.</span><br>
             Calle San Martín N° 687<br>MOCHUMI - LAMBAYEQUE<br>Telf: 922388208<br>RUC: 20611525304<br>
             ========================================<br>
