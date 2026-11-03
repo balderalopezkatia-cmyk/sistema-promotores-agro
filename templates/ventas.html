@@ -119,6 +119,7 @@
                 width: 80mm;
                 margin: 0 !important;
                 padding: 0 !important;
+                overflow-x: hidden !important;
             }
             body * { visibility: hidden; }
             #ticket-impresion, #ticket-impresion * { visibility: visible; }
@@ -128,14 +129,21 @@
                 left: 0; 
                 top: 0; 
                 width: 76mm; 
+                max-width: 76mm;
                 padding: 2mm; 
+                margin: 0;
                 overflow: hidden;
                 background: white; 
                 font-family: 'Courier New', Courier, monospace; 
-                font-size: 13px; 
+                font-size: 12px; 
                 font-weight: bold; 
-                color: #000;
-                line-height: 1.2;
+                color: #000 !important;
+                line-height: 1.25;
+                box-sizing: border-box;
+            }
+            #ticket-impresion * {
+                color: #000 !important;
+                font-weight: bold !important;
             }
             .top-navbar, .main-content, .modal-overlay { display: none !important; }
         }
@@ -509,11 +517,11 @@
     <!-- Ticket Térmico POS-80 -->
     <div id="ticket-impresion">
         <div style="text-align: center; margin-bottom: 6px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Promotores del Agro" style="max-width: 140px; height: auto; margin-bottom: 4px; filter: grayscale(100%) contrast(200%);"><br>
-            <span style="font-size: 14px;">PROMOTORES DEL AGRO JK E.I.R.L.</span><br>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Promotores del Agro" style="max-width: 120px; height: auto; display: block; margin: 0 auto 4px auto; filter: grayscale(100%) contrast(300%);"><br>
+            <span style="font-size: 13px;">PROMOTORES DEL AGRO JK E.I.R.L.</span><br>
             Calle San Martín N° 687<br>MOCHUMI - LAMBAYEQUE<br>Telf: 922388208<br>RUC: 20611525304<br>
             ========================================<br>
-            <strong style="font-size: 16px;">NOTA SIMPLE</strong><br>
+            <span style="font-size: 14px;">NOTA SIMPLE</span><br>
             ========================================
         </div>
         <div style="margin-bottom: 6px; font-size: 12px;">
@@ -526,22 +534,22 @@
         </div>
         <table style="width: 100%; font-family: 'Courier New', Courier, monospace; font-size: 12px; font-weight: bold; border-collapse: collapse; table-layout: fixed;">
             <thead>
-                <tr style="border-bottom: 2px dashed #000;">
-                    <th style="text-align: left; width: 12%; padding-bottom: 4px;">CANT</th>
-                    <th style="text-align: left; width: 48%; padding-bottom: 4px;">PRODUCTO/LAB</th>
-                    <th style="text-align: right; width: 20%; padding-bottom: 4px;">P.UNI</th>
-                    <th style="text-align: right; width: 20%; padding-bottom: 4px;">IMP</th>
+                <tr style="border-bottom: 1px solid #000;">
+                    <th style="text-align: left; width: 12%; padding-bottom: 3px; font-weight: bold; color: #000;">CANT</th>
+                    <th style="text-align: left; width: 48%; padding-bottom: 3px; font-weight: bold; color: #000;">PRODUCTO/LAB</th>
+                    <th style="text-align: right; width: 20%; padding-bottom: 3px; font-weight: bold; color: #000;">P.UNI</th>
+                    <th style="text-align: right; width: 20%; padding-bottom: 3px; font-weight: bold; color: #000;">IMP</th>
                 </tr>
             </thead>
             <tbody id="t-cuerpo-items"></tbody>
         </table>
-        <div style="margin-top: 6px; font-size: 13px;">
+        <div style="margin-top: 6px; font-size: 12px;">
             ----------------------------------------<br>
-            TOTAL A PAGAR: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-total" style="font-size: 14px;"></span><br>
+            TOTAL A PAGAR: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-total" style="font-size: 13px;"></span><br>
             <span id="t-etiqueta-paga-con">PAGA CON:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-abonado"></span><br>
-            <span id="t-etiqueta-vuelto-saldo">VUELTO:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-vuelto-saldo" style="font-size: 14px;"></span><br>
+            <span id="t-etiqueta-vuelto-saldo">VUELTO:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-vuelto-saldo" style="font-size: 13px;"></span><br>
             ----------------------------------------<br>
-            <div style="text-align: center; margin-top: 8px; font-size: 12px;">¡GRACIAS POR SU CONFIANZA!<br><strong style="font-size: 13px;">PROMOTORES DEL AGRO</strong></div>
+            <div style="text-align: center; margin-top: 6px; font-size: 11px;">¡GRACIAS POR SU CONFIANZA!<br>PROMOTORES DEL AGRO</div>
         </div>
     </div>
 
@@ -912,10 +920,10 @@
             carrito.forEach(item => {
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="padding: 3px 0; vertical-align: top;">${item.cantidad}</td>
-                    <td style="padding: 3px 0; vertical-align: top; word-break: break-all;">${item.producto} <br><small style="font-size:10px;">(${item.laboratorio})</small></td>
-                    <td style="text-align: right; padding: 3px 0; vertical-align: top;">${item.precio.toFixed(2)}</td>
-                    <td style="text-align: right; padding: 3px 0; vertical-align: top;">${item.subtotal.toFixed(2)}</td>
+                    <td style="padding: 3px 0; vertical-align: top; font-weight: bold; color: #000;">${item.cantidad}</td>
+                    <td style="padding: 3px 0; vertical-align: top; word-break: break-all; font-weight: bold; color: #000;">${item.producto} <br><small style="font-size:10px; color: #000; font-weight: bold;">(${item.laboratorio})</small></td>
+                    <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; color: #000;">${item.precio.toFixed(2)}</td>
+                    <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; color: #000;">${item.subtotal.toFixed(2)}</td>
                 `;
                 tbodyTicket.appendChild(tr);
             });
