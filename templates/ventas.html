@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ventas - Promotores del Agro</title>
+    <!-- Enlace al archivo de estilos global -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body { padding: 16px; }
+        .main-content { width: 100%; max-width: 1400px; margin: 0 auto; }
+        
+        /* Barra superior */
+        .top-navbar { padding: 14px 20px; }
+        .logo-container-top { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .logo-container-top img { height: 75px; width: auto; object-fit: contain; }
+        .logo-slogan-italic { font-size: 10px; font-style: italic; color: var(--text-secondary); margin-left: 2px; letter-spacing: 0.3px; }
+
+        /* Cajas Principales */
+        .card-box { background: var(--bg-card); border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); margin-bottom: 25px; overflow: hidden; border: 1px solid var(--border-color); }
+        .card-header { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--green-primary); padding: 16px 20px; font-weight: bold; font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .card-body { padding: 20px; }
+
+        /* Formularios y Grids */
+        .form-row { display: grid; gap: 15px; margin-bottom: 15px; align-items: end; }
+        .row-3 { grid-template-columns: 2fr 1fr 1fr; }
+        .row-3-btn { grid-template-columns: 2fr 1fr 1fr auto; }
+        .row-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .row-2 { grid-template-columns: 1fr 1fr; }
+        .row-2-buttons { grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+        
+        /* Estilo idéntico al de compras para el historial */
+        .row-search-historial { grid-template-columns: 2fr 2fr auto; align-items: end; gap: 15px; }
+
+        .form-group { display: flex; flex-direction: column; position: relative; }
+        .form-group label { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; }
+        .form-group input, .form-group select { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 9px 12px; border-radius: 8px; font-size: 14px; outline: none; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--green-primary); }
+
+        /* Sección de Pago Mixto Oculta/Visible */
+        #seccion-pago-mixto {
+            background: #1a2a3a;
+            border: 1px solid var(--green-primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        /* Desplegable de Sugerencias */
+        .dropdown-suggestions {
+            position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--green-primary);
+            border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: none;
+        }
+        .dropdown-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 13px; text-transform: uppercase; color: var(--text-white); }
+        .dropdown-item:hover { background-color: #1a2a3a; }
+        .dropdown-item .badge-stock { background: var(--green-primary); color: var(--bg-main); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+        /* Botones */
+        .btn-add { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 18px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; }
+        .btn-add:hover { background-color: #35f5aa; }
+        
+        .btn-action-primary { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 13px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; }
+        .btn-action-primary:hover { background-color: #35f5aa; }
+
+        .btn-action-secondary { background-color: #1a2a3a; color: var(--green-primary); border: 1px solid var(--green-primary); padding: 13px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-transform: uppercase; }
+        .btn-action-secondary:hover { background-color: rgba(46, 196, 182, 0.1); }
+
+        .btn-consultar-historial { background-color: var(--green-primary); color: var(--bg-main); border: none; padding: 10px 18px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 13px; text-transform: uppercase; transition: 0.2s; height: 41px; }
+        .btn-consultar-historial:hover { background-color: #35f5aa; }
+
+        /* Tablas */
+        .table-container { margin: 15px 0 20px 0; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); font-size: 13px; color: var(--text-white); }
+        th { background-color: #1a2a3a; color: var(--text-secondary); text-align: left; padding: 10px 12px; font-weight: bold; border-bottom: 1px solid var(--border-color); text-transform: uppercase; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-white); text-transform: uppercase; }
+        .text-green { color: var(--green-primary); font-weight: bold; }
+        .text-red { color: var(--red-alert); font-weight: bold; }
+        .link-action { color: var(--blue-tag); text-decoration: none; font-weight: bold; margin-right: 8px; cursor: pointer; text-transform: uppercase; }
+        .link-danger { color: var(--red-alert); text-decoration: none; cursor: pointer; margin-left: 8px; text-transform: uppercase; font-weight: bold; }
+
+        /* Caja de Deuda y Resumen Inferior */
+        .deuda-box-short { background-color: rgba(255, 14, 85, 0.1); border: 1px solid var(--red-alert); color: var(--red-alert); padding: 8px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; text-align: center; text-transform: uppercase; display: inline-block; min-width: 180px; }
+        .resumen-vuelto-saldo-box { background: #1a2a3a; border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 8px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold; text-transform: uppercase; color: var(--text-white); }
+
+        /* Modales Arrastrables */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-card { background: var(--bg-card); padding: 20px; border-radius: 12px; max-width: 480px; width: 90%; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 5px solid var(--green-primary); text-align: center; position: absolute; }
+        .modal-header-drag { cursor: move; background: #1a2a3a; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .modal-header-drag h3 { color: var(--green-primary); font-size: 13px; text-transform: uppercase; font-weight: 700; margin: 0; }
+        
+        .btn-modal-close { background: var(--green-primary); color: var(--bg-main); border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; }
+        .btn-modal-danger { background: var(--red-alert); color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; margin-right: 8px; }
+        .btn-modal-secondary { background: var(--border-color); color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; margin-top: 10px; text-transform: uppercase; }
+
+        /* MODAL DETALLE DE VENTA ARRASTRABLE */
+        .modal-detalle-card {
+            background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 650px; width: 92%;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 1px solid var(--border-color); border-top: 6px solid var(--green-primary);
+            text-align: left; position: absolute;
+        }
+        .modal-detalle-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; background: #1a2a3a; padding: 15px;
+            border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 20px; font-size: 13px; text-transform: uppercase; color: var(--text-white);
+        }
+        .modal-detalle-grid div span { font-weight: bold; color: var(--green-primary); }
+        .modal-detalle-tabla-container { max-height: 220px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 20px; }
+        .modal-detalle-resumen { background: #1a2a3a; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; font-size: 14px; text-transform: uppercase; margin-bottom: 20px; color: var(--text-white); }
+        .modal-detalle-resumen-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .modal-detalle-resumen-row:last-child { margin-bottom: 0; border-top: 1px dashed var(--border-color); padding-top: 8px; font-size: 15px; font-weight: bold; }
+
+        #ticket-impresion { display: none; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-impresion, #ticket-impresion * { visibility: visible; }
+            #ticket-impresion {
+                display: block !important; position: absolute; left: 0; top: 0; width: 78mm; padding: 2mm; overflow: hidden;
+                background: white; font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #000;
+            }
+            .top-navbar, .main-content, .modal-overlay { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior -->
+    <div class="top-navbar">
+        <div class="nav-left">
+            <div class="logo-container-top">
+                <img src="/static/logo.png" alt="Promotores del Agro" onerror="this.style.display='none'">
+                <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
+            </div>
+            <div class="nav-menu" style="margin-left: 20px; align-self: center;">
+                <a href="/dashboard" class="nav-link">PANEL</a>
+                <a href="/stock" class="nav-link">STOCK</a>
+                <a href="/ventas" class="nav-link active">VENTAS</a>
+                <a href="/compras" class="nav-link">COMPRAS</a>
+                <a href="/creditos" class="nav-link">CRÉDITOS</a>
+                <a href="/tesoreria" class="nav-link">TESORERÍA</a>
+                <a href="/gastos" class="nav-link">GASTOS</a>
+                <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
+            </div>
+        </div>
+        <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
+            <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
+            <button class="user-avatar" title="Cerrar Sesión" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+
+        <!-- MÓDULO 1: REGISTRO DE VENTAS -->
+        <div class="card-box">
+            <div class="card-header">REGISTRO DE VENTAS</div>
+            <div class="card-body">
+                
+                <div class="form-row row-3">
+                    <div class="form-group">
+                        <label>NOMBRE DE CLIENTE / EMPRESA:</label>
+                        <input type="text" id="cliente" list="lista-clientes" placeholder="ESCRIBIR NOMBRE" style="text-transform: uppercase;">
+                        <datalist id="lista-clientes">
+                            <option value="KATIA BALDERA">
+                            <option value="JUAN SUCLUPE">
+                            <option value="MANFREDO DIAZ">
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>DNI / RUC:</label>
+                        <input type="text" id="doc-identidad" placeholder="NRO DE DOCUMENTO">
+                    </div>
+                    <div class="form-group">
+                        <label>N° COMPROBANTE / BOLETA / FACTURA (CORRELATIVO):</label>
+                        <input type="text" id="comprobante" placeholder="EJ. 01" style="text-transform: uppercase;" readonly>
+                    </div>
+                </div>
+
+                <!-- Selección de Producto Enlazada con el Stock Real -->
+                <div class="form-row row-3-btn">
+                    <div class="form-group">
+                        <label>PRODUCTO:</label>
+                        <input type="text" id="input-producto" placeholder="ESCRIBE PARA BUSCAR EN STOCK" autocomplete="off" style="text-transform: uppercase;">
+                        <input type="hidden" id="input-producto-codigo">
+                        <div id="dropdown-productos" class="dropdown-suggestions"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>CANTIDAD (EJ. 1 O FRACCIÓN 0.1):</label>
+                        <input type="number" id="input-cantidad" value="1" min="0.01" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>PRECIO UNITARIO (S/):</label>
+                        <input type="number" id="input-precio" value="0.00" step="0.01">
+                    </div>
+                    <button type="button" class="btn-add" id="btn-agregar">+ AGREGAR</button>
+                </div>
+
+                <!-- Tabla Carrito -->
+                <div class="table-container">
+                    <table id="tabla-carrito">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Producto</th>
+                                <th>Laboratorio</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <!-- Resumen de Pago -->
+                <div class="form-row row-4">
+                    <div class="form-group">
+                        <label>MEDIO DE PAGO:</label>
+                        <select id="medio-pago">
+                            <option value="CONTADO">CONTADO (EFECTIVO)</option>
+                            <option value="PAGO MIXTO">PAGO MIXTO (EFECTIVO + DIGITAL)</option>
+                            <option value="YAPE">YAPE</option>
+                            <option value="PLIN">PLIN</option>
+                            <option value="BCP">BCP</option>
+                            <option value="CREDITO">CRÉDITO</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>TOTAL A PAGAR (S/):</label>
+                        <input type="text" id="total-pagar" value="0.00" readonly style="font-weight: bold; background: #1a2a3a;">
+                    </div>
+                    <div class="form-group">
+                        <label>PAGA CON / ABONADO (S/):</label>
+                        <input type="number" id="monto-abonado" value="0.00" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>FECHA DE OPERACIÓN:</label>
+                        <input type="date" id="fecha-operacion">
+                    </div>
+                </div>
+
+                <!-- SECCIÓN DINÁMICA DE PAGO MIXTO -->
+                <div id="seccion-pago-mixto">
+                    <label style="font-size: 12px; font-weight: bold; color: var(--green-primary); margin-bottom: 8px; display: block; text-transform: uppercase;">Detalle de Pago Mixto:</label>
+                    <div class="form-row row-2" style="margin-bottom: 0;">
+                        <div class="form-group">
+                            <label>MONTO EN EFECTIVO (S/):</label>
+                            <input type="number" id="mixto-efectivo" value="0.00" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>MONTO DIGITAL / YAPE / PLIN (S/):</label>
+                            <input type="number" id="mixto-digital" value="0.00" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Caja dinámica de Vuelto o Saldo Pendiente -->
+                <div class="resumen-vuelto-saldo-box">
+                    <span id="label-vuelto-saldo-texto">VUELTO / SALDO:</span>
+                    <span id="valor-vuelto-saldo-display" class="text-green">S/ 0.00</span>
+                </div>
+
+                <!-- Botones Separados -->
+                <div class="form-row row-2-buttons">
+                    <button type="button" class="btn-action-primary" id="btn-abrir-modal-confirmar">
+                        💾 CONFIRMAR VENTA
+                    </button>
+                    <button type="button" class="btn-action-secondary" id="btn-abrir-modal-imprimir">
+                        🖨️ IMPRIMIR TICKET
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- MÓDULO 2: HISTORIAL -->
+        <div class="card-box">
+            <div class="card-header">CONSULTA DE HISTORIAL DE VENTAS POR CLIENTE / BOLETA / FACTURA</div>
+            <div class="card-body">
+                
+                <div class="form-row row-search-historial" style="margin-bottom: 15px;">
+                    <div class="form-group">
+                        <label>BUSCAR POR CLIENTE / EMPRESA:</label>
+                        <select id="filtro-cliente-select">
+                            <option value="">-- SELECCIONAR CLIENTE --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>FILTRAR POR N° COMPROBANTE / BOLETA:</label>
+                        <select id="filtro-comprobante-select">
+                            <option value="">-- SELECCIONAR N° COMPROBANTE --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-consultar-historial" id="btn-consultar-historial">CONSULTAR HISTORIAL</button>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-bottom: 15px;">
+                    <div id="contenedor-saldo-deuda" style="display: none;">
+                        <label style="font-size: 10px; font-weight: bold; margin-bottom: 3px; display: block; text-align: left; text-transform: uppercase; color: var(--text-secondary);">Saldo Deuda:</label>
+                        <div class="deuda-box-short">
+                            SALDO TOTAL: <span id="deuda-total-cliente">S/ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container" id="seccion-tabla-historial" style="display: none;">
+                    <table id="tabla-historial">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>N° Comprobante</th>
+                                <th>Cliente / Empresa</th>
+                                <th>Saldo Pendiente Actual</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL DE ALERTA GENERAL -->
+    <div id="modal-alerta-general" class="modal-overlay">
+        <div class="modal-card" id="card-alerta">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-alerta')">
+                <h3>AVISO DEL SISTEMA - VALIDACIÓN DE DATOS</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-alerta-general')">✕</span>
+            </div>
+            <p id="modal-mensaje-texto" style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;"></p>
+            <div style="text-align: right;">
+                <button class="btn-modal-close" onclick="cerrarModal('modal-alerta-general')">ACEPTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMAR VENTA -->
+    <div id="modal-confirmar-venta" class="modal-overlay">
+        <div class="modal-card" id="card-conf-venta">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-conf-venta')">
+                <h3>CONFIRMACIÓN Y GUARDADO DE VENTA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-confirmar-venta')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿ESTÁ SEGURO DE GUARDAR Y REGISTRAR ESTA VENTA EN EL SISTEMA?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-ejecutar-confirmar-venta" style="background-color: var(--green-primary); color: var(--bg-main);">GUARDAR VENTA</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-confirmar-venta')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL IMPRIMIR TICKET -->
+    <div id="modal-imprimir-ticket" class="modal-overlay">
+        <div class="modal-card" id="card-imp-ticket">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-imp-ticket')">
+                <h3>IMPRESIÓN DIRECTA DE TICKET TÉRMICO</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-imprimir-ticket')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿DESEA PROCEDER A IMPRIMIR EL TICKET TÉRMICO DE ESTA VENTA?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-ejecutar-impresion" style="background-color: var(--green-primary); color: var(--bg-main);">IMPRIMIR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-imprimir-ticket')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETALLE DE VENTA -->
+    <div id="modal-detalle-venta" class="modal-overlay">
+        <div class="modal-detalle-card" id="card-detalle">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-detalle')">
+                <h3 id="modal-titulo-boleta">CONSULTA DE DETALLE DE VENTA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-detalle-venta')">✕</span>
+            </div>
+            
+            <div class="modal-detalle-grid">
+                <div><span>FECHA:</span> <span id="modal-fecha" style="font-weight: normal; color: var(--text-white);"></span></div>
+                <div><span>MEDIO PAGO:</span> <span id="modal-medio" style="font-weight: normal; color: var(--text-white);"></span></div>
+                <div><span>CLIENTE:</span> <span id="modal-cliente" style="font-weight: normal; color: var(--text-white);"></span></div>
+                <div><span>DNI / RUC:</span> <span id="modal-doc" style="font-weight: normal; color: var(--text-white);"></span></div>
+            </div>
+
+            <label style="font-size: 12px; font-weight: bold; color: var(--green-primary); margin-bottom: 6px; display: block; text-transform: uppercase;">Productos Registrados en esta Venta:</label>
+            <div class="modal-detalle-tabla-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px;">CANT</th>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px;">PRODUCTO</th>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px; text-align: right;">P. UNI</th>
+                            <th style="padding: 8px 10px; background: #1a2a3a; font-size: 11px; text-align: right;">SUBTOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-items-lista"></tbody>
+                </table>
+            </div>
+
+            <div class="modal-detalle-resumen">
+                <div class="modal-detalle-resumen-row">
+                    <span>Total a Pagar:</span>
+                    <span>S/ <span id="modal-total">0.00</span></span>
+                </div>
+                <div class="modal-detalle-resumen-row">
+                    <span>Monto Abonado:</span>
+                    <span>S/ <span id="modal-abonado">0.00</span></span>
+                </div>
+                <div class="modal-detalle-resumen-row" style="color: var(--red-alert);">
+                    <span>Saldo Pendiente:</span>
+                    <span>S/ <span id="modal-saldo">0.00</span></span>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="btn-modal-close" onclick="cerrarModal('modal-detalle-venta')">CERRAR VENTANA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR ITEM CARRITO -->
+    <div id="modal-editar-carrito" class="modal-overlay">
+        <div class="modal-card" id="card-editar-carrito">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-editar-carrito')">
+                <h3>MODIFICACIÓN DE ÍTEM EN CARRITO</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-editar-carrito')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 15px;">MODIFIQUE LA CANTIDAD O EL PRECIO DEL PRODUCTO:</p>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">CANTIDAD:</label>
+                <input type="number" id="edit-carrito-cant" min="0.01" step="any" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 8px; border-radius: 6px; margin-bottom: 10px;">
+                <label style="font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 4px;">PRECIO UNITARIO (S/):</label>
+                <input type="number" id="edit-carrito-precio" step="0.01" style="width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-white); padding: 8px; border-radius: 6px;">
+            </div>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-guardar-edicion-carrito" style="background-color: var(--green-primary); color: var(--bg-main);">GUARDAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-editar-carrito')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ELIMINAR ITEM CARRITO -->
+    <div id="modal-eliminar-carrito" class="modal-overlay">
+        <div class="modal-card" id="card-eliminar-carrito">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-eliminar-carrito')">
+                <h3>ELIMINACIÓN DE ÍTEM DEL CARRITO</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-eliminar-carrito')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿ESTÁ SEGURO DE QUITAR ESTE PRODUCTO DE LA LISTA DE VENTA?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-confirmar-eliminar-carrito">ACEPTAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-eliminar-carrito')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR VENTA HISTORIAL -->
+    <div id="modal-editar-venta" class="modal-overlay">
+        <div class="modal-card" id="card-editar">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-editar')">
+                <h3>MODIFICACIÓN Y EDICIÓN DE VENTA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-editar-venta')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿DESEA EDITAR ESTE REGISTRO DE VENTA Y CARGAR SUS DATOS AL FORMULARIO PRINCIPAL?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-confirmar-editar" style="background-color: var(--green-primary); color: var(--bg-main);">ACEPTAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-editar-venta')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ELIMINAR VENTA HISTORIAL -->
+    <div id="modal-eliminar-venta" class="modal-overlay">
+        <div class="modal-card" id="card-eliminar">
+            <div class="modal-header-drag" onmousedown="iniciarArrastre(event, 'card-eliminar')">
+                <h3>ELIMINACIÓN DE REGISTRO DE VENTA</h3>
+                <span style="cursor: pointer; color: var(--text-white);" onclick="cerrarModal('modal-eliminar-venta')">✕</span>
+            </div>
+            <p style="font-weight: normal; margin-top: 10px; margin-bottom: 20px;">¿ESTÁ SEGURO DE ELIMINAR ESTE REGISTRO DE VENTA PERMANENTEMENTE?</p>
+            <div style="text-align: right;">
+                <button class="btn-modal-danger" id="btn-confirmar-eliminar">ACEPTAR</button>
+                <button class="btn-modal-secondary" onclick="cerrarModal('modal-eliminar-venta')">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Térmico POS-80 -->
+    <div id="ticket-impresion">
+        <div style="text-align: center; margin-bottom: 6px;">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Promotores del Agro" style="max-width: 130px; height: auto; margin-bottom: 4px;"><br>
+            Calle San Martín N° 687<br>MOCHUMI - LAMBAYEQUE<br>Telf: 922388208<br>RUC: 20611525304<br>
+            ========================================<br>
+            <strong style="font-size: 13px;">NOTA DE VENTA</strong><br>
+            ========================================
+        </div>
+        <div style="margin-bottom: 6px;">
+            FECHA: <span id="t-fecha"></span> HORA: <span id="t-hora"></span><br>
+            PAGO: <span id="t-mediopago"></span> &nbsp; USUARIO: KATIA<br>
+            <span id="t-detalle-mixto-print" style="display:none;">EFECTIVO: S/ <span id="t-mixto-efectivo">0.00</span> | DIGITAL: S/ <span id="t-mixto-digital">0.00</span><br></span>
+            CLIENTE: <span id="t-cliente"></span><br>
+            N° DOC: <span id="t-doc"></span> | COMPR: <span id="t-comprobante"></span><br>
+            ----------------------------------------
+        </div>
+        <table style="width: 100%; font-family: 'Courier New', Courier, monospace; font-size: 10px; border-collapse: collapse; table-layout: fixed;">
+            <thead>
+                <tr style="border-bottom: 1px dashed #000;">
+                    <th style="text-align: left; width: 12%;">CANT</th>
+                    <th style="text-align: left; width: 48%;">PRODUCTO/LAB</th>
+                    <th style="text-align: right; width: 20%;">P.UNI</th>
+                    <th style="text-align: right; width: 20%;">IMP</th>
+                </tr>
+            </thead>
+            <tbody id="t-cuerpo-items"></tbody>
+        </table>
+        <div style="margin-top: 6px;">
+            ----------------------------------------<br>
+            TOTAL A PAGAR: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-total"></span><br>
+            <span id="t-etiqueta-paga-con">PAGA CON:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-abonado"></span><br>
+            <span id="t-etiqueta-vuelto-saldo">VUELTO:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-vuelto-saldo"></span><br>
+            ----------------------------------------<br>
+            <div style="text-align: center; margin-top: 8px;">¡GRACIAS POR SU CONFIANZA!<br><strong>PROMOTORES DEL AGRO</strong></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fecha-operacion').valueAsDate = new Date();
+        
+        let carrito = [];
+        let historialVentas = [];
+        let inventarioStockCache = [];
+
+        function cargarHistorialLocal() {
+            try {
+                let datos = localStorage.getItem('historial_ventas_agro');
+                historialVentas = datos ? JSON.parse(datos) : [];
+            } catch (e) {
+                historialVentas = [];
+            }
+            calcularCorrelativoComprobante();
+            poblarSelectoresFiltro();
+        }
+
+        function poblarSelectoresFiltro() {
+            let selectCliente = document.getElementById('filtro-cliente-select');
+            let selectComprobante = document.getElementById('filtro-comprobante-select');
+
+            let clienteActual = selectCliente.value;
+            let comprobanteActual = selectComprobante.value;
+
+            selectCliente.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>';
+            selectComprobante.innerHTML = '<option value="">-- SELECCIONAR N° COMPROBANTE --</option>';
+
+            let clientesUnicos = [...new Set(historialVentas.map(v => v.cliente))].sort();
+            let comprobantesUnicos = [...new Set(historialVentas.map(v => v.comprobante))].sort((a,b) => parseInt(a) - parseInt(b));
+
+            clientesUnicos.forEach(cli => {
+                let opt = document.createElement('option');
+                opt.value = cli;
+                opt.innerText = cli;
+                selectCliente.appendChild(opt);
+            });
+
+            comprobantesUnicos.forEach(comp => {
+                let opt = document.createElement('option');
+                opt.value = comp;
+                opt.innerText = "N° " + comp;
+                selectComprobante.appendChild(opt);
+            });
+
+            selectCliente.value = clienteActual;
+            selectComprobante.value = comprobanteActual;
+        }
+
+        function cargarInventarioStock() {
+            let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
+            let mapaStock = {};
+
+            historialCompras.forEach(compra => {
+                if (compra.items) {
+                    compra.items.forEach(item => {
+                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                        if (!nombre) return;
+                        let laboratorio = item.laboratorio ? item.laboratorio.trim().toUpperCase() : '-';
+                        let sugerido = parseFloat(item.sugerido) || 0;
+                        let costo = parseFloat(item.costo) || 0;
+                        let key = nombre;
+                        
+                        if (!mapaStock[key]) {
+                            mapaStock[key] = { producto: nombre, laboratorio: laboratorio, precioSugerido: sugerido, costo: costo };
+                        }
+                    });
+                }
+            });
+
+            inventarioStockCache = Object.values(mapaStock);
+        }
+
+        cargarInventarioStock();
+        cargarHistorialLocal();
+
+        function calcularCorrelativoComprobante() {
+            let campoComprobante = document.getElementById('comprobante');
+            if (historialVentas.length === 0) {
+                campoComprobante.value = "01";
+                return;
+            }
+            let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n));
+            if (numeros.length === 0) {
+                campoComprobante.value = "01";
+                return;
+            }
+            let maximo = Math.max(...numeros);
+            let siguiente = maximo + 1;
+            campoComprobante.value = siguiente < 10 ? "0" + siguiente : "" + siguiente;
+        }
+
+        function iniciarArrastre(e, cardId) {
+            const card = document.getElementById(cardId);
+            let startX = e.clientX, startY = e.clientY;
+            const rect = card.getBoundingClientRect();
+            card.style.position = 'absolute';
+            card.style.left = rect.left + 'px';
+            card.style.top = rect.top + 'px';
+            card.style.transform = 'none';
+
+            function onMouseMove(moveEvent) {
+                card.style.left = (rect.left + (moveEvent.clientX - startX)) + 'px';
+                card.style.top = (rect.top + (moveEvent.clientY - startY)) + 'px';
+            }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function mostrarAlerta(mensaje, elementoEnfocar = null) {
+            document.getElementById('modal-mensaje-texto').innerText = mensaje;
+            document.getElementById('modal-alerta-general').style.display = 'flex';
+            window.elementoEnfocarDestino = elementoEnfocar;
+        }
+
+        function cerrarModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId === 'modal-alerta-general' && window.elementoEnfocarDestino) {
+                window.elementoEnfocarDestino.focus();
+                window.elementoEnfocarDestino = null;
+            }
+        }
+
+        const inputProducto = document.getElementById('input-producto');
+        const dropdownProductos = document.getElementById('dropdown-productos');
+
+        inputProducto.addEventListener('input', function() {
+            let filtro = this.value.trim().toUpperCase();
+            dropdownProductos.innerHTML = '';
+            if (filtro === '') { dropdownProductos.style.display = 'none'; return; }
+
+            let coincidencia = inventarioStockCache.filter(p => p.producto.includes(filtro));
+            if (coincidencia.length === 0) { dropdownProductos.style.display = 'none'; return; }
+
+            coincidencia.forEach(p => {
+                let item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.innerHTML = `
+                    <span><strong>${p.producto}</strong> <small style="color:var(--text-secondary);">(${p.laboratorio})</small></span>
+                    <span class="badge-stock">Sugerido: S/ ${p.precioSugerido.toFixed(2)}</span>
+                `;
+                item.addEventListener('click', function() {
+                    inputProducto.value = p.producto;
+                    document.getElementById('input-precio').value = p.precioSugerido.toFixed(2);
+                    dropdownProductos.style.display = 'none';
+                });
+                dropdownProductos.appendChild(item);
+            });
+            dropdownProductos.style.display = 'block';
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!inputProducto.contains(e.target) && !dropdownProductos.contains(e.target)) {
+                dropdownProductos.style.display = 'none';
+            }
+        });
+
+        document.getElementById('btn-agregar').addEventListener('click', function() {
+            let nombreProducto = inputProducto.value.trim().toUpperCase();
+            let cantidad = parseFloat(document.getElementById('input-cantidad').value) || 0;
+            let precio = parseFloat(document.getElementById('input-precio').value) || 0;
+
+            if (!nombreProducto) { mostrarAlerta('POR FAVOR INGRESE O SELECCIONE UN PRODUCTO.', inputProducto); return; }
+            if (cantidad <= 0) { mostrarAlerta('INGRESE UNA CANTIDAD MAYOR A CERO.'); return; }
+            if (precio <= 0) { mostrarAlerta('INGRESE UN PRECIO UNITARIO.'); return; }
+
+            let prodData = inventarioStockCache.find(p => p.producto.toUpperCase() === nombreProducto);
+            let laboratorio = prodData ? prodData.laboratorio : '-';
+
+            let subtotal = cantidad * precio;
+            carrito.push({ producto: nombreProducto, laboratorio, cantidad, precio, subtotal });
+            actualizarTablaCarrito();
+
+            inputProducto.value = '';
+            document.getElementById('input-cantidad').value = '1';
+            document.getElementById('input-precio').value = '0.00';
+            inputProducto.focus();
+        });
+
+        function actualizarTablaCarrito() {
+            let tbody = document.querySelector('#tabla-carrito tbody');
+            tbody.innerHTML = '';
+            let totalGeneral = 0;
+            carrito.forEach((item, index) => {
+                totalGeneral += item.subtotal;
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.producto}</td>
+                    <td>${item.laboratorio}</td>
+                    <td>${item.cantidad}</td>
+                    <td>S/ ${item.precio.toFixed(2)}</td>
+                    <td>S/ ${item.subtotal.toFixed(2)}</td>
+                    <td>
+                        <a class="link-action" onclick="pedirEditarCarrito(${index})">EDITAR</a>
+                        <a class="link-danger" onclick="pedirEliminarCarrito(${index})">ELIMINAR</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('total-pagar').value = totalGeneral.toFixed(2);
+            document.getElementById('monto-abonado').value = totalGeneral.toFixed(2);
+            document.getElementById('mixto-efectivo').value = totalGeneral.toFixed(2);
+            document.getElementById('mixto-digital').value = "0.00";
+            actualizarCalculoVueltoSaldo();
+        }
+
+        const medioPagoSelect = document.getElementById('medio-pago');
+        const seccionPagoMixto = document.getElementById('seccion-pago-mixto');
+
+        medioPagoSelect.addEventListener('change', function() {
+            if (this.value === 'PAGO MIXTO') {
+                seccionPagoMixto.style.display = 'block';
+                let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+                document.getElementById('mixto-efectivo').value = total.toFixed(2);
+                document.getElementById('mixto-digital').value = "0.00";
+            } else {
+                seccionPagoMixto.style.display = 'none';
+            }
+            actualizarCalculoVueltoSaldo();
+        });
+
+        document.getElementById('monto-abonado').addEventListener('input', actualizarCalculoVueltoSaldo);
+        document.getElementById('mixto-efectivo').addEventListener('input', sincronizarPagoMixto);
+        document.getElementById('mixto-digital').addEventListener('input', sincronizarPagoMixto);
+
+        function sincronizarPagoMixto() {
+            let efec = parseFloat(document.getElementById('mixto-efectivo').value) || 0;
+            let dig = parseFloat(document.getElementById('mixto-digital').value) || 0;
+            document.getElementById('monto-abonado').value = (efec + dig).toFixed(2);
+            actualizarCalculoVueltoSaldo();
+        }
+
+        function actualizarCalculoVueltoSaldo() {
+            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+            let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
+            let medio = medioPagoSelect.value;
+            let labelText = document.getElementById('label-vuelto-saldo-texto');
+            let displayVal = document.getElementById('valor-vuelto-saldo-display');
+
+            if (medio === 'CREDITO') {
+                let saldo = Math.max(0, total - abonado);
+                labelText.innerText = "SALDO PENDIENTE A CRÉDITO:";
+                displayVal.innerText = "S/ " + saldo.toFixed(2);
+                displayVal.className = "text-red";
+            } else {
+                if (abonado >= total) {
+                    let vuelto = abonado - total;
+                    labelText.innerText = "VUELTO:";
+                    displayVal.innerText = "S/ " + vuelto.toFixed(2);
+                    displayVal.className = "text-green";
+                } else {
+                    let saldo = total - abonado;
+                    labelText.innerText = "SALDO PENDIENTE:";
+                    displayVal.innerText = "S/ " + saldo.toFixed(2);
+                    displayVal.className = "text-red";
+                }
+            }
+        }
+
+        let indiceItemEditar = null;
+        window.pedirEditarCarrito = function(index) {
+            indiceItemEditar = index;
+            let item = carrito[index];
+            document.getElementById('edit-carrito-cant').value = item.cantidad;
+            document.getElementById('edit-carrito-precio').value = item.precio;
+            document.getElementById('modal-editar-carrito').style.display = 'flex';
+        };
+
+        document.getElementById('btn-guardar-edicion-carrito').addEventListener('click', function() {
+            if (indiceItemEditar !== null) {
+                let nuevaCant = parseFloat(document.getElementById('edit-carrito-cant').value) || 0;
+                let nuevoPrecio = parseFloat(document.getElementById('edit-carrito-precio').value) || 0;
+                if (nuevaCant <= 0 || nuevoPrecio <= 0) {
+                    alert('Ingrese valores válidos mayores a cero.');
+                    return;
+                }
+                carrito[indiceItemEditar].cantidad = nuevaCant;
+                carrito[indiceItemEditar].precio = nuevoPrecio;
+                carrito[indiceItemEditar].subtotal = nuevaCant * nuevoPrecio;
+                actualizarTablaCarrito();
+                document.getElementById('modal-editar-carrito').style.display = 'none';
+                indiceItemEditar = null;
+            }
+        });
+
+        let indiceItemEliminar = null;
+        window.pedirEliminarCarrito = function(index) {
+            indiceItemEliminar = index;
+            document.getElementById('modal-eliminar-carrito').style.display = 'flex';
+        };
+
+        document.getElementById('btn-confirmar-eliminar-carrito').addEventListener('click', function() {
+            if (indiceItemEliminar !== null) {
+                carrito.splice(indiceItemEliminar, 1);
+                actualizarTablaCarrito();
+                document.getElementById('modal-eliminar-carrito').style.display = 'none';
+                indiceItemEliminar = null;
+            }
+        });
+
+        document.getElementById('btn-abrir-modal-confirmar').addEventListener('click', function() {
+            let cliente = document.getElementById('cliente').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim();
+            if (!cliente || !comprobante || carrito.length === 0) {
+                mostrarAlerta('POR FAVOR COMPLETE EL CLIENTE, N° DE COMPROBANTE Y AGREGUE PRODUCTOS.');
+                return;
+            }
+            document.getElementById('modal-confirmar-venta').style.display = 'flex';
+        });
+
+        document.getElementById('btn-abrir-modal-imprimir').addEventListener('click', function() {
+            let cliente = document.getElementById('cliente').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim();
+            if (!cliente || !comprobante || carrito.length === 0) {
+                mostrarAlerta('POR FAVOR COMPLETE EL CLIENTE, N° DE COMPROBANTE Y AGREGUE PRODUCTOS.');
+                return;
+            }
+            document.getElementById('modal-imprimir-ticket').style.display = 'flex';
+        });
+
+        // 1. CONFIRMAR VENTA: Guarda la venta en el sistema y limpia el formulario
+        document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
+            guardarVentaLocal(true);
+            document.getElementById('modal-confirmar-venta').style.display = 'none';
+        });
+
+        // 2. IMPRIMIR TICKET: Solo imprime el ticket sin volver a guardar la venta
+        document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
+            prepararYImprimirTicket();
+            document.getElementById('modal-imprimir-ticket').style.display = 'none';
+        });
+
+        function prepararYImprimirTicket() {
+            let cliente = document.getElementById('cliente').value.trim().toUpperCase();
+            let doc = document.getElementById('doc-identidad').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
+            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+            let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
+            let fecha = document.getElementById('fecha-operacion').value;
+            let medio = medioPagoSelect.value;
+            let saldo = Math.max(0, total - abonado);
+
+            document.getElementById('t-fecha').innerText = formatearFecha(fecha);
+            document.getElementById('t-hora').innerText = new Date().toLocaleTimeString();
+            document.getElementById('t-cliente').innerText = cliente;
+            document.getElementById('t-doc').innerText = doc || '-';
+            document.getElementById('t-comprobante').innerText = comprobante;
+            document.getElementById('t-mediopago').innerText = medio;
+
+            if (medio === 'PAGO MIXTO') {
+                document.getElementById('t-mixto-efectivo').innerText = (parseFloat(document.getElementById('mixto-efectivo').value) || 0).toFixed(2);
+                document.getElementById('t-mixto-digital').innerText = (parseFloat(document.getElementById('mixto-digital').value) || 0).toFixed(2);
+                document.getElementById('t-detalle-mixto-print').style.display = 'block';
+            } else {
+                document.getElementById('t-detalle-mixto-print').style.display = 'none';
+            }
+
+            let tbodyTicket = document.getElementById('t-cuerpo-items');
+            tbodyTicket.innerHTML = '';
+            carrito.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 2px 0; vertical-align: top;">${item.cantidad}</td>
+                    <td style="padding: 2px 0; vertical-align: top; word-break: break-all;">${item.producto} <br><small style="font-size:9px;">(${item.laboratorio})</small></td>
+                    <td style="text-align: right; padding: 2px 0; vertical-align: top;">${item.precio.toFixed(2)}</td>
+                    <td style="text-align: right; padding: 2px 0; vertical-align: top;">${item.subtotal.toFixed(2)}</td>
+                `;
+                tbodyTicket.appendChild(tr);
+            });
+
+            document.getElementById('t-total').innerText = total.toFixed(2);
+            document.getElementById('t-abonado').innerText = abonado.toFixed(2);
+
+            if (medio === 'CREDITO') {
+                document.getElementById('t-etiqueta-paga-con').innerText = "ABONADO / A CUENTA:";
+                document.getElementById('t-etiqueta-vuelto-saldo').innerText = "SALDO PENDIENTE:";
+                document.getElementById('t-vuelto-saldo').innerText = saldo.toFixed(2);
+            } else {
+                document.getElementById('t-etiqueta-paga-con').innerText = "PAGA CON:";
+                if (abonado >= total) {
+                    document.getElementById('t-etiqueta-vuelto-saldo').innerText = "VUELTO:";
+                    document.getElementById('t-vuelto-saldo').innerText = (abonado - total).toFixed(2);
+                } else {
+                    document.getElementById('t-etiqueta-vuelto-saldo').innerText = "SALDO PENDIENTE:";
+                    document.getElementById('t-vuelto-saldo').innerText = saldo.toFixed(2);
+                }
+            }
+
+            window.print();
+        }
+
+        function guardarVentaLocal(limpiarDespues = false) {
+            let cliente = document.getElementById('cliente').value.trim().toUpperCase();
+            let doc = document.getElementById('doc-identidad').value.trim();
+            let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
+            let total = parseFloat(document.getElementById('total-pagar').value) || 0;
+            let abonado = parseFloat(document.getElementById('monto-abonado').value) || 0;
+            let fecha = document.getElementById('fecha-operacion').value;
+            let medio = medioPagoSelect.value;
+            let saldo = Math.max(0, total - abonado);
+            
+            let nuevaVenta = { 
+                id: Date.now(),
+                comprobante, 
+                cliente, 
+                doc, 
+                fecha, 
+                medio, 
+                total, 
+                abonado, 
+                saldo, 
+                items: [...carrito] 
+            };
+
+            historialVentas.push(nuevaVenta);
+            localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+            
+            mostrarAlerta('¡VENTA GUARDADA EXITOSAMENTE EN EL SISTEMA!');
+            cargarHistorialLocal();
+            
+            if (limpiarDespues) {
+                limpiarFormularioVenta();
+            }
+        }
+
+        function limpiarFormularioVenta() {
+            carrito = [];
+            actualizarTablaCarrito();
+            document.getElementById('cliente').value = '';
+            document.getElementById('doc-identidad').value = '';
+            medioPagoSelect.value = 'CONTADO';
+            seccionPagoMixto.style.display = 'none';
+            calcularCorrelativoComprobante();
+            document.getElementById('fecha-operacion').valueAsDate = new Date();
+        }
+
+        const filtroClienteSelect = document.getElementById('filtro-cliente-select');
+        const filtroComprobanteSelect = document.getElementById('filtro-comprobante-select');
+        const btnConsultarHistorial = document.getElementById('btn-consultar-historial');
+        const seccionTablaHistorial = document.getElementById('seccion-tabla-historial');
+        const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
+
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return '';
+            let soloFecha = fechaStr.split('T')[0].split(' ')[0];
+            let p = soloFecha.split('-');
+            if (p.length === 3) {
+                if (p[0].length === 4) {
+                    return `${p[2]}/${p[1]}/${p[0]}`;
+                }
+            }
+            return soloFecha;
+        }
+
+        btnConsultarHistorial.addEventListener('click', function() {
+            let clienteFiltro = filtroClienteSelect.value;
+            let comprobanteFiltro = filtroComprobanteSelect.value;
+
+            if (clienteFiltro === "" && comprobanteFiltro === "") {
+                mostrarAlerta('POR FAVOR SELECCIONE UN CLIENTE O UN N° DE COMPROBANTE PARA CONSULTAR.');
+                seccionTablaHistorial.style.display = 'none';
+                contenedorSaldoDeuda.style.display = 'none';
+                return;
+            }
+
+            seccionTablaHistorial.style.display = 'block';
+            contenedorSaldoDeuda.style.display = 'block';
+
+            let filtrados = historialVentas.filter(v => {
+                let matchCliente = clienteFiltro === "" || v.cliente === clienteFiltro;
+                let matchComprobante = comprobanteFiltro === "" || v.comprobante === comprobanteFiltro;
+                return matchCliente && matchComprobante;
+            });
+
+            let tbodyHistorial = document.querySelector('#tabla-historial tbody');
+            tbodyHistorial.innerHTML = '';
+            let deudaTotal = 0;
+
+            if (filtrados.length === 0) {
+                tbodyHistorial.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 15px; color: var(--text-secondary);">No se encontraron comprobantes con los filtros seleccionados.</td></tr>`;
+                document.getElementById('deuda-total-cliente').innerText = "S/ 0.00";
+                return;
+            }
+
+            filtrados.forEach((venta) => {
+                deudaTotal += venta.saldo || 0;
+                let realIndex = historialVentas.indexOf(venta);
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${formatearFecha(venta.fecha)}</td>
+                    <td><a class="link-action" onclick="verDetalleVenta(${realIndex})">${venta.comprobante}</a></td>
+                    <td>${venta.cliente}</td>
+                    <td class="${(venta.saldo || 0) > 0 ? 'text-red' : 'text-green'}">S/ ${(venta.saldo || 0).toFixed(2)}</td>
+                    <td>
+                        <a class="link-action" onclick="pedirEditarVenta(${realIndex})">EDITAR</a>
+                        <a class="link-danger" onclick="pedirEliminarVenta(${realIndex})">ELIMINAR</a>
+                    </td>
+                `;
+                tbodyHistorial.appendChild(tr);
+            });
+
+            document.getElementById('deuda-total-cliente').innerText = "S/ " + deudaTotal.toFixed(2);
+        });
+
+        window.verDetalleVenta = function(index) {
+            let v = historialVentas[index];
+            let medioTexto = v.medio || 'CONTADO';
+
+            document.getElementById('modal-titulo-boleta').innerText = `CONSULTA DE DETALLE DE VENTA N° ${v.comprobante}`;
+            document.getElementById('modal-fecha').innerText = formatearFecha(v.fecha);
+            document.getElementById('modal-cliente').innerText = v.cliente;
+            document.getElementById('modal-doc').innerText = v.doc || '-';
+            document.getElementById('modal-medio').innerText = medioTexto;
+
+            let tbodyItems = document.getElementById('modal-items-lista');
+            tbodyItems.innerHTML = '';
+            
+            if (v.items && v.items.length > 0) {
+                v.items.forEach(item => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 6px 10px;">${item.cantidad}</td>
+                        <td style="padding: 6px 10px;">${item.producto}</td>
+                        <td style="padding: 6px 10px; text-align: right;">S/ ${item.precio.toFixed(2)}</td>
+                        <td style="padding: 6px 10px; text-align: right;">S/ ${item.subtotal.toFixed(2)}</td>
+                    `;
+                    tbodyItems.appendChild(tr);
+                });
+            } else {
+                tbodyItems.innerHTML = `<tr><td colspan="4" style="padding: 10px; text-align: center; color: var(--text-secondary);">Sin detalles registrados.</td></tr>`;
+            }
+
+            document.getElementById('modal-total').innerText = v.total.toFixed(2);
+            document.getElementById('modal-abonado').innerText = v.abonado.toFixed(2);
+            document.getElementById('modal-saldo').innerText = (v.saldo || 0).toFixed(2);
+
+            document.getElementById('modal-detalle-venta').style.display = 'flex';
+        };
+
+        let indiceAEditar = null;
+        window.pedirEditarVenta = function(index) {
+            indiceAEditar = index;
+            document.getElementById('modal-editar-venta').style.display = 'flex';
+        };
+
+        document.getElementById('btn-confirmar-editar').addEventListener('click', function() {
+            if (indiceAEditar !== null) {
+                let v = historialVentas[indiceAEditar];
+                document.getElementById('cliente').value = v.cliente;
+                document.getElementById('doc-identidad').value = v.doc;
+                document.getElementById('comprobante').value = v.comprobante;
+                document.getElementById('monto-abonado').value = v.abonado;
+                document.getElementById('fecha-operacion').value = v.fecha ? v.fecha.split('T')[0].split(' ')[0] : '';
+                medioPagoSelect.value = v.medio || 'CONTADO';
+                if (v.items) {
+                    carrito = [...v.items];
+                    actualizarTablaCarrito();
+                }
+
+                document.getElementById('modal-editar-venta').style.display = 'none';
+                btnConsultarHistorial.click();
+                indiceAEditar = null;
+            }
+        });
+
+        let indiceAEliminar = null;
+        window.pedirEliminarVenta = function(index) {
+            indiceAEliminar = index;
+            document.getElementById('modal-eliminar-venta').style.display = 'flex';
+        };
+
+        document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
+            if (indiceAEliminar !== null) {
+                historialVentas.splice(indiceAEliminar, 1);
+                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
+                
+                mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE.');
+                cargarHistorialLocal();
+                document.getElementById('seccion-tabla-historial').style.display = 'none';
+                document.getElementById('contenedor-saldo-deuda').style.display = 'none';
+
+                document.getElementById('modal-eliminar-venta').style.display = 'none';
+                indiceAEliminar = null;
+            }
+        });
+    </script>
+</body>
+</html>
