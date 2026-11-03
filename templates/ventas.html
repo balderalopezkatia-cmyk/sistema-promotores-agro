@@ -111,11 +111,31 @@
         #ticket-impresion { display: none; }
 
         @media print {
+            @page {
+                size: 80mm auto;
+                margin: 0mm;
+            }
+            body, html {
+                width: 80mm;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
             body * { visibility: hidden; }
             #ticket-impresion, #ticket-impresion * { visibility: visible; }
             #ticket-impresion {
-                display: block !important; position: absolute; left: 0; top: 0; width: 78mm; padding: 2mm; overflow: hidden;
-                background: white; font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #000;
+                display: block !important; 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 76mm; 
+                padding: 2mm; 
+                overflow: hidden;
+                background: white; 
+                font-family: 'Courier New', Courier, monospace; 
+                font-size: 13px; 
+                font-weight: bold; 
+                color: #000;
+                line-height: 1.2;
             }
             .top-navbar, .main-content, .modal-overlay { display: none !important; }
         }
@@ -489,13 +509,14 @@
     <!-- Ticket Térmico POS-80 -->
     <div id="ticket-impresion">
         <div style="text-align: center; margin-bottom: 6px;">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="Promotores del Agro" style="max-width: 130px; height: auto; margin-bottom: 4px;"><br>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Promotores del Agro" style="max-width: 140px; height: auto; margin-bottom: 4px; filter: grayscale(100%) contrast(200%);"><br>
+            <span style="font-size: 14px;">PROMOTORES DEL AGRO JK E.I.R.L.</span><br>
             Calle San Martín N° 687<br>MOCHUMI - LAMBAYEQUE<br>Telf: 922388208<br>RUC: 20611525304<br>
             ========================================<br>
-            <strong style="font-size: 13px;">NOTA DE VENTA</strong><br>
+            <strong style="font-size: 16px;">NOTA SIMPLE</strong><br>
             ========================================
         </div>
-        <div style="margin-bottom: 6px;">
+        <div style="margin-bottom: 6px; font-size: 12px;">
             FECHA: <span id="t-fecha"></span> HORA: <span id="t-hora"></span><br>
             PAGO: <span id="t-mediopago"></span> &nbsp; USUARIO: KATIA<br>
             <span id="t-detalle-mixto-print" style="display:none;">EFECTIVO: S/ <span id="t-mixto-efectivo">0.00</span> | DIGITAL: S/ <span id="t-mixto-digital">0.00</span><br></span>
@@ -503,24 +524,24 @@
             N° DOC: <span id="t-doc"></span> | COMPR: <span id="t-comprobante"></span><br>
             ----------------------------------------
         </div>
-        <table style="width: 100%; font-family: 'Courier New', Courier, monospace; font-size: 10px; border-collapse: collapse; table-layout: fixed;">
+        <table style="width: 100%; font-family: 'Courier New', Courier, monospace; font-size: 12px; font-weight: bold; border-collapse: collapse; table-layout: fixed;">
             <thead>
-                <tr style="border-bottom: 1px dashed #000;">
-                    <th style="text-align: left; width: 12%;">CANT</th>
-                    <th style="text-align: left; width: 48%;">PRODUCTO/LAB</th>
-                    <th style="text-align: right; width: 20%;">P.UNI</th>
-                    <th style="text-align: right; width: 20%;">IMP</th>
+                <tr style="border-bottom: 2px dashed #000;">
+                    <th style="text-align: left; width: 12%; padding-bottom: 4px;">CANT</th>
+                    <th style="text-align: left; width: 48%; padding-bottom: 4px;">PRODUCTO/LAB</th>
+                    <th style="text-align: right; width: 20%; padding-bottom: 4px;">P.UNI</th>
+                    <th style="text-align: right; width: 20%; padding-bottom: 4px;">IMP</th>
                 </tr>
             </thead>
             <tbody id="t-cuerpo-items"></tbody>
         </table>
-        <div style="margin-top: 6px;">
+        <div style="margin-top: 6px; font-size: 13px;">
             ----------------------------------------<br>
-            TOTAL A PAGAR: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-total"></span><br>
+            TOTAL A PAGAR: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-total" style="font-size: 14px;"></span><br>
             <span id="t-etiqueta-paga-con">PAGA CON:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-abonado"></span><br>
-            <span id="t-etiqueta-vuelto-saldo">VUELTO:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-vuelto-saldo"></span><br>
+            <span id="t-etiqueta-vuelto-saldo">VUELTO:</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; S/ <span id="t-vuelto-saldo" style="font-size: 14px;"></span><br>
             ----------------------------------------<br>
-            <div style="text-align: center; margin-top: 8px;">¡GRACIAS POR SU CONFIANZA!<br><strong>PROMOTORES DEL AGRO</strong></div>
+            <div style="text-align: center; margin-top: 8px; font-size: 12px;">¡GRACIAS POR SU CONFIANZA!<br><strong style="font-size: 13px;">PROMOTORES DEL AGRO</strong></div>
         </div>
     </div>
 
@@ -891,10 +912,10 @@
             carrito.forEach(item => {
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td style="padding: 2px 0; vertical-align: top;">${item.cantidad}</td>
-                    <td style="padding: 2px 0; vertical-align: top; word-break: break-all;">${item.producto} <br><small style="font-size:9px;">(${item.laboratorio})</small></td>
-                    <td style="text-align: right; padding: 2px 0; vertical-align: top;">${item.precio.toFixed(2)}</td>
-                    <td style="text-align: right; padding: 2px 0; vertical-align: top;">${item.subtotal.toFixed(2)}</td>
+                    <td style="padding: 3px 0; vertical-align: top;">${item.cantidad}</td>
+                    <td style="padding: 3px 0; vertical-align: top; word-break: break-all;">${item.producto} <br><small style="font-size:10px;">(${item.laboratorio})</small></td>
+                    <td style="text-align: right; padding: 3px 0; vertical-align: top;">${item.precio.toFixed(2)}</td>
+                    <td style="text-align: right; padding: 3px 0; vertical-align: top;">${item.subtotal.toFixed(2)}</td>
                 `;
                 tbodyTicket.appendChild(tr);
             });
