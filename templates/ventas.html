@@ -237,7 +237,6 @@
                             <tr>
                                 <th>Item</th>
                                 <th>Producto</th>
-                                <th>Laboratorio</th>
                                 <th>Cantidad</th>
                                 <th>Precio Unitario</th>
                                 <th>Subtotal</th>
@@ -544,7 +543,7 @@
             <thead>
                 <tr style="border-bottom: 1px solid #000;">
                     <th style="text-align: left; width: 12%; padding-bottom: 3px; font-weight: bold; color: #000;">CANT</th>
-                    <th style="text-align: left; width: 48%; padding-bottom: 3px; font-weight: bold; color: #000;">PRODUCTO/LAB</th>
+                    <th style="text-align: left; width: 48%; padding-bottom: 3px; font-weight: bold; color: #000;">PRODUCTO</th>
                     <th style="text-align: right; width: 20%; padding-bottom: 3px; font-weight: bold; color: #000;">P.UNI</th>
                     <th style="text-align: right; width: 20%; padding-bottom: 3px; font-weight: bold; color: #000;">IMP</th>
                 </tr>
@@ -754,7 +753,6 @@
                 tr.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${item.producto}</td>
-                    <td>${item.laboratorio}</td>
                     <td>${item.cantidad}</td>
                     <td>S/ ${item.precio.toFixed(2)}</td>
                     <td>S/ ${item.subtotal.toFixed(2)}</td>
@@ -929,7 +927,7 @@
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="padding: 3px 0; vertical-align: top; font-weight: bold; color: #000;">${item.cantidad}</td>
-                    <td style="padding: 3px 0; vertical-align: top; word-break: break-all; font-weight: bold; color: #000;">${item.producto} <br><small style="font-size:10px; color: #000; font-weight: bold;">(${item.laboratorio})</small></td>
+                    <td style="padding: 3px 0; vertical-align: top; word-break: break-all; font-weight: bold; color: #000;">${item.producto}</td>
                     <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; color: #000;">${item.precio.toFixed(2)}</td>
                     <td style="text-align: right; padding: 3px 0; vertical-align: top; font-weight: bold; color: #000;">${item.subtotal.toFixed(2)}</td>
                 `;
