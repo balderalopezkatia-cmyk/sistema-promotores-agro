@@ -1,0 +1,69 @@
+[33me3d4701[m[33m ([m[1;36mHEAD[m[33m)[m Restaurar codigo anterior funcional
+[33mfc60609[m Restaurar codigo anterior funcional
+[33md8ddec3[m Eliminar nombre de laboratorio en la impresion del ticket
+[33m05993ef[m Corregir tamano e impresion natural del logo en ticket
+[33m2771e77[m Corregir filtro de impresion de logo en ticket termico
+[33m61f3253[m Correccion del logotipo en la impresion de ticket
+[33mba08b91[m Correccion de impresion de ticket y estilos de impresion
+[33mbdb6638[m Corregir nitidez de texto y desbordamiento en ticket termico
+[33m936336b[m Resolver conflictos y actualizar ventas.html
+[33m791a044[m Add files via upload
+[33m5cd984f[m Delete templates/ventas.html
+[33m97558de[m Ticket termico optimizado con letra grande y corte automatico
+[33m29ff81d[m Add files via upload
+[33mf0da194[m Delete templates/ventas.html
+[33mdff18d4[m Actualizacion ticket termico y logo POS-80
+[33m0b09cde[m Añadida busqueda por tecla Enter en el modulo de Stock
+[33m59d63ec[m Corregido duplicación de venta al imprimir ticket
+[33ma164044[m Solucion error de conexion usando almacenamiento local robusto
+[33m8b96548[m Correccion definitiva de formato de fecha y eliminacion de ventas
+[33mf7ed96e[m Correccion de fechas y eliminacion de boletas duplicadas
+[33m6847964[m Corregir formato de fecha en historial de ventas
+[33mcdeb05c[m Arreglar base de datos ventas
+[33m34588d9[m Actualizado historial de ventas con selectores tipo compras
+[33mc89e04c[m Sincronizado autocompletado de ventas con stock real de compras
+[33m11b7b3a[m Corregido historial de ventas con columnas exactas y modales arrastrables
+[33m753beeb[m Corregir error de sintaxis en main.py
+[33m78fa898[m Sincronizacion nube y creacion automatica de tabla ventas
+[33m13e82a9[m Actualizacion de ventas y conexion a base de datos para sincronizacion movil
+[33m0cf4e0c[m Corregir duplicacion y puerto en main.py
+[33mdf3c18d[m Actualizacion general
+[33m2ac39fd[m Actualizacion completa de backend para sincronizar todos los modulos
+[33m7da8257[m Correccion definitiva de archivo principal main.py para conexion
+[33m0e6b41b[m Actualizacion de diseño responsivo para celulares en styles.css
+[33ma81a0e2[m Sincronizacion automatica del panel dashboard con localStorage para ventas, compras, gastos y creditos
+[33m92e2eab[m Correccion de nombres de funciones de zoom y arrastre de imagen en stock
+[33m77e7f94[m Incorporacion de seccion dinamica de Pago Mixto Efectivo mas Digital
+[33mc2eb2d2[m Correccion definitiva: Confirmar venta sin borrar datos para permitir impresion posterior y correlativo inteligente con huecos
+[33mc6fae57[m Correccion flujo guardar venta sin borrar datos e impresion de ticket, mas correlativo inteligente por eliminacion
+[33m6010d43[m Correccion boleleta credito abono saldo, botones separados con modales arrastrables y caja de vuelto/saldo
+[33m1029e2c[m Agregado botones editar y eliminar con modales flotantes en la tabla de productos del carrito y historial
+[33mb0ae271[m Agregada accion EDITAR en historial con ventana flotante arrastrable y cargado al formulario
+[33m56bfda5[m Actualizacion de ventas: comprobante correlativo automatico y modales flotantes arrastrables
+[33ma711280[m Correccion de guardado de ventas diarias, vista previa de impresion y detalle de boletas en historial
+[33m22cad0f[m Correccion de enlace de stock en ventas, pestaña activa y zoom con arrastre fluido en stock
+[33m609017f[m Correccion definitiva de la vista de stock conectada con compras
+[33md56a740[m Restauracion de roles de gerente y acceso a todos los paneles
+[33mf499531[m Actualizacion de stock y ventas para enlazar inventario y zoom de imagenes
+[33m9fa4d8c[m Agregada opcion 3 para ver imagen completa super grande en modal de stock
+[33mb722a30[m Agregado monto total de stock valorizado y modal flotante movible para ver imagen grande
+[33m7d6ae47[m Corregido enlace activo en la barra de navegacion de compras.html
+[33mb91861a[m Actualizado tesoreria.html con fecha personalizable, pagos mixtos y modales movibles
+[33md94276a[m Actualizado detalle de boleta con historial de amortizaciones y saldo final
+[33md7f8f3b[m Corregido calculo de montos abonados mixtos para boletas de credito
+[33m2b49ee6[m Correccion de datos separados para clientes y proveedores y persistencia de listas temporales
+[33mefb9743[m Corregido creditos con edicion temporal, correlativos automaticos y confirmaciones flotantes movibles
+[33m0fa5dc3[m Modulo de creditos completo con multiproducto, pago mixto y modales movibles
+[33mb39283d[m Formulario completo de creditos antiguos con nombre, producto, fechas, medios de pago y botones funcionales
+[33mfcc486d[m Agregados modulos de creditos y tesoreria en main.py y htmls
+[33m34c7048[m Actualizacion del dashboard con menus de creditos y tesoreria
+[33m4534b3d[m Agregada fila de suma total de deuda pendiente en historial de compras
+[33mb9ce479[m Corregido calculo fluido e instantaneo para Pago Mixto en compras
+[33m171cf9c[m Agregada opcion de Pago Mixto con validacion dinamica en compras.html
+[33m05e38c6[m Agregado archivo de enlaces y accesos importantes
+[33m4571b87[m Actualizado configuracion.html con datos completos y botón de añadir datos
+[33m1f58b6e[m Conectado a la base de datos de Clever Cloud
+[33mb44cf4f[m Actualizar todas las librerias en requirements
+[33m6385e4d[m Agregar conector de MySQL a requirements
+[33m2e11be1[m Subir carpetas ordenadas
+[33m74233fc[m Sistema limpio en ceros
