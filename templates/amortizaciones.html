@@ -301,7 +301,7 @@
         let tipoActual = 'VENTA';
         let accionPendiente = null;
 
-        // Cargar datos reales desde MySQL mediante Flask al iniciar
+        // Cargar datos DIRECTAMENTE desde MySQL vía Flask al iniciar y en cada actualización
         async function cargarDatosServidor() {
             try {
                 let [resVentas, resCompras, resGastos] = await Promise.all([
@@ -378,7 +378,7 @@
         const seccionTablaResumen = document.getElementById('seccion-tabla-resumen');
         const contenedorSaldoDeuda = document.getElementById('contenedor-saldo-deuda');
 
-        selectTipoCredito.addEventListener('change', function() {
+        selectTipoCredito.addEventListener('change', async function() {
             tipoActual = this.value;
             registroSeleccionado = null;
             inputBuscarEntidad.value = '';
@@ -412,7 +412,8 @@
             contenedorSaldoDeuda.style.display = 'none';
         });
 
-        inputBuscarEntidad.addEventListener('input', function() {
+        inputBuscarEntidad.addEventListener('input', async function() {
+            await cargarDatosServidor();
             let texto = this.value.trim().toUpperCase();
             selectComprobante.innerHTML = '<option value="">-- Seleccionar Comprobante --</option>';
 
@@ -521,7 +522,6 @@
             item.saldo -= montoAbonar;
             item.amortizado = (item.amortizado || item.abonado || 0) + montoAbonar;
 
-            // En compras el campo es 'abonos', en ventas/gastos manejamos 'amortizaciones' o 'abonos'
             if (tipoActual === 'COMPRA') {
                 if (!item.abonos) item.abonos = [];
                 item.abonos.push({
@@ -546,7 +546,6 @@
                 });
             }
 
-            // Sincronizar cambios al servidor MySQL según corresponda
             let endpoint = '';
             let payload = {};
 
@@ -578,6 +577,7 @@
                 return;
             }
 
+            await cargarDatosServidor();
             verificarYRenderizarResumen();
 
             registroSeleccionado = null;
@@ -593,7 +593,8 @@
             mostrarAlerta('AMORTIZACIÓN REGISTRADA EXITOSAMENTE EN LA BOLETA SELECCIONADA.');
         });
 
-        function verificarYRenderizarResumen() {
+        async function verificarYRenderizarResumen() {
+            await cargarDatosServidor();
             let filtroNombre = document.getElementById('filtro-historial-nombre').value.trim();
             let filtroComp = document.getElementById('filtro-historial-comprobante').value.trim();
             let filtroFecha = document.getElementById('filtro-historial-fecha').value;
@@ -670,7 +671,8 @@
         document.getElementById('filtro-historial-comprobante').addEventListener('input', verificarYRenderizarResumen);
         document.getElementById('filtro-historial-fecha').addEventListener('change', verificarYRenderizarResumen);
 
-        window.verModalDetalleComprobante = function(numComp) {
+        window.verModalDetalleComprobante = async function(numComp) {
+            await cargarDatosServidor();
             let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
             let item = dataset.find(x => (obtenerNumeroComprobante(x) === numComp));
 
@@ -811,6 +813,7 @@
                 });
             } catch (e) { console.error(e); }
 
+            await cargarDatosServidor();
             let numComp = obtenerNumeroComprobante(item);
             verModalDetalleComprobante(numComp);
             verificarYRenderizarResumen();
@@ -836,8 +839,7 @@
                         await fetch(endpointDel, { method: 'DELETE' });
                     } catch (e) { console.error(e); }
 
-                    dataset.splice(parentIdx, 1);
-
+                    await cargarDatosServidor();
                     verificarYRenderizarResumen();
                     limpiarVistaDetalle();
                     mostrarAlerta('COMPROBANTE ELIMINADO EXITOSAMENTE.');
@@ -853,7 +855,7 @@
             document.querySelector('#tabla-info-credito tbody').innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">Seleccione un comprobante para ver el detalle.</td></tr>`;
         }
 
-        // Inicializar datos al cargar la página
+        // Cargar datos al iniciar la página
         window.addEventListener('DOMContentLoaded', async () => {
             await cargarDatosServidor();
         });

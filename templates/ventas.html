@@ -568,6 +568,7 @@
         let inventarioStockCache = [];
         let idVentaEditando = null;
 
+        // Cargar datos DIRECTAMENTE desde MySQL vía Flask al iniciar y en cada actualización
         async function cargarDatosVentasBD() {
             try {
                 let [resVentas, resCompras] = await Promise.all([
@@ -1032,7 +1033,8 @@
             return soloFecha;
         }
 
-        btnConsultarHistorial.addEventListener('click', function() {
+        btnConsultarHistorial.addEventListener('click', async function() {
+            await cargarDatosVentasBD();
             let clienteFiltro = filtroClienteSelect.value;
             let comprobanteFiltro = filtroComprobanteSelect.value;
 
@@ -1088,8 +1090,10 @@
             document.getElementById('deuda-total-cliente').innerText = "S/ " + deudaTotal.toFixed(2);
         });
 
-        window.verDetalleVenta = function(index) {
+        window.verDetalleVenta = async function(index) {
+            await cargarDatosVentasBD();
             let v = historialVentas[index];
+            if (!v) return;
             let compNum = v.comprobante || v.boleta || v.factura || '01';
             let cliName = v.cliente || v.nombre || 'SIN NOMBRE';
             let totalVenta = v.total || v.monto_total || 0;
@@ -1135,9 +1139,11 @@
             document.getElementById('modal-editar-venta').style.display = 'flex';
         };
 
-        document.getElementById('btn-confirmar-editar').addEventListener('click', function() {
+        document.getElementById('btn-confirmar-editar').addEventListener('click', async function() {
             if (indiceAEditar !== null) {
+                await cargarDatosVentasBD();
                 let v = historialVentas[indiceAEditar];
+                if (!v) return;
                 idVentaEditando = v.id;
 
                 document.getElementById('cliente').value = v.cliente || v.nombre || '';
