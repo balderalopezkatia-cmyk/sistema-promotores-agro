@@ -566,16 +566,40 @@
         let carrito = [];
         let historialVentas = [];
         let inventarioStockCache = [];
+        let idVentaEditando = null;
 
-        function cargarHistorialLocal() {
+        async function cargarDatosVentasBD() {
             try {
-                let datos = localStorage.getItem('historial_ventas_agro');
-                historialVentas = datos ? JSON.parse(datos) : [];
+                let [resVentas, resCompras] = await Promise.all([
+                    fetch('/api/ventas/listar').then(r => r.json()),
+                    fetch('/api/compras/listar').then(r => r.json())
+                ]);
+
+                historialVentas = resVentas || [];
+
+                let mapaStock = {};
+                (resCompras || []).forEach(compra => {
+                    if (compra.items) {
+                        compra.items.forEach(item => {
+                            let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                            if (!nombre) return;
+                            let laboratorio = item.laboratorio ? item.laboratorio.trim().toUpperCase() : '-';
+                            let sugerido = parseFloat(item.sugerido) || 0;
+                            let costo = parseFloat(item.costo) || 0;
+                            
+                            if (!mapaStock[nombre]) {
+                                mapaStock[nombre] = { producto: nombre, laboratorio: laboratorio, precioSugerido: sugerido, costo: costo };
+                            }
+                        });
+                    }
+                });
+                inventarioStockCache = Object.values(mapaStock);
+
+                calcularCorrelativoComprobante();
+                poblarSelectoresFiltro();
             } catch (e) {
-                historialVentas = [];
+                console.error("Error al cargar datos desde el servidor:", e);
             }
-            calcularCorrelativoComprobante();
-            poblarSelectoresFiltro();
         }
 
         function poblarSelectoresFiltro() {
@@ -588,8 +612,8 @@
             selectCliente.innerHTML = '<option value="">-- SELECCIONAR CLIENTE --</option>';
             selectComprobante.innerHTML = '<option value="">-- SELECCIONAR N° COMPROBANTE --</option>';
 
-            let clientesUnicos = [...new Set(historialVentas.map(v => v.cliente))].sort();
-            let comprobantesUnicos = [...new Set(historialVentas.map(v => v.comprobante))].sort((a,b) => parseInt(a) - parseInt(b));
+            let clientesUnicos = [...new Set(historialVentas.map(v => v.cliente || v.nombre))].filter(Boolean).sort();
+            let comprobantesUnicos = [...new Set(historialVentas.map(v => v.comprobante || v.boleta || v.factura))].filter(Boolean).sort((a,b) => parseInt(a) - parseInt(b));
 
             clientesUnicos.forEach(cli => {
                 let opt = document.createElement('option');
@@ -609,40 +633,13 @@
             selectComprobante.value = comprobanteActual;
         }
 
-        function cargarInventarioStock() {
-            let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
-            let mapaStock = {};
-
-            historialCompras.forEach(compra => {
-                if (compra.items) {
-                    compra.items.forEach(item => {
-                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
-                        if (!nombre) return;
-                        let laboratorio = item.laboratorio ? item.laboratorio.trim().toUpperCase() : '-';
-                        let sugerido = parseFloat(item.sugerido) || 0;
-                        let costo = parseFloat(item.costo) || 0;
-                        let key = nombre;
-                        
-                        if (!mapaStock[key]) {
-                            mapaStock[key] = { producto: nombre, laboratorio: laboratorio, precioSugerido: sugerido, costo: costo };
-                        }
-                    });
-                }
-            });
-
-            inventarioStockCache = Object.values(mapaStock);
-        }
-
-        cargarInventarioStock();
-        cargarHistorialLocal();
-
         function calcularCorrelativoComprobante() {
             let campoComprobante = document.getElementById('comprobante');
             if (historialVentas.length === 0) {
                 campoComprobante.value = "01";
                 return;
             }
-            let numeros = historialVentas.map(v => parseInt(v.comprobante)).filter(n => !isNaN(n));
+            let numeros = historialVentas.map(v => parseInt(v.comprobante || v.boleta || v.factura)).filter(n => !isNaN(n));
             if (numeros.length === 0) {
                 campoComprobante.value = "01";
                 return;
@@ -884,14 +881,13 @@
             document.getElementById('modal-imprimir-ticket').style.display = 'flex';
         });
 
-        // 1. CONFIRMAR VENTA: Guarda la venta en el sistema y limpia el formulario
-        document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', function() {
-            guardarVentaLocal(true);
+        document.getElementById('btn-ejecutar-confirmar-venta').addEventListener('click', async function() {
+            await guardarVentaBD(true);
             document.getElementById('modal-confirmar-venta').style.display = 'none';
         });
 
-        // 2. IMPRIMIR TICKET: Solo imprime el ticket sin volver a guardar la venta
-        document.getElementById('btn-ejecutar-impresion').addEventListener('click', function() {
+        document.getElementById('btn-ejecutar-impresion').addEventListener('click', async function() {
+            await guardarVentaBD(false);
             prepararYImprimirTicket();
             document.getElementById('modal-imprimir-ticket').style.display = 'none';
         });
@@ -955,7 +951,7 @@
             window.print();
         }
 
-        function guardarVentaLocal(limpiarDespues = false) {
+        async function guardarVentaBD(limpiarDespues = false) {
             let cliente = document.getElementById('cliente').value.trim().toUpperCase();
             let doc = document.getElementById('doc-identidad').value.trim();
             let comprobante = document.getElementById('comprobante').value.trim().toUpperCase();
@@ -965,24 +961,42 @@
             let medio = medioPagoSelect.value;
             let saldo = Math.max(0, total - abonado);
             
-            let nuevaVenta = { 
-                id: Date.now(),
-                comprobante, 
-                cliente, 
-                doc, 
-                fecha, 
-                medio, 
-                total, 
-                abonado, 
-                saldo, 
-                items: [...carrito] 
+            let payload = {
+                cliente: cliente,
+                doc: doc,
+                comprobante: comprobante,
+                fecha: fecha,
+                medio: medio,
+                total: total,
+                amortizado: abonado,
+                saldo: saldo,
+                items: [...carrito]
             };
 
-            historialVentas.push(nuevaVenta);
-            localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-            
-            mostrarAlerta('¡VENTA GUARDADA EXITOSAMENTE EN EL SISTEMA!');
-            cargarHistorialLocal();
+            if (idVentaEditando !== null) {
+                payload.id = idVentaEditando;
+            }
+
+            try {
+                let res = await fetch('/api/ventas/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                let resJson = await res.json();
+                if (!resJson.success) {
+                    mostrarAlerta("Error al guardar la venta en el servidor.");
+                    return;
+                }
+            } catch (e) {
+                console.error(e);
+                mostrarAlerta("Error de conexión al guardar la venta.");
+                return;
+            }
+
+            idVentaEditando = null;
+            mostrarAlerta('¡VENTA GUARDADA EXITOSAMENTE EN LA BASE DE DATOS!');
+            await cargarDatosVentasBD();
             
             if (limpiarDespues) {
                 limpiarFormularioVenta();
@@ -1033,8 +1047,10 @@
             contenedorSaldoDeuda.style.display = 'block';
 
             let filtrados = historialVentas.filter(v => {
-                let matchCliente = clienteFiltro === "" || v.cliente === clienteFiltro;
-                let matchComprobante = comprobanteFiltro === "" || v.comprobante === comprobanteFiltro;
+                let cliName = v.cliente || v.nombre || '';
+                let compNum = v.comprobante || v.boleta || v.factura || '';
+                let matchCliente = clienteFiltro === "" || cliName === clienteFiltro;
+                let matchComprobante = comprobanteFiltro === "" || compNum === comprobanteFiltro;
                 return matchCliente && matchComprobante;
             });
 
@@ -1049,15 +1065,18 @@
             }
 
             filtrados.forEach((venta) => {
-                deudaTotal += venta.saldo || 0;
+                let saldoVenta = venta.saldo !== undefined ? parseFloat(venta.saldo) : (parseFloat(venta.total || venta.monto_total || 0) - parseFloat(venta.amortizado || venta.abonado || 0));
+                deudaTotal += Math.max(0, saldoVenta);
                 let realIndex = historialVentas.indexOf(venta);
+                let compNum = venta.comprobante || venta.boleta || venta.factura || '01';
+                let cliName = venta.cliente || venta.nombre || 'SIN NOMBRE';
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${formatearFecha(venta.fecha)}</td>
-                    <td><a class="link-action" onclick="verDetalleVenta(${realIndex})">${venta.comprobante}</a></td>
-                    <td>${venta.cliente}</td>
-                    <td class="${(venta.saldo || 0) > 0 ? 'text-red' : 'text-green'}">S/ ${(venta.saldo || 0).toFixed(2)}</td>
+                    <td><a class="link-action" onclick="verDetalleVenta(${realIndex})">${compNum}</a></td>
+                    <td>${cliName}</td>
+                    <td class="${saldoVenta > 0 ? 'text-red' : 'text-green'}">S/ ${saldoVenta.toFixed(2)}</td>
                     <td>
                         <a class="link-action" onclick="pedirEditarVenta(${realIndex})">EDITAR</a>
                         <a class="link-danger" onclick="pedirEliminarVenta(${realIndex})">ELIMINAR</a>
@@ -1071,25 +1090,31 @@
 
         window.verDetalleVenta = function(index) {
             let v = historialVentas[index];
-            let medioTexto = v.medio || 'CONTADO';
+            let compNum = v.comprobante || v.boleta || v.factura || '01';
+            let cliName = v.cliente || v.nombre || 'SIN NOMBRE';
+            let totalVenta = v.total || v.monto_total || 0;
+            let abonadoVenta = v.amortizado || v.abonado || 0;
+            let saldoVenta = v.saldo !== undefined ? v.saldo : (totalVenta - abonadoVenta);
 
-            document.getElementById('modal-titulo-boleta').innerText = `CONSULTA DE DETALLE DE VENTA N° ${v.comprobante}`;
+            document.getElementById('modal-titulo-boleta').innerText = `CONSULTA DE DETALLE DE VENTA N° ${compNum}`;
             document.getElementById('modal-fecha').innerText = formatearFecha(v.fecha);
-            document.getElementById('modal-cliente').innerText = v.cliente;
+            document.getElementById('modal-cliente').innerText = cliName;
             document.getElementById('modal-doc').innerText = v.doc || '-';
-            document.getElementById('modal-medio').innerText = medioTexto;
+            document.getElementById('modal-medio').innerText = v.medio || 'CONTADO';
 
             let tbodyItems = document.getElementById('modal-items-lista');
             tbodyItems.innerHTML = '';
             
             if (v.items && v.items.length > 0) {
                 v.items.forEach(item => {
+                    let pCosto = item.precio || item.costo || 0;
+                    let pSub = item.subtotal || (item.cantidad * pCosto);
                     let tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td style="padding: 6px 10px;">${item.cantidad}</td>
                         <td style="padding: 6px 10px;">${item.producto}</td>
-                        <td style="padding: 6px 10px; text-align: right;">S/ ${item.precio.toFixed(2)}</td>
-                        <td style="padding: 6px 10px; text-align: right;">S/ ${item.subtotal.toFixed(2)}</td>
+                        <td style="padding: 6px 10px; text-align: right;">S/ ${pCosto.toFixed(2)}</td>
+                        <td style="padding: 6px 10px; text-align: right;">S/ ${pSub.toFixed(2)}</td>
                     `;
                     tbodyItems.appendChild(tr);
                 });
@@ -1097,9 +1122,9 @@
                 tbodyItems.innerHTML = `<tr><td colspan="4" style="padding: 10px; text-align: center; color: var(--text-secondary);">Sin detalles registrados.</td></tr>`;
             }
 
-            document.getElementById('modal-total').innerText = v.total.toFixed(2);
-            document.getElementById('modal-abonado').innerText = v.abonado.toFixed(2);
-            document.getElementById('modal-saldo').innerText = (v.saldo || 0).toFixed(2);
+            document.getElementById('modal-total').innerText = totalVenta.toFixed(2);
+            document.getElementById('modal-abonado').innerText = abonadoVenta.toFixed(2);
+            document.getElementById('modal-saldo').innerText = saldoVenta.toFixed(2);
 
             document.getElementById('modal-detalle-venta').style.display = 'flex';
         };
@@ -1113,10 +1138,12 @@
         document.getElementById('btn-confirmar-editar').addEventListener('click', function() {
             if (indiceAEditar !== null) {
                 let v = historialVentas[indiceAEditar];
-                document.getElementById('cliente').value = v.cliente;
-                document.getElementById('doc-identidad').value = v.doc;
-                document.getElementById('comprobante').value = v.comprobante;
-                document.getElementById('monto-abonado').value = v.abonado;
+                idVentaEditando = v.id;
+
+                document.getElementById('cliente').value = v.cliente || v.nombre || '';
+                document.getElementById('doc-identidad').value = v.doc || '';
+                document.getElementById('comprobante').value = v.comprobante || v.boleta || v.factura || '';
+                document.getElementById('monto-abonado').value = v.amortizado || v.abonado || 0;
                 document.getElementById('fecha-operacion').value = v.fecha ? v.fecha.split('T')[0].split(' ')[0] : '';
                 medioPagoSelect.value = v.medio || 'CONTADO';
                 if (v.items) {
@@ -1136,19 +1163,27 @@
             document.getElementById('modal-eliminar-venta').style.display = 'flex';
         };
 
-        document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
+        document.getElementById('btn-confirmar-eliminar').addEventListener('click', async function() {
             if (indiceAEliminar !== null) {
-                historialVentas.splice(indiceAEliminar, 1);
-                localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-                
+                let v = historialVentas[indiceAEliminar];
+                try {
+                    await fetch(`/api/ventas/eliminar/${v.id}`, { method: 'DELETE' });
+                } catch (e) {
+                    console.error("Error al eliminar venta:", e);
+                }
+
                 mostrarAlerta('REGISTRO DE VENTA ELIMINADO CORRECTAMENTE.');
-                cargarHistorialLocal();
+                await cargarDatosVentasBD();
                 document.getElementById('seccion-tabla-historial').style.display = 'none';
                 document.getElementById('contenedor-saldo-deuda').style.display = 'none';
 
                 document.getElementById('modal-eliminar-venta').style.display = 'none';
                 indiceAEliminar = null;
             }
+        });
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarDatosVentasBD();
         });
     </script>
 </body>

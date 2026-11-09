@@ -48,12 +48,12 @@
 <body>
     <div class="login-card">
         <div>
-            <img src="/static/logo.png" alt="Logo" class="logo-img" onerror="this.style.display='none'">
+            <img src="/static/logo.png" alt="Promotores del Agro" class="logo-img" onerror="this.style.display='none'">
         </div>
         <div class="sub-bienvenido">¡BIENVENIDO AL SISTEMA!</div>
         <span class="slogan-italic">Asegura tus buenas cosechas</span>
         
-        <!-- Este aviso solo aparece si Flask detecta error=True al fallar la clave -->
+        <!-- Este aviso aparece si Flask detecta error=True al fallar la contraseña de gerencia -->
         {% if error %}
         <div class="alert-error">
             ⚠️ CONTRASEÑA INCORRECTA DE GERENCIA
@@ -88,6 +88,11 @@
                 divPass.style.display = "none";
             }
         }
+        
+        // Ejecutar al cargar por si recarga con error seleccionado en gerente
+        window.addEventListener('DOMContentLoaded', () => {
+            togglePassword();
+        });
     </script>
 </body>
 </html>

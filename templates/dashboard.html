@@ -379,7 +379,26 @@
         hacerMovible('card-modal-notif', 'header-modal-notif');
         hacerMovible('card-modal-confirm', 'header-modal-confirm');
 
-        let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
+        let historialVentas = [];
+        let historialCompras = [];
+        let historialGastos = [];
+
+        async function cargarDatosDashboardServidor() {
+            try {
+                let [resVentas, resCompras, resGastos] = await Promise.all([
+                    fetch('/api/ventas/listar').then(r => r.json()),
+                    fetch('/api/compras/listar').then(r => r.json()),
+                    fetch('/api/gastos/listar').then(r => r.json())
+                ]);
+                historialVentas = resVentas || [];
+                historialCompras = resCompras || [];
+                historialGastos = resGastos || [];
+
+                cargarResumenDashboard();
+            } catch (e) {
+                console.error("Error al cargar datos del servidor para el dashboard:", e);
+            }
+        }
 
         function formatearFecha(fechaStr) {
             if (!fechaStr || fechaStr.indexOf('-') === -1) return fechaStr;
@@ -458,13 +477,18 @@
 
             filtrados.forEach((v) => {
                 let realIndex = historialVentas.indexOf(v);
+                let clienteNombre = v.cliente || v.nombre || 'SIN NOMBRE';
+                let comprobanteNum = v.comprobante || v.boleta || v.factura || '01';
+                let totalVenta = v.total || v.monto_total || 0;
+                let medioVenta = v.medio || 'CONTADO';
+
                 tablaHTML += `<tr>
                     <td><strong>${formatearFecha(v.fecha)}</strong></td>
-                    <td><strong>${v.comprobante}</strong></td>
-                    <td>${v.cliente}</td>
-                    <td>${v.medio}</td>
-                    <td>S/ ${v.total.toFixed(2)}</td>
-                    <td style="text-align: right;"><a class="link-action" onclick="verDetalleBoleta(${realIndex}, '${fechaSeleccionada}')">VER DESCRIPCIÓN</a></td>
+                    <td><strong>${comprobanteNum}</strong></td>
+                    <td>${clienteNombre}</td>
+                    <td>${medioVenta}</td>
+                    <td>S/ ${totalVenta.toFixed(2)}</td>
+                    <td style="text-align: right;"><a class="link-action" onclick="verDetalleBoleta(${realIndex})">VER DESCRIPCIÓN</a></td>
                 </tr>`;
             });
 
@@ -472,9 +496,15 @@
             divResultados.innerHTML = tablaHTML;
         }
 
-        window.verDetalleBoleta = function(index, fechaBusq) {
+        window.verDetalleBoleta = function(index) {
             let v = historialVentas[index];
-            tituloHistorial.innerText = `NOTA DE VENTA N° ${v.comprobante}`;
+            let clienteNombre = v.cliente || v.nombre || 'SIN NOMBRE';
+            let comprobanteNum = v.comprobante || v.boleta || v.factura || '01';
+            let totalVenta = v.total || v.monto_total || 0;
+            let abonadoVenta = v.amortizado || v.abonado || 0;
+            let saldoVenta = v.saldo !== undefined ? v.saldo : (totalVenta - abonadoVenta);
+
+            tituloHistorial.innerText = `NOTA DE VENTA N° ${comprobanteNum}`;
             subtituloHistorial.innerText = `DETALLE Y DESCRIPCIÓN DEL COMPROBANTE`;
             seccionBusqueda.style.display = 'none';
             divResultados.style.display = 'none';
@@ -490,15 +520,15 @@
                         </div>
                         <div style="text-align: right;">
                             <strong style="font-size: 15px; color: var(--green-primary);">NOTA DE VENTA</strong><br>
-                            <span style="font-size: 14px; font-weight: bold; color: var(--red-alert);">N° ${v.comprobante}</span>
+                            <span style="font-size: 14px; font-weight: bold; color: var(--red-alert);">N° ${comprobanteNum}</span>
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 13px; background: #1a2a3a; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
-                        <div><strong>CLIENTE / EMPRESA:</strong> ${v.cliente}</div>
+                        <div><strong>CLIENTE / EMPRESA:</strong> ${clienteNombre}</div>
                         <div><strong>DNI / RUC:</strong> ${v.doc || '---'}</div>
                         <div><strong>FECHA DE OPERACIÓN:</strong> ${formatearFecha(v.fecha)}</div>
-                        <div><strong>MEDIO DE PAGO:</strong> ${v.medio}</div>
+                        <div><strong>MEDIO DE PAGO:</strong> ${v.medio || 'CONTADO'}</div>
                     </div>
 
                     <p style="font-weight: bold; margin-bottom: 8px; color: var(--green-primary); font-size: 13px;">PRODUCTOS ADQUIRIDOS:</p>
@@ -514,15 +544,19 @@
                             </thead>
                             <tbody>`;
 
-            v.items.forEach(i => {
-                detalleHTML += `
-                    <tr>
-                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color);">${i.cantidad}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color);"><strong>${i.producto}</strong> <br><small style="color:var(--text-secondary);">Cód: ${i.codigo}</small></td>
-                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right;">S/ ${i.precio.toFixed(2)}</td>
-                        <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: bold;">S/ ${i.subtotal.toFixed(2)}</td>
-                    </tr>`;
-            });
+            if (v.items) {
+                v.items.forEach(i => {
+                    let pCosto = i.precio || i.costo || 0;
+                    let pSub = i.subtotal || (i.cantidad * pCosto);
+                    detalleHTML += `
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid var(--border-color);">${i.cantidad}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid var(--border-color);"><strong>${i.producto}</strong></td>
+                            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right;">S/ ${pCosto.toFixed(2)}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; font-weight: bold;">S/ ${pSub.toFixed(2)}</td>
+                        </tr>`;
+                });
+            }
 
             detalleHTML += `
                             </tbody>
@@ -533,15 +567,15 @@
                         <div style="width: 280px; background: #1a2a3a; padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); font-size: 13px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                 <span>TOTAL A PAGAR:</span>
-                                <strong>S/ ${v.total.toFixed(2)}</strong>
+                                <strong>S/ ${totalVenta.toFixed(2)}</strong>
                             </div>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                 <span>MONTO ABONADO:</span>
-                                <strong>S/ ${v.abonado.toFixed(2)}</strong>
+                                <strong>S/ ${abonadoVenta.toFixed(2)}</strong>
                             </div>
                             <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 5px; margin-top: 5px;">
                                 <span>SALDO PENDIENTE:</span>
-                                <strong class="${v.saldo > 0 ? 'text-red' : 'text-green'}">S/ ${v.saldo.toFixed(2)}</strong>
+                                <strong class="${saldoVenta > 0 ? 'text-red' : 'text-green'}">S/ ${saldoVenta.toFixed(2)}</strong>
                             </div>
                         </div>
                     </div>
@@ -755,13 +789,8 @@
             );
         };
 
-        // CARGA Y CÁLCULO AUTOMÁTICO DE DATOS DESDE LOCALSTORAGE
+        // CARGA Y CÁLCULO AUTOMÁTICO DE DATOS DESDE MYSQL (SERVER)
         function cargarResumenDashboard() {
-            let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
-            let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
-            let historialGastos = JSON.parse(localStorage.getItem('historial_gastos_agro')) || [];
-            let historialCreditos = JSON.parse(localStorage.getItem('historial_creditos_agro')) || [];
-
             let hoyStr = new Date().toISOString().split('T')[0];
             let mesActualStr = hoyStr.substring(0, 7); // YYYY-MM
 
@@ -790,17 +819,15 @@
 
             historialVentas.forEach(v => {
                 let vFecha = v.fecha || '';
-                let vTotal = parseFloat(v.total) || 0;
-                let vAbonado = parseFloat(v.abonado) || 0;
+                let vTotal = parseFloat(v.total || v.monto_total || 0);
                 let vMedio = (v.medio || 'CONTADO').toUpperCase();
 
-                // Calcular costo de los items vendidos en esta venta
                 let costoVentaActual = 0;
                 if (v.items) {
                     v.items.forEach(item => {
                         let iNombre = item.producto ? item.producto.trim().toUpperCase() : '';
                         let iCant = parseFloat(item.cantidad) || 0;
-                        let cUnit = costosProductos[iNombre] || parseFloat(item.precio) * 0.75; // Estimación si no hay costo
+                        let cUnit = costosProductos[iNombre] || parseFloat(item.precio || item.costo || 0) * 0.75;
                         costoVentaActual += iCant * cUnit;
                     });
                 }
@@ -809,15 +836,12 @@
                     ventasDia += vTotal;
                     costoVentasDia += costoVentaActual;
 
-                    if (vMedio.includes('YAPE') || vMedio.includes('PLIN') || vMedio.includes('BCP') || vMedio.includes('DIGITAL') || (v.pagoMixtoDetalle && v.pagoMixtoDetalle.digital > 0)) {
-                        let digMonto = v.pagoMixtoDetalle ? v.pagoMixtoDetalle.digital : (vMedio !== 'CONTADO' ? vTotal : 0);
-                        pagosDigitalesDia += digMonto;
+                    if (vMedio.includes('YAPE') || vMedio.includes('PLIN') || vMedio.includes('BCP') || vMedio.includes('TRANSFERENCIA') || vMedio.includes('DIGITAL')) {
+                        pagosDigitalesDia += vTotal;
                     }
 
                     if (vMedio === 'CONTADO' || vMedio.includes('EFECTIVO')) {
                         ventasEfectivoHoy += vTotal;
-                    } else if (v.pagoMixtoDetalle) {
-                        ventasEfectivoHoy += v.pagoMixtoDetalle.efectivo || 0;
                     }
                 }
 
@@ -839,7 +863,7 @@
 
                 if (gFecha === hoyStr) {
                     gastosDia += gMonto;
-                    if (!gTipoPago.includes('DIGITAL') && !gTipoPago.includes('YAPE')) {
+                    if (!gTipoPago.includes('DIGITAL') && !gTipoPago.includes('YAPE') && !gTipoPago.includes('TRANSFERENCIA')) {
                         gastosEfectivoHoy += gMonto;
                     }
                 }
@@ -853,19 +877,17 @@
             let deudasTotalesCobrar = 0;
 
             historialVentas.forEach(v => {
-                let saldoVenta = parseFloat(v.saldo) || 0;
-                deudasTotalesCobrar += saldoVenta;
-            });
+                let saldoVenta = parseFloat(v.saldo) !== undefined ? parseFloat(v.saldo) : (parseFloat(v.total || 0) - parseFloat(v.amortizado || v.abonado || 0));
+                deudasTotalesCobrar += Math.max(0, saldoVenta);
 
-            historialCreditos.forEach(cred => {
-                if (cred.abonos) {
-                    cred.abonos.forEach(ab => {
-                        if (ab.fecha === hoyStr) {
-                            amortizacionesDia += parseFloat(ab.monto) || 0;
-                            abonosEfectivoHoy += parseFloat(ab.monto) || 0;
-                        }
-                    });
-                }
+                // Revisar cronología de amortizaciones si existe en la venta
+                let listaAbonos = v.amortizaciones || v.abonos || [];
+                listaAbonos.forEach(ab => {
+                    if (ab.fecha === hoyStr) {
+                        amortizacionesDia += parseFloat(ab.monto) || 0;
+                        abonosEfectivoHoy += parseFloat(ab.monto) || 0;
+                    }
+                });
             });
 
             // Ganancias / Utilidades Netas
@@ -925,7 +947,10 @@
 
         renderizarNotificaciones();
         verificarAlertasDelDia();
-        cargarResumenDashboard();
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarDatosDashboardServidor();
+        });
     </script>
 </body>
 </html>

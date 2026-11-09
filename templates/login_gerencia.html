@@ -1,14 +1,31 @@
+from flask import Flask, render_template, request, redirect, url_for, session
+
+# (Asegúrate de mantener tu inicialización de app y base de datos existente)
+
+@app.route('/')
+def index():
+    # Renderiza la pantalla de bienvenida / login principal
+    return render_template('index.html', error=False)
+
 @app.route('/login', methods=['POST'])
 def login():
     perfil = request.form.get('perrol')
     
     if perfil == 'gerente':
         password = request.form.get('password', '')
+        # Contraseña de gerencia configurada para Katia Baldera
         if password == 'Tubandera2714':  
             session['rol'] = 'gerente'
             return redirect(url_for('dashboard'))
         else:
-            return "Contraseña incorrecta de Gerencia. <a href='/login_gerencia'>Volver</a>"
+            # Si falla la contraseña, vuelve a la vista de login mostrando el mensaje de error
+            return render_template('index.html', error=True)
     else:
         session['rol'] = 'empleado'
+        # Los empleados ingresan directamente al módulo de ventas
         return redirect(url_for('ventas'))
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))

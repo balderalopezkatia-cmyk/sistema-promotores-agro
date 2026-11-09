@@ -140,23 +140,23 @@
                 <span class="logo-slogan-italic">Asegura tus buenas cosechas</span>
             </div>
             <div class="nav-menu" style="margin-left: 20px; align-self: center;">
-                <a href="/dashboard" class="nav-link active">PANEL</a>
+                <a href="/dashboard" class="nav-link">PANEL</a>
                 <a href="/stock" class="nav-link">STOCK</a>
                 <a href="/ventas" class="nav-link">VENTAS</a>
                 <a href="/compras" class="nav-link">COMPRAS</a>
                 <a href="/creditos" class="nav-link">CRÉDITOS</a>
                 <a href="/tesoreria" class="nav-link">TESORERÍA</a>
-                <a href="/gastos" class="nav-link">GASTOS</a>
+                <a href="/gastos" class="nav-link active">GASTOS</a>
                 <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
             </div>
         </div>
-        <div class="nav-right" style="align-self: center;">
+        <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
             <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
             <div class="icon-btn" title="Notificaciones">
                 🔔
                 <span class="notification-dot"></span>
             </div>
-            <button class="user-avatar" title="Katia Baldera López (Gerente)">K</button>
+            <button class="user-avatar" title="Cerrar Sesión" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
         </div>
     </div>
 
@@ -403,15 +403,32 @@
 
     <script>
         document.getElementById('gasto-fecha').valueAsDate = new Date();
-        let listaGastos = JSON.parse(localStorage.getItem('historial_gastos_agro')) || [];
-        let indiceEditando = null;
+        let listaGastos = [];
+        let idGastoEditando = null;
 
-        listaGastos.forEach(g => {
-            if (g.medio && g.medio.includes('(')) {
-                g.medio = g.medio.split('(')[0].trim();
+        async function cargarGastosDesdeBD() {
+            try {
+                let res = await fetch('/api/gastos/listar');
+                let data = await res.json();
+                listaGastos = (data || []).map(g => ({
+                    id: g.id,
+                    fecha: g.fecha,
+                    recibo: g.recibo || g.comprobante || '01',
+                    categoria: g.categoria || '',
+                    mes: g.mes || '',
+                    detalle: g.detalle || '',
+                    montoTotal: parseFloat(g.montoTotal || g.monto_total || g.monto || 0),
+                    amortizado: parseFloat(g.amortizado || g.abonado || 0),
+                    saldo: parseFloat(g.saldo || 0),
+                    medio: g.medio || 'YAPE'
+                }));
+                actualizarFiltrosSelect();
+                verificarYAsignarCorrelativoGasto();
+                document.getElementById('btn-consultar-gastos').click();
+            } catch (e) {
+                console.error("Error al cargar los gastos desde el servidor:", e);
             }
-        });
-        localStorage.setItem('historial_gastos_agro', JSON.stringify(listaGastos));
+        }
 
         function mostrarAlerta(msj) {
             document.getElementById('modal-mensaje').innerText = msj;
@@ -437,8 +454,6 @@
                 }
             }
         }
-
-        verificarYAsignarCorrelativoGasto();
 
         const selectCategoria = document.getElementById('gasto-categoria');
         const contenedorMes = document.getElementById('contenedor-selector-mes');
@@ -558,7 +573,7 @@
             document.getElementById('modal-detalle-gasto').style.display = 'none';
         });
 
-        document.getElementById('btn-registrar-gasto').addEventListener('click', function() {
+        document.getElementById('btn-registrar-gasto').addEventListener('click', async function() {
             let fecha = document.getElementById('gasto-fecha').value;
             let recibo = document.getElementById('gasto-recibo').value.trim().toUpperCase();
             let categoria = document.getElementById('gasto-categoria').value;
@@ -588,18 +603,43 @@
             let saldo = montoTotal - amortizado;
             if (saldo < 0) saldo = 0;
 
-            if (indiceEditando !== null) {
-                listaGastos[indiceEditando] = { fecha, recibo, categoria, mes, detalle, montoTotal, amortizado, saldo, medio };
-                indiceEditando = null;
-                document.getElementById('btn-registrar-gasto').innerText = "REGISTRAR GASTO";
-                document.getElementById('titulo-form-gasto').innerText = "GASTOS - REGISTRO DE SALIDAS OPERATIVAS Y SERVICIOS";
-            } else {
-                listaGastos.push({ fecha, recibo, categoria, mes, detalle, montoTotal, amortizado, saldo, medio });
+            let payload = {
+                fecha: fecha,
+                recibo: recibo,
+                categoria: categoria,
+                mes: mes,
+                detalle: detalle,
+                montoTotal: montoTotal,
+                amortizado: amortizado,
+                saldo: saldo,
+                medio: medio
+            };
+
+            if (idGastoEditando !== null) {
+                payload.id = idGastoEditando;
             }
 
-            localStorage.setItem('historial_gastos_agro', JSON.stringify(listaGastos));
-            actualizarFiltrosSelect();
-            
+            try {
+                let res = await fetch('/api/gastos/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                let resJson = await res.json();
+                if (!resJson.success) {
+                    mostrarAlerta("Error al guardar el gasto en el servidor.");
+                    return;
+                }
+            } catch (e) {
+                console.error(e);
+                mostrarAlerta("Error de conexión al guardar el gasto.");
+                return;
+            }
+
+            idGastoEditando = null;
+            document.getElementById('btn-registrar-gasto').innerText = "REGISTRAR GASTO";
+            document.getElementById('titulo-form-gasto').innerText = "GASTOS - REGISTRO DE SALIDAS OPERATIVAS Y SERVICIOS";
+
             document.getElementById('gasto-fecha').valueAsDate = new Date();
             document.getElementById('gasto-detalle').value = '';
             document.getElementById('gasto-monto-total').value = '0.00';
@@ -612,9 +652,8 @@
             seccionGastoMixto.style.display = 'none';
             document.getElementById('gasto-efectivo-mixto').value = '0.00';
             document.getElementById('gasto-digital-mixto').value = '0.00';
-            verificarYAsignarCorrelativoGasto();
-            
-            document.getElementById('btn-consultar-gastos').click();
+
+            await cargarGastosDesdeBD();
         });
 
         let indiceAEditar = null;
@@ -625,8 +664,8 @@
 
         document.getElementById('btn-confirmar-editar').addEventListener('click', function() {
             if (indiceAEditar !== null) {
-                indiceEditando = indiceAEditar;
-                let g = listaGastos[indiceEditando];
+                let g = listaGastos[indiceAEditar];
+                idGastoEditando = g.id;
                 
                 document.getElementById('gasto-fecha').value = g.fecha;
                 document.getElementById('gasto-recibo').value = g.recibo;
@@ -683,17 +722,18 @@
             document.getElementById('modal-eliminar-gasto').style.display = 'flex';
         };
 
-        document.getElementById('btn-confirmar-eliminar').addEventListener('click', function() {
+        document.getElementById('btn-confirmar-eliminar').addEventListener('click', async function() {
             if (indiceAEliminar !== null) {
-                listaGastos.splice(indiceAEliminar, 1);
-                localStorage.setItem('historial_gastos_agro', JSON.stringify(listaGastos));
-                actualizarFiltrosSelect();
-                
-                document.getElementById('btn-consultar-gastos').click();
-                verificarYAsignarCorrelativoGasto();
+                let g = listaGastos[indiceAEliminar];
+                try {
+                    await fetch(`/api/gastos/eliminar/${g.id}`, { method: 'DELETE' });
+                } catch (e) {
+                    console.error("Error al eliminar gasto:", e);
+                }
 
                 document.getElementById('modal-eliminar-gasto').style.display = 'none';
                 indiceAEliminar = null;
+                await cargarGastosDesdeBD();
             }
         });
 
@@ -702,8 +742,9 @@
             document.getElementById('modal-eliminar-gasto').style.display = 'none';
         });
 
-        actualizarFiltrosSelect();
-        document.querySelector('#tabla-gastos tbody').innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 20px;">Utilice los filtros superiores y presione "CONSULTAR GASTOS" para visualizar los registros.</td></tr>`;
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarGastosDesdeBD();
+        });
     </script>
 
 </body>

@@ -10,8 +10,9 @@
             <a href="/amortizaciones" class="nav-link">AMORTIZACIONES</a>
         </div>
     </div>
-    <div class="nav-right" style="align-self: center;">
-        <!-- Botón para regresar al login y cambiar a Gerencia -->
-        <button class="user-avatar" title="Cambiar a Gerencia" onclick="window.location.href='/login_gerencia'" style="cursor: pointer; background: #ef4444; color: white;">E</button>
+    <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 11px; font-weight: bold; color: var(--text-secondary); text-transform: uppercase;">MODO EMPLEADO</span>
+        <!-- Botón para regresar al login / cerrar sesión -->
+        <button class="user-avatar" title="Cerrar Sesión / Cambiar Usuario" onclick="window.location.href='/logout'" style="cursor: pointer; background: #ef4444; border: none; color: white; font-weight: bold; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">E</button>
     </div>
 </div>

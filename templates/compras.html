@@ -140,13 +140,13 @@
                 <a href="/configuracion" class="nav-link">CONFIGURACIÓN</a>
             </div>
         </div>
-        <div class="nav-right" style="align-self: center;">
+        <div class="nav-right" style="align-self: center; display: flex; align-items: center; gap: 10px;">
             <div class="icon-btn" title="Configuración" onclick="window.location.href='/configuracion'">⚙️</div>
             <div class="icon-btn" title="Notificaciones">
                 🔔
                 <span class="notification-dot"></span>
             </div>
-            <button class="user-avatar" title="Katia Baldera López (Gerente)">K</button>
+            <button class="user-avatar" title="Cerrar Sesión / Cambiar Perfil" onclick="window.location.href='/logout'" style="cursor: pointer; background: #2ec4b6; border: none; color: #0f172a; font-weight: bold; border-radius: 50%; width: 36px; height: 36px;">K</button>
         </div>
     </div>
 
@@ -356,11 +356,24 @@
         document.getElementById('compra-fecha').valueAsDate = new Date();
         document.getElementById('compra-fecha-abono').valueAsDate = new Date();
 
-        let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
+        let historialCompras = [];
         let itemsCompraActual = [];
         let indiceEditando = null;
+        let idEditandoBD = null;
         let itemIndexEditando = null;
         let accionPendiente = null;
+
+        // Cargar compras desde MySQL al iniciar
+        async function cargarComprasServidor() {
+            try {
+                let res = await fetch('/api/compras/listar');
+                historialCompras = await res.json() || [];
+                verificarYAsignarCorrelativoCompra();
+                actualizarSelectsFiltros();
+            } catch (e) {
+                console.error("Error al cargar compras desde el servidor:", e);
+            }
+        }
 
         function hacerMovible(cardId, headerSelector) {
             const card = document.getElementById(cardId);
@@ -451,12 +464,11 @@
                 }
             }
         }
-        verificarYAsignarCorrelativoCompra();
 
         const inputProducto = document.getElementById('item-producto');
         const listaSugerencias = document.getElementById('lista-sugerencias-producto');
 
-        function obtenerCatalogoCompletoStock() {
+        async function obtenerCatalogoCompletoStock() {
             let mapaCatalogo = {};
 
             historialCompras.forEach(compra => {
@@ -475,27 +487,31 @@
                 }
             });
 
-            let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
-            historialVentas.forEach(venta => {
-                if (venta.items) {
-                    venta.items.forEach(item => {
-                        let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
-                        if (nombre && !mapaCatalogo[nombre]) {
-                            mapaCatalogo[nombre] = {
-                                producto: nombre,
-                                laboratorio: item.laboratorio ? item.laboratorio.trim().toUpperCase() : '',
-                                costo: parseFloat(item.costo) || 0,
-                                sugerido: parseFloat(item.sugerido) || 0
-                            };
+            try {
+                let resVentas = await fetch('/api/ventas/listar').then(r => r.json());
+                if (resVentas) {
+                    resVentas.forEach(venta => {
+                        if (venta.items) {
+                            venta.items.forEach(item => {
+                                let nombre = item.producto ? item.producto.trim().toUpperCase() : '';
+                                if (nombre && !mapaCatalogo[nombre]) {
+                                    mapaCatalogo[nombre] = {
+                                        producto: nombre,
+                                        laboratorio: item.laboratorio ? item.laboratorio.trim().toUpperCase() : '',
+                                        costo: parseFloat(item.costo) || 0,
+                                        sugerido: parseFloat(item.sugerido) || 0
+                                    };
+                                }
+                            });
                         }
                     });
                 }
-            });
+            } catch (e) { console.error(e); }
 
             return Object.values(mapaCatalogo);
         }
 
-        inputProducto.addEventListener('input', function() {
+        inputProducto.addEventListener('input', async function() {
             let texto = this.value.trim().toUpperCase();
             listaSugerencias.innerHTML = '';
             
@@ -504,7 +520,7 @@
                 return;
             }
 
-            let catalogo = obtenerCatalogoCompletoStock();
+            let catalogo = await obtenerCatalogoCompletoStock();
             let filtrados = catalogo.filter(p => p.producto.includes(texto));
 
             if (filtrados.length === 0) {
@@ -685,7 +701,7 @@
             inputSaldo.value = "S/ " + saldo.toFixed(2);
         }
 
-        document.getElementById('btn-registrar-compra').addEventListener('click', function() {
+        document.getElementById('btn-registrar-compra').addEventListener('click', async function() {
             let proveedor = document.getElementById('compra-proveedor').value.trim().toUpperCase();
             let factura = document.getElementById('compra-factura').value.trim().toUpperCase();
             let fecha = document.getElementById('compra-fecha').value;
@@ -742,20 +758,40 @@
                 });
             }
 
-            if (indiceEditando !== null) {
-                historialCompras[indiceEditando] = {
-                    fecha, proveedor, factura, items: itemsCompraActual, montoTotal, amortizado, saldo, medio: textoMedioGuardar, abonos: abonosIniciales
-                };
-                indiceEditando = null;
-                document.getElementById('btn-registrar-compra').innerText = "REGISTRAR COMPRA";
-                document.getElementById('titulo-form-compra').innerText = "REGISTRO DE COMPRAS - INGRESA FACTURAS, CONDICIÓN DE PAGO Y AMORTIZACIONES";
-            } else {
-                historialCompras.push({
-                    fecha, proveedor, factura, items: itemsCompraActual, montoTotal, amortizado, saldo, medio: textoMedioGuardar, abonos: abonosIniciales
-                });
+            let compraObj = {
+                proveedor,
+                factura,
+                fecha,
+                montoTotal,
+                amortizado,
+                saldo,
+                medio: textoMedioGuardar,
+                items: itemsCompraActual,
+                abonos: abonosIniciales
+            };
+
+            if (idEditandoBD !== null) {
+                compraObj.id = idEditandoBD;
             }
 
-            localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
+            try {
+                let res = await fetch('/api/compras/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(compraObj)
+                });
+                let jsonRes = await res.json();
+                if (!jsonRes.success) {
+                    mostrarAlerta('Error al guardar la compra en la base de datos.');
+                    return;
+                }
+            } catch (e) {
+                console.error(e);
+                mostrarAlerta('Error de conexión con el servidor.');
+                return;
+            }
+
+            await cargarComprasServidor();
             
             document.getElementById('compra-proveedor').value = '';
             document.getElementById('compra-amortizado').value = '0.00';
@@ -771,6 +807,11 @@
             document.getElementById('compra-fecha').valueAsDate = new Date();
             document.getElementById('compra-fecha-abono').valueAsDate = new Date();
             
+            indiceEditando = null;
+            idEditandoBD = null;
+            document.getElementById('btn-registrar-compra').innerText = "REGISTRAR COMPRA";
+            document.getElementById('titulo-form-compra').innerText = "REGISTRO DE COMPRAS - INGRESA FACTURAS, CONDICIÓN DE PAGO Y AMORTIZACIONES";
+
             verificarYAsignarCorrelativoCompra();
             actualizarSelectsFiltros();
 
@@ -821,7 +862,6 @@
         }
 
         document.getElementById('filtro-proveedor').addEventListener('change', actualizarComprobantesFiltro);
-        actualizarSelectsFiltros();
 
         document.getElementById('btn-consultar-compras').addEventListener('click', function() {
             let provFiltro = document.getElementById('filtro-proveedor').value;
@@ -907,8 +947,9 @@
             });
 
             let abonosFilas = '';
-            if (c.abonos && c.abonos.length > 0) {
-                c.abonos.forEach(a => {
+            let listaAbonos = c.abonos || [];
+            if (listaAbonos.length > 0) {
+                listaAbonos.forEach(a => {
                     abonosFilas += `
                         <tr>
                             <td>${formatearFecha(a.fecha)}</td>
@@ -981,15 +1022,16 @@
                 function() {
                     let c = historialCompras[idx];
                     indiceEditando = idx;
+                    idEditandoBD = c.id;
                     document.getElementById('compra-proveedor').value = c.proveedor;
                     document.getElementById('compra-factura').value = c.factura;
                     document.getElementById('compra-fecha').value = c.fecha;
                     
-                    if (c.medio.includes('PAGO MIXTO')) {
+                    if (c.medio && c.medio.includes('PAGO MIXTO')) {
                         selectMedio.value = 'PAGO MIXTO';
                         seccionMixto.style.display = 'grid';
                     } else {
-                        selectMedio.value = c.medio;
+                        selectMedio.value = c.medio || 'YAPE';
                         seccionMixto.style.display = 'none';
                     }
 
@@ -1011,16 +1053,23 @@
             abrirModalConfirmacion(
                 "¿DESEA ELIMINAR ESTA COMPRA COMPLETA?",
                 "¿Está totalmente seguro de eliminar este registro de compra de la base de datos? Esta acción no se puede deshacer.",
-                function() {
-                    historialCompras.splice(idx, 1);
-                    localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
-                    actualizarSelectsFiltros();
+                async function() {
+                    let c = historialCompras[idx];
+                    try {
+                        await fetch(`/api/compras/eliminar/${c.id}`, { method: 'DELETE' });
+                    } catch (e) { console.error(e); }
+
+                    await cargarComprasServidor();
                     document.getElementById('btn-consultar-compras').click();
-                    verificarYAsignarCorrelativoCompra();
                     mostrarAlerta('COMPRA ELIMINADA EXITOSAMENTE.');
                 }
             );
         };
+
+        // Inicializar al cargar la página
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarComprasServidor();
+        });
     </script>
 
 </body>

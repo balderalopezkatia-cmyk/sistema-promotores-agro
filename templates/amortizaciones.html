@@ -293,13 +293,29 @@
     <script>
         document.getElementById('abono-fecha').valueAsDate = new Date();
         
-        let historialVentas = JSON.parse(localStorage.getItem('historial_ventas_agro')) || [];
-        let historialCompras = JSON.parse(localStorage.getItem('historial_compras_agro')) || [];
-        let historialGastos = JSON.parse(localStorage.getItem('historial_gastos_agro')) || [];
+        let historialVentas = [];
+        let historialCompras = [];
+        let historialGastos = [];
 
         let registroSeleccionado = null;
         let tipoActual = 'VENTA';
         let accionPendiente = null;
+
+        // Cargar datos reales desde MySQL mediante Flask al iniciar
+        async function cargarDatosServidor() {
+            try {
+                let [resVentas, resCompras, resGastos] = await Promise.all([
+                    fetch('/api/ventas/listar').then(r => r.json()),
+                    fetch('/api/compras/listar').then(r => r.json()),
+                    fetch('/api/gastos/listar').then(r => r.json())
+                ]);
+                historialVentas = resVentas || [];
+                historialCompras = resCompras || [];
+                historialGastos = resGastos || [];
+            } catch (e) {
+                console.error("Error al cargar datos desde el servidor:", e);
+            }
+        }
 
         function formatearFecha(fechaStr) {
             if (!fechaStr) return '-';
@@ -407,7 +423,7 @@
             lista.forEach((item, index) => {
                 let identificador = obtenerNombreEntidad(item);
                 let numComp = obtenerNumeroComprobante(item);
-                let saldo = item.saldo !== undefined ? item.saldo : (item.total || item.montoTotal || 0);
+                let saldo = item.saldo !== undefined ? item.saldo : (item.total || item.monto_total || item.montoTotal || 0);
 
                 if (identificador && identificador.toUpperCase().includes(texto) && saldo > 0) {
                     let opt = document.createElement('option');
@@ -449,7 +465,7 @@
             let numComp = obtenerNumeroComprobante(item);
             let detalle = item.items ? item.items.map(i => `${i.cantidad}x ${i.producto}`).join(', ') : (tipoActual === 'GASTO' ? `${item.categoria} - ${item.detalle}` : (item.detalle || '-'));
             let cantidadTotal = item.items ? item.items.reduce((acc, i) => acc + parseInt(i.cantidad), 0) : 1;
-            let total = item.total || item.montoTotal || 0;
+            let total = item.total || item.monto_total || item.montoTotal || 0;
             let saldo = item.saldo || 0;
 
             tbody.innerHTML = `
@@ -481,7 +497,7 @@
             inputSaldoRestante.value = "S/ " + restante.toFixed(2);
         }
 
-        document.getElementById('btn-registrar-amortizacion').addEventListener('click', function() {
+        document.getElementById('btn-registrar-amortizacion').addEventListener('click', async function() {
             if (!registroSeleccionado) {
                 mostrarAlerta('POR FAVOR SELECCIONE UN COMPROBANTE.');
                 return;
@@ -505,23 +521,62 @@
             item.saldo -= montoAbonar;
             item.amortizado = (item.amortizado || item.abonado || 0) + montoAbonar;
 
-            if (!item.abonos) item.abonos = [];
-            let nombreEntidad = obtenerNombreEntidad(item);
-            let numComp = obtenerNumeroComprobante(item);
+            // En compras el campo es 'abonos', en ventas/gastos manejamos 'amortizaciones' o 'abonos'
+            if (tipoActual === 'COMPRA') {
+                if (!item.abonos) item.abonos = [];
+                item.abonos.push({
+                    fecha: fechaAbono,
+                    nombre: obtenerNombreEntidad(item),
+                    comprobante: obtenerNumeroComprobante(item),
+                    monto: montoAbonar,
+                    medio: medioPago,
+                    saldoQuedante: item.saldo,
+                    tipo: tipoActual
+                });
+            } else {
+                if (!item.amortizaciones) item.amortizaciones = [];
+                item.amortizaciones.push({
+                    fecha: fechaAbono,
+                    nombre: obtenerNombreEntidad(item),
+                    comprobante: obtenerNumeroComprobante(item),
+                    monto: montoAbonar,
+                    medio: medioPago,
+                    saldoQuedante: item.saldo,
+                    tipo: tipoActual
+                });
+            }
 
-            item.abonos.push({
-                fecha: fechaAbono,
-                nombre: nombreEntidad,
-                comprobante: numComp,
-                monto: montoAbonar,
-                medio: medioPago,
-                saldoQuedante: item.saldo,
-                tipo: tipoActual
-            });
+            // Sincronizar cambios al servidor MySQL según corresponda
+            let endpoint = '';
+            let payload = {};
 
-            if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-            else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
-            else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+            if (tipoActual === 'VENTA') {
+                endpoint = '/api/ventas/guardar';
+                payload = item;
+            } else if (tipoActual === 'COMPRA') {
+                endpoint = '/api/compras/guardar';
+                payload = item;
+            } else if (tipoActual === 'GASTO') {
+                endpoint = '/api/gastos/guardar';
+                payload = item;
+            }
+
+            try {
+                let response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                let resJson = await response.json();
+                if (!resJson.success) {
+                    mostrarAlerta('Error al guardar la amortización en la base de datos.');
+                    return;
+                }
+            } catch (e) {
+                console.error(e);
+                mostrarAlerta('Error de conexión con el servidor.');
+                return;
+            }
 
             verificarYRenderizarResumen();
 
@@ -571,7 +626,7 @@
 
             let deudaTotalFiltro = 0;
             filtrados.forEach(item => {
-                let total = item.total || item.montoTotal || 0;
+                let total = item.total || item.monto_total || item.montoTotal || 0;
                 let abonado = item.amortizado || item.abonado || 0;
                 let saldo = item.saldo !== undefined ? item.saldo : total - abonado;
                 deudaTotalFiltro += saldo;
@@ -588,10 +643,11 @@
                 let parentIdx = dataset.indexOf(item);
                 let nombre = obtenerNombreEntidad(item);
                 let comp = obtenerNumeroComprobante(item);
-                let total = item.total || item.montoTotal || 0;
+                let total = item.total || item.monto_total || item.montoTotal || 0;
                 let totalAbonado = item.amortizado || item.abonado || 0;
                 let saldoPendiente = item.saldo !== undefined ? item.saldo : total - totalAbonado;
-                let numAbonos = item.abonos ? item.abonos.length : 0;
+                let listaAbonos = item.abonos || item.amortizaciones || [];
+                let numAbonos = listaAbonos.length;
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -627,7 +683,7 @@
             let contenedor = document.getElementById('contenido-modal-comprobante');
             let nombre = obtenerNombreEntidad(item);
             let fechaEmisionFormateada = formatearFecha(item.fecha);
-            let total = item.total || item.montoTotal || 0;
+            let total = item.total || item.monto_total || item.montoTotal || 0;
             let detalleStr = item.items ? item.items.map(i => `• ${i.cantidad}x ${i.producto} (S/ ${i.precio.toFixed(2)})`).join('<br>') : (tipoActual === 'GASTO' ? `Categoría: ${item.categoria}<br>Detalle: ${item.detalle}` : (item.detalle || 'SIN DETALLE'));
 
             let abonosTabla = `
@@ -645,8 +701,9 @@
                         <tbody>
             `;
 
-            if (item.abonos && item.abonos.length > 0) {
-                item.abonos.forEach((a, abIdx) => {
+            let listaAbonos = item.abonos || item.amortizaciones || [];
+            if (listaAbonos.length > 0) {
+                listaAbonos.forEach((a, abIdx) => {
                     let fechaAbonoFormateada = formatearFecha(a.fecha);
                     abonosTabla += `
                         <tr>
@@ -699,7 +756,8 @@
         window.editarAbonoGeneral = function(parentIdx, abIdx) {
             let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
             let item = dataset[parentIdx];
-            let abono = item.abonos[abIdx];
+            let listaAbonos = item.abonos || item.amortizaciones || [];
+            let abono = listaAbonos[abIdx];
 
             registroSeleccionado = { item: item, globalIndex: parentIdx };
             selectComprobante.innerHTML = `<option value="${parentIdx}">N° ${obtenerNumeroComprobante(item)} - ${obtenerNombreEntidad(item)} (Deuda: S/ ${item.saldo.toFixed(2)})</option>`;
@@ -714,11 +772,7 @@
 
             item.saldo += abono.monto;
             item.amortizado = (item.amortizado || item.abonado || 0) - abono.monto;
-            item.abonos.splice(abIdx, 1);
-
-            if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-            else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
-            else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+            listaAbonos.splice(abIdx, 1);
 
             renderizarDetalleCredito(item);
             calcularSaldoRestanteAbono();
@@ -737,19 +791,25 @@
             );
         };
 
-        window.eliminarAbonoIndividualModal = function(parentIdx, abIdx) {
+        window.eliminarAbonoIndividualModal = async function(parentIdx, abIdx) {
             let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
             let item = dataset[parentIdx];
-            let abonoEliminado = item.abonos[abIdx];
+            let listaAbonos = item.abonos || item.amortizaciones || [];
+            let abonoEliminado = listaAbonos[abIdx];
 
             item.saldo += abonoEliminado.monto;
             item.amortizado = (item.amortizado || item.abonado || 0) - abonoEliminado.monto;
 
-            item.abonos.splice(abIdx, 1);
+            listaAbonos.splice(abIdx, 1);
 
-            if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-            else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
-            else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+            let endpoint = tipoActual === 'VENTA' ? '/api/ventas/guardar' : (tipoActual === 'COMPRA' ? '/api/compras/guardar' : '/api/gastos/guardar');
+            try {
+                await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                });
+            } catch (e) { console.error(e); }
 
             let numComp = obtenerNumeroComprobante(item);
             verModalDetalleComprobante(numComp);
@@ -767,13 +827,16 @@
             abrirModalConfirmacion(
                 "¿DESEA ELIMINAR ESTE COMPROBANTE?",
                 "¿Está seguro de eliminar todo este registro de crédito de la base de datos? Esta acción es irreversible.",
-                function() {
+                async function() {
                     let dataset = tipoActual === 'VENTA' ? historialVentas : (tipoActual === 'COMPRA' ? historialCompras : historialGastos);
-                    dataset.splice(parentIdx, 1);
+                    let item = dataset[parentIdx];
+                    let endpointDel = tipoActual === 'VENTA' ? `/api/ventas/eliminar/${item.id}` : (tipoActual === 'COMPRA' ? `/api/compras/eliminar/${item.id}` : `/api/gastos/eliminar/${item.id}`);
 
-                    if (tipoActual === 'VENTA') localStorage.setItem('historial_ventas_agro', JSON.stringify(historialVentas));
-                    else if (tipoActual === 'COMPRA') localStorage.setItem('historial_compras_agro', JSON.stringify(historialCompras));
-                    else if (tipoActual === 'GASTO') localStorage.setItem('historial_gastos_agro', JSON.stringify(historialGastos));
+                    try {
+                        await fetch(endpointDel, { method: 'DELETE' });
+                    } catch (e) { console.error(e); }
+
+                    dataset.splice(parentIdx, 1);
 
                     verificarYRenderizarResumen();
                     limpiarVistaDetalle();
@@ -789,6 +852,11 @@
         function limpiarVistaDetalle() {
             document.querySelector('#tabla-info-credito tbody').innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">Seleccione un comprobante para ver el detalle.</td></tr>`;
         }
+
+        // Inicializar datos al cargar la página
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarDatosServidor();
+        });
     </script>
 
 </body>

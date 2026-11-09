@@ -247,11 +247,29 @@
         hacerMovible('card-modal-editar', 'header-editar');
         hacerMovible('card-modal-confirm', 'header-confirm');
 
-        let movimientosTesoreria = JSON.parse(localStorage.getItem('movimientos_tesoreria_agro_v2')) || [];
-        let indiceSeleccionado = -1;
+        let movimientosTesoreria = [];
+        let idMovimientoEditando = null;
 
         let hoyStr = new Date().toISOString().split('T')[0];
         document.getElementById('input-fecha').value = hoyStr;
+
+        async function cargarTesoreriaDesdeBD() {
+            try {
+                let res = await fetch('/api/tesoreria/listar');
+                let data = await res.json();
+                movimientosTesoreria = (data || []).map(m => ({
+                    id: m.id,
+                    fecha: m.fecha,
+                    tipo: m.tipo || 'APORTE SOCIO',
+                    concepto: m.concepto || '',
+                    monto: parseFloat(m.monto || 0),
+                    destino: m.destino || 'CAJA FÍSICA'
+                }));
+                renderizarTesoreria();
+            } catch (e) {
+                console.error("Error al cargar tesorería desde el servidor:", e);
+            }
+        }
 
         function verificarDestinoTesoreria() {
             let destino = document.getElementById('input-destino').value;
@@ -310,9 +328,8 @@
                 return;
             }
 
-            mostrarAlertaAccion("REGISTRAR MOVIMIENTO", `¿ESTÁ SEGURO DE REGISTRAR <strong>${tipo}</strong> POR <strong>S/ ${monto.toFixed(2)}</strong>?`, function() {
-                let nuevoMov = {
-                    id: Date.now(),
+            mostrarAlertaAccion("REGISTRAR MOVIMIENTO", `¿ESTÁ SEGURO DE REGISTRAR <strong>${tipo}</strong> POR <strong>S/ ${monto.toFixed(2)}</strong>?`, async function() {
+                let payload = {
                     fecha: fecha,
                     tipo: tipo,
                     concepto: concepto,
@@ -320,16 +337,35 @@
                     destino: destinoFinal
                 };
 
-                movimientosTesoreria.push(nuevoMov);
-                localStorage.setItem('movimientos_tesoreria_agro_v2', JSON.stringify(movimientosTesoreria));
+                if (idMovimientoEditando !== null) {
+                    payload.id = idMovimientoEditando;
+                }
 
+                try {
+                    let res = await fetch('/api/tesoreria/guardar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    let resJson = await res.json();
+                    if (!resJson.success) {
+                        alert("Error al guardar el movimiento en el servidor.");
+                        return;
+                    }
+                } catch(e) {
+                    console.error(e);
+                    alert("Error de conexión al guardar el registro.");
+                    return;
+                }
+
+                idMovimientoEditando = null;
                 document.getElementById('input-concepto').value = '';
                 document.getElementById('input-monto').value = '';
                 document.getElementById('input-monto-fisico').value = '0.00';
                 document.getElementById('input-monto-digital').value = '0.00';
                 document.getElementById('input-fecha').value = hoyStr;
 
-                renderizarTesoreria();
+                await cargarTesoreriaDesdeBD();
             });
         }
 
@@ -381,8 +417,8 @@
         }
 
         function abrirEditarTesoreria(index) {
-            indiceSeleccionado = index;
             let item = movimientosTesoreria[index];
+            idMovimientoEditando = item.id;
 
             document.getElementById('edit-tipo').value = item.tipo;
             document.getElementById('edit-concepto').value = item.concepto;
@@ -405,9 +441,9 @@
                 return;
             }
 
-            mostrarAlertaAccion("GUARDAR CAMBIOS", `¿DESEA ACTUALIZAR ESTE MOVIMIENTO FINANCIERO?`, function() {
-                movimientosTesoreria[indiceSeleccionado] = {
-                    id: movimientosTesoreria[indiceSeleccionado].id,
+            mostrarAlertaAccion("GUARDAR CAMBIOS", `¿DESEA ACTUALIZAR ESTE MOVIMIENTO FINANCIERO?`, async function() {
+                let payload = {
+                    id: idMovimientoEditando,
                     fecha: fecha,
                     tipo: tipo,
                     concepto: concepto,
@@ -415,27 +451,43 @@
                     destino: destino
                 };
 
-                localStorage.setItem('movimientos_tesoreria_agro_v2', JSON.stringify(movimientosTesoreria));
+                try {
+                    await fetch('/api/tesoreria/guardar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch(e) {
+                    console.error(e);
+                }
+
+                idMovimientoEditando = null;
                 cerrarModal('modal-editar');
-                renderizarTesoreria();
+                await cargarTesoreriaDesdeBD();
             });
         }
 
         function eliminarMovimiento(index) {
             let item = movimientosTesoreria[index];
-            mostrarAlertaAccion("🗑️ ELIMINAR REGISTRO", `¿ESTÁ SEGURO DE ELIMINAR EL MOVIMIENTO <strong>${item.concepto}</strong> (S/ ${item.monto.toFixed(2)})?`, function() {
-                movimientosTesoreria.splice(index, 1);
-                localStorage.setItem('movimientos_tesoreria_agro_v2', JSON.stringify(movimientosTesoreria));
-                renderizarTesoreria();
+            mostrarAlertaAccion("🗑️ ELIMINAR REGISTRO", `¿ESTÁ SEGURO DE ELIMINAR EL MOVIMIENTO <strong>${item.concepto}</strong> (S/ ${item.monto.toFixed(2)})?`, async function() {
+                try {
+                    await fetch(`/api/tesoreria/eliminar/${item.id}`, { method: 'DELETE' });
+                } catch(e) {
+                    console.error(e);
+                }
+
+                await cargarTesoreriaDesdeBD();
             });
         }
 
         function cerrarModal(idModal) {
             document.getElementById(idModal).style.display = 'none';
-            indiceSeleccionado = -1;
+            idMovimientoEditando = null;
         }
 
-        renderizarTesoreria();
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarTesoreriaDesdeBD();
+        });
     </script>
 </body>
 </html>

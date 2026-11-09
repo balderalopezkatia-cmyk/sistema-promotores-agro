@@ -340,11 +340,11 @@
         hacerMovible('card-modal-confirm', 'header-confirm');
         hacerMovible('card-modal-editar-temp', 'header-editar-temp');
 
-        let creditosClientes = JSON.parse(localStorage.getItem('creditos_clientes_v6')) || [];
-        let creditosProveedores = JSON.parse(localStorage.getItem('creditos_proveedores_v6')) || [];
+        let creditosClientes = [];
+        let creditosProveedores = [];
         
-        let tempClientes = JSON.parse(localStorage.getItem('temp_clientes_v6')) || [];
-        let tempProveedores = JSON.parse(localStorage.getItem('temp_proveedores_v6')) || [];
+        let tempClientes = [];
+        let tempProveedores = [];
 
         let modoActual = 'cobrar';
         let indiceSeleccionado = -1;
@@ -355,22 +355,59 @@
         document.getElementById('reg-fecha-amort').value = hoyStr;
         document.getElementById('abono-fecha').value = hoyStr;
 
+        // Cargar todos los registros desde MySQL a través de las rutas Flask
+        async function cargarDatosCreditosBD() {
+            try {
+                let [resVentas, resCompras] = await Promise.all([
+                    fetch('/api/ventas/listar').then(r => r.json()),
+                    fetch('/api/compras/listar').then(r => r.json())
+                ]);
+
+                // Filtrar o mapear ventas que son a crédito o tienen saldo pendiente
+                creditosClientes = (resVentas || []).map(v => ({
+                    id: v.id,
+                    comprobante: v.comprobante || v.factura || v.boleta || 'B-0000',
+                    persona: v.cliente || v.nombre || 'CLIENTE DESCONOCIDO',
+                    fecha: v.fecha,
+                    items: v.items || [],
+                    total: parseFloat(v.total || v.monto_total || v.montoTotal || 0),
+                    medio: v.medio || 'CREDITO',
+                    fechaAmort: v.fechaAmort || v.fecha,
+                    abonado: parseFloat(v.amortizado || v.abonado || 0),
+                    amortizaciones: v.amortizaciones || v.abonos || []
+                }));
+
+                // Mapear compras que son a crédito o tienen saldo pendiente
+                creditosProveedores = (resCompras || []).map(c => ({
+                    id: c.id,
+                    comprobante: c.factura || c.comprobante || 'F-0000',
+                    persona: c.proveedor || c.nombre || 'PROVEEDOR DESCONOCIDO',
+                    fecha: c.fecha,
+                    items: c.items || [],
+                    total: parseFloat(c.montoTotal || c.total || c.monto_total || 0),
+                    medio: c.medio || 'CREDITO',
+                    fechaAmort: c.fechaAmort || c.fecha,
+                    abonado: parseFloat(c.amortizado || c.abonado || 0),
+                    amortizaciones: c.abonos || c.amortizaciones || []
+                }));
+
+                document.getElementById('reg-nro-boleta').value = generarCorrelativo();
+                renderizarTemporal();
+                renderizarTablaCreditos();
+            } catch (e) {
+                console.error("Error al cargar los créditos desde el servidor:", e);
+            }
+        }
+
         function obtenerTempActual() {
             return modoActual === 'cobrar' ? tempClientes : tempProveedores;
         }
 
-        function guardarTempActual() {
-            if (modoActual === 'cobrar') {
-                localStorage.setItem('temp_clientes_v6', JSON.stringify(tempClientes));
-            } else {
-                localStorage.setItem('temp_proveedores_v6', JSON.stringify(tempProveedores));
-            }
-        }
-
         function generarCorrelativo() {
             let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
+            let prefijo = modoActual === 'cobrar' ? 'B-' : 'F-';
             let siguiente = lista.length + 1;
-            return "B-" + String(siguiente).padStart(4, '0');
+            return prefijo + String(siguiente).padStart(4, '0');
         }
 
         function cambiarVista(modo) {
@@ -423,7 +460,6 @@
             mostrarAlertaAccion("AGREGAR PRODUCTO", `¿DESEA AGREGAR <strong>${cant}x ${prod}</strong> (S/ ${prec.toFixed(2)} c/u) A LA BOLETA?`, function() {
                 let tempActual = obtenerTempActual();
                 tempActual.push({ producto: prod, cantidad: cant, precio: prec, subtotal: cant * prec });
-                guardarTempActual();
                 document.getElementById('temp-prod').value = '';
                 document.getElementById('temp-cant').value = '1';
                 document.getElementById('temp-precio').value = '';
@@ -478,7 +514,6 @@
 
             let tempActual = obtenerTempActual();
             tempActual[indiceTempEditando] = { producto: prod, cantidad: cant, precio: prec, subtotal: cant * prec };
-            guardarTempActual();
             cerrarModal('modal-editar-temp');
             renderizarTemporal();
         }
@@ -488,12 +523,11 @@
             let item = tempActual[idx];
             mostrarAlertaAccion("QUITAR PRODUCTO", `¿ESTÁ SEGURO DE QUITAR <strong>${item.producto}</strong> DE LA LISTA TEMPORAL?`, function() {
                 tempActual.splice(idx, 1);
-                guardarTempActual();
                 renderizarTemporal();
             });
         }
 
-        function guardarBoletaCompleta() {
+        async function guardarBoletaCompleta() {
             let persona = document.getElementById('reg-persona').value.trim().toUpperCase();
             let nroBoleta = document.getElementById('reg-nro-boleta').value;
             let fecha = document.getElementById('reg-fecha').value;
@@ -524,49 +558,80 @@
                 return;
             }
 
-            // Historial de amortizaciones inicial
+            let saldoCalculado = totalBoleta - abonado;
+
             let historialAmortizaciones = [];
             if (abonado > 0) {
                 historialAmortizaciones.push({
                     fecha: fechaAmort || fecha,
+                    nombre: persona,
+                    comprobante: nroBoleta,
                     monto: abonado,
-                    medio: descMedio
+                    medio: descMedio,
+                    saldoQuedante: saldoCalculado,
+                    tipo: modoActual === 'cobrar' ? 'VENTA' : 'COMPRA'
                 });
             }
 
-            let nuevaBoleta = {
-                id: Date.now(),
-                comprobante: nroBoleta,
-                persona: persona,
-                fecha: fecha,
-                items: [...tempActual],
-                total: totalBoleta,
-                medio: descMedio,
-                fechaAmort: fechaAmort,
-                abonado: abonado,
-                amortizaciones: historialAmortizaciones
-            };
+            mostrarAlertaAccion("GUARDAR BOLETA", `¿ESTÁ SEGURO DE GUARDAR LA BOLETA <strong>${nroBoleta}</strong> PARA <strong>${persona}</strong> (S/ ${totalBoleta.toFixed(2)})?`, async function() {
+                let endpoint = modoActual === 'cobrar' ? '/api/ventas/guardar' : '/api/compras/guardar';
+                let payload = {};
 
-            mostrarAlertaAccion("GUARDAR BOLETA", `¿ESTÁ SEGURO DE GUARDAR LA BOLETA <strong>${nroBoleta}</strong> PARA <strong>${persona}</strong> (S/ ${totalBoleta.toFixed(2)})?`, function() {
                 if (modoActual === 'cobrar') {
-                    creditosClientes.push(nuevaBoleta);
-                    localStorage.setItem('creditos_clientes_v6', JSON.stringify(creditosClientes));
-                    tempClientes = [];
-                    localStorage.setItem('temp_clientes_v6', JSON.stringify(tempClientes));
+                    payload = {
+                        cliente: persona,
+                        comprobante: nroBoleta,
+                        fecha: fecha,
+                        items: tempActual,
+                        total: totalBoleta,
+                        amortizado: abonado,
+                        saldo: saldoCalculado,
+                        medio: descMedio,
+                        amortizaciones: historialAmortizaciones
+                    };
                 } else {
-                    creditosProveedores.push(nuevaBoleta);
-                    localStorage.setItem('creditos_proveedores_v6', JSON.stringify(creditosProveedores));
+                    payload = {
+                        proveedor: persona,
+                        factura: nroBoleta,
+                        fecha: fecha,
+                        items: tempActual,
+                        montoTotal: totalBoleta,
+                        amortizado: abonado,
+                        saldo: saldoCalculado,
+                        medio: descMedio,
+                        abonos: historialAmortizaciones
+                    };
+                }
+
+                try {
+                    let res = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    let resJson = await res.json();
+                    if (!resJson.success) {
+                        alert("Error al guardar el comprobante en el servidor.");
+                        return;
+                    }
+                } catch(e) {
+                    console.error(e);
+                    alert("Error de conexión al guardar el registro.");
+                    return;
+                }
+
+                if (modoActual === 'cobrar') {
+                    tempClientes = [];
+                } else {
                     tempProveedores = [];
-                    localStorage.setItem('temp_proveedores_v6', JSON.stringify(tempProveedores));
                 }
 
                 document.getElementById('reg-persona').value = '';
                 document.getElementById('reg-abonado').value = '0.00';
                 document.getElementById('reg-monto-efectivo').value = '0.00';
                 document.getElementById('reg-monto-digital').value = '0.00';
-                renderizarTemporal();
-                document.getElementById('reg-nro-boleta').value = generarCorrelativo();
-                renderizarTablaCreditos();
+                
+                await cargarDatosCreditosBD();
             });
         }
 
@@ -601,16 +666,18 @@
             let contadorFilas = 0;
 
             lista.forEach((b, index) => {
-                let textoBusqueda = `${b.comprobante} ${b.persona} ${b.medio} ${b.items.map(i=>i.producto).join(' ')}`.toUpperCase();
+                let itemsArr = b.items || [];
+                let productosTexto = itemsArr.map(i => i.producto || '').join(' ');
+                let textoBusqueda = `${b.comprobante} ${b.persona} ${b.medio} ${productosTexto}`.toUpperCase();
                 if (filtro && !textoBusqueda.includes(filtro)) return;
 
                 contadorFilas++;
-                let saldo = b.total - b.abonado;
+                let saldo = (b.total || 0) - (b.abonado || 0);
                 if (saldo > 0) conteoPendientes++;
                 sumaTotalFiltrado += Math.max(0, saldo);
                 sumaAbonos += (b.abonado || 0);
 
-                let productosResumen = b.items.map(i => `${i.cantidad}x ${i.producto}`).join(', ');
+                let productosResumen = itemsArr.length > 0 ? itemsArr.map(i => `${i.cantidad}x ${i.producto}`).join(', ') : 'SIN DETALLE';
 
                 let badge = saldo <= 0 ? 
                     `<span class="badge-pagado">CANCELADO ✓</span>` : 
@@ -619,11 +686,11 @@
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><a class="link-boleta" onclick="verDetalleBoleta(${index})" title="Ver descripción completa">${b.comprobante}</a></td>
-                    <td>${b.fecha}</td>
+                    <td>${b.fecha || '-'}</td>
                     <td><strong>${b.persona}</strong></td>
                     <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${productosResumen}">${productosResumen}</td>
                     <td><strong>S/ ${b.total.toFixed(2)}</strong></td>
-                    <td>${b.medio}</td>
+                    <td>${b.medio || 'CREDITO'}</td>
                     <td>${b.fechaAmort || '---'}</td>
                     <td class="text-green">S/ ${(b.abonado || 0).toFixed(2)}</td>
                     <td class="${saldo > 0 ? 'text-red' : 'text-green'}"><strong>S/ ${saldo.toFixed(2)}</strong></td>
@@ -651,14 +718,13 @@
             let b = lista[index];
             let saldo = b.total - b.abonado;
 
-            // Construir historial de amortizaciones o mostrar la única si no tiene array estructurado
             let historialHTML = '';
             if (b.amortizaciones && b.amortizaciones.length > 0) {
                 historialHTML = b.amortizaciones.map(am => `
                     <tr>
-                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${am.fecha}</td>
-                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${am.medio}</td>
-                        <td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right;" class="text-green">S/ ${am.monto.toFixed(2)}</td>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${am.fecha || '-'}</td>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color);">${am.medio || '-'}</td>
+                        <td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right;" class="text-green">S/ ${(am.monto || 0).toFixed(2)}</td>
                     </tr>
                 `).join('');
             } else if (b.abonado > 0) {
@@ -684,7 +750,7 @@
                     <table style="width:100%; font-size:12px; margin-bottom:12px; border-collapse:collapse;">
                         <thead><tr style="background:#0f172a;"><th style="padding:6px;">Cant</th><th style="padding:6px;">Producto</th><th style="padding:6px; text-align:right;">P. Unit</th><th style="padding:6px; text-align:right;">Subtotal</th></tr></thead>
                         <tbody>
-                            ${b.items.map(i => `<tr><td style="padding:6px; border-bottom:1px solid var(--border-color);">${i.cantidad}</td><td style="padding:6px; border-bottom:1px solid var(--border-color);">${i.producto}</td><td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right;">S/${i.precio.toFixed(2)}</td><td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right; font-weight:bold;">S/${i.subtotal.toFixed(2)}</td></tr>`).join('')}
+                            ${(b.items || []).map(i => `<tr><td style="padding:6px; border-bottom:1px solid var(--border-color);">${i.cantidad}</td><td style="padding:6px; border-bottom:1px solid var(--border-color);">${i.producto}</td><td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right;">S/${(i.precio || i.costo || 0).toFixed(2)}</td><td style="padding:6px; border-bottom:1px solid var(--border-color); text-align:right; font-weight:bold;">S/${(i.subtotal || (i.cantidad * (i.precio || i.costo || 0))).toFixed(2)}</td></tr>`).join('')}
                         </tbody>
                     </table>
 
@@ -754,7 +820,7 @@
                 return;
             }
 
-            mostrarAlertaAccion("CONFIRMAR ABONO", `¿ESTÁ SEGURO DE REGISTRAR EL ABONO DE <strong>S/ ${monto.toFixed(2)}</strong> A <strong>${b.persona}</strong>?`, function() {
+            mostrarAlertaAccion("CONFIRMAR ABONO", `¿ESTÁ SEGURO DE REGISTRAR EL ABONO DE <strong>S/ ${monto.toFixed(2)}</strong> A <strong>${b.persona}</strong>?`, async function() {
                 b.abonado += monto;
                 b.medio = medio;
                 b.fechaAmort = fechaAmort;
@@ -762,15 +828,62 @@
                 if (!b.amortizaciones) {
                     b.amortizaciones = [];
                 }
+
+                let nuevoSaldo = b.total - b.abonado;
+
                 b.amortizaciones.push({
                     fecha: fechaAmort,
+                    nombre: b.persona,
+                    comprobante: b.comprobante,
                     monto: monto,
-                    medio: medio
+                    medio: medio,
+                    saldoQuedante: nuevoSaldo,
+                    tipo: modoActual === 'cobrar' ? 'VENTA' : 'COMPRA'
                 });
 
-                guardarStorage();
+                let endpoint = modoActual === 'cobrar' ? '/api/ventas/guardar' : '/api/compras/guardar';
+                let payload = {};
+
+                if (modoActual === 'cobrar') {
+                    payload = {
+                        id: b.id,
+                        cliente: b.persona,
+                        comprobante: b.comprobante,
+                        fecha: b.fecha,
+                        items: b.items,
+                        total: b.total,
+                        amortizado: b.abonado,
+                        saldo: nuevoSaldo,
+                        medio: medio,
+                        amortizaciones: b.amortizaciones
+                    };
+                } else {
+                    payload = {
+                        id: b.id,
+                        proveedor: b.persona,
+                        factura: b.comprobante,
+                        fecha: b.fecha,
+                        items: b.items,
+                        montoTotal: b.total,
+                        amortizado: b.abonado,
+                        saldo: nuevoSaldo,
+                        medio: medio,
+                        abonos: b.amortizaciones
+                    };
+                }
+
+                try {
+                    await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch(e) {
+                    console.error(e);
+                }
+
                 cerrarModal('modal-abono');
-                renderizarTablaCreditos();
+                await cargarDatosCreditosBD();
             });
         }
 
@@ -794,13 +907,55 @@
             let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
             let b = lista[indiceSeleccionado];
 
-            mostrarAlertaAccion("GUARDAR CAMBIOS", `¿DESEA GUARDAR LAS MODIFICACIONES EN LA BOLETA <strong>${b.comprobante}</strong>?`, function() {
+            mostrarAlertaAccion("GUARDAR CAMBIOS", `¿DESEA GUARDAR LAS MODIFICACIONES EN LA BOLETA <strong>${b.comprobante}</strong>?`, async function() {
                 b.persona = persona;
                 b.total = total;
                 b.fecha = fecha;
-                guardarStorage();
+
+                let nuevoSaldo = b.total - b.abonado;
+                let endpoint = modoActual === 'cobrar' ? '/api/ventas/guardar' : '/api/compras/guardar';
+                let payload = {};
+
+                if (modoActual === 'cobrar') {
+                    payload = {
+                        id: b.id,
+                        cliente: b.persona,
+                        comprobante: b.comprobante,
+                        fecha: b.fecha,
+                        items: b.items,
+                        total: b.total,
+                        amortizado: b.abonado,
+                        saldo: nuevoSaldo,
+                        medio: b.medio,
+                        amortizaciones: b.amortizaciones
+                    };
+                } else {
+                    payload = {
+                        id: b.id,
+                        proveedor: b.persona,
+                        factura: b.comprobante,
+                        fecha: b.fecha,
+                        items: b.items,
+                        montoTotal: b.total,
+                        amortizado: b.abonado,
+                        saldo: nuevoSaldo,
+                        medio: b.medio,
+                        abonos: b.amortizaciones
+                    };
+                }
+
+                try {
+                    await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch(e) {
+                    console.error(e);
+                }
+
                 cerrarModal('modal-editar');
-                renderizarTablaCreditos();
+                await cargarDatosCreditosBD();
             });
         }
 
@@ -808,16 +963,17 @@
             let lista = modoActual === 'cobrar' ? creditosClientes : creditosProveedores;
             let b = lista[index];
 
-            mostrarAlertaAccion("🗑️ ELIMINAR BOLETA", `¿ESTÁ SEGURO DE ELIMINAR PERMANENTEMENTE LA BOLETA <strong>${b.comprobante}</strong> DE <strong>${b.persona}</strong>?`, function() {
-                lista.splice(index, 1);
-                guardarStorage();
-                renderizarTablaCreditos();
-            });
-        }
+            mostrarAlertaAccion("🗑️ ELIMINAR BOLETA", `¿ESTÁ SEGURO DE ELIMINAR PERMANENTEMENTE LA BOLETA <strong>${b.comprobante}</strong> DE <strong>${b.persona}</strong>?`, async function() {
+                let endpointDel = modoActual === 'cobrar' ? `/api/ventas/eliminar/${b.id}` : `/api/compras/eliminar/${b.id}`;
 
-        function guardarStorage() {
-            localStorage.setItem('creditos_clientes_v6', JSON.stringify(creditosClientes));
-            localStorage.setItem('creditos_proveedores_v6', JSON.stringify(creditosProveedores));
+                try {
+                    await fetch(endpointDel, { method: 'DELETE' });
+                } catch(e) {
+                    console.error(e);
+                }
+
+                await cargarDatosCreditosBD();
+            });
         }
 
         function cerrarModal(idModal) {
@@ -825,9 +981,9 @@
             indiceSeleccionado = -1;
         }
 
-        document.getElementById('reg-nro-boleta').value = generarCorrelativo();
-        renderizarTemporal();
-        renderizarTablaCreditos();
+        window.addEventListener('DOMContentLoaded', async () => {
+            await cargarDatosCreditosBD();
+        });
     </script>
 </body>
 </html>
