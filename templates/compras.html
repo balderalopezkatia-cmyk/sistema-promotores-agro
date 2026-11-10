@@ -294,7 +294,7 @@
                     </div>
                 </div>
 
-                <div class="table-container" id="seccion-tabla-historial" style="display: none;">
+                <div class="table-container" id="seccion-tabla-historial">
                     <table id="tabla-historial-compras">
                         <thead>
                             <tr>
@@ -308,7 +308,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Cargado dinámicamente -->
+                            <!-- Cargado automáticamente -->
                         </tbody>
                     </table>
                 </div>
@@ -363,16 +363,56 @@
         let itemIndexEditando = null;
         let accionPendiente = null;
 
-        // Cargar compras desde MySQL al iniciar
+        // Cargar compras desde MySQL al iniciar y mostrarlas de frente
         async function cargarComprasServidor() {
             try {
                 let res = await fetch('/api/compras/listar');
                 historialCompras = await res.json() || [];
                 verificarYAsignarCorrelativoCompra();
                 actualizarSelectsFiltros();
+                renderizarHistorialCompleto(historialCompras);
             } catch (e) {
                 console.error("Error al cargar compras desde el servidor:", e);
             }
+        }
+
+        function renderizarHistorialCompleto(lista) {
+            let tbody = document.querySelector('#tabla-historial-compras tbody');
+            tbody.innerHTML = '';
+
+            if (lista.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">No hay compras registradas todavía.</td></tr>`;
+                return;
+            }
+
+            let sumaTotalDeuda = 0;
+            lista.forEach((c) => {
+                sumaTotalDeuda += c.saldo;
+                let realIdx = historialCompras.indexOf(c);
+                let fechaForm = formatearFecha(c.fecha);
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${fechaForm}</td>
+                    <td><strong>${c.proveedor}</strong></td>
+                    <td><a class="link-factura" onclick="verDetalleCompra(${realIdx})">${c.factura}</a></td>
+                    <td>S/ ${c.montoTotal.toFixed(2)}</td>
+                    <td class="text-green" style="font-weight: bold;">S/ ${c.amortizado.toFixed(2)} <br><small style="color:var(--text-secondary);">${c.medio}</small></td>
+                    <td class="${c.saldo > 0 ? 'text-red' : 'text-green'}" style="font-weight: bold;">S/ ${c.saldo.toFixed(2)}</td>
+                    <td>
+                        <a class="link-action" onclick="confirmarEditarCompra(${realIdx})">Editar</a>
+                        <a class="link-danger" onclick="confirmarEliminarCompra(${realIdx})">Eliminar</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            let trTotal = document.createElement('tr');
+            trTotal.style.background = "#1a2a3a";
+            trTotal.innerHTML = `
+                <td colspan="5" style="text-align: right; font-weight: bold; color: var(--green-primary); text-transform: uppercase;">MONTO TOTAL DE LA DEUDA PENDIENTE:</td>
+                <td colspan="2" class="text-red" style="font-size: 14px; font-weight: bold;">S/ ${sumaTotalDeuda.toFixed(2)}</td>
+            `;
+            tbody.appendChild(trTotal);
         }
 
         function hacerMovible(cardId, headerSelector) {
@@ -867,56 +907,13 @@
             let provFiltro = document.getElementById('filtro-proveedor').value;
             let facFiltro = document.getElementById('filtro-factura').value;
 
-            if (provFiltro === "" && facFiltro === "") {
-                document.getElementById('seccion-tabla-historial').style.display = 'none';
-                mostrarAlerta('SELECCIONE AL MENOS UN FILTRO DE BÚSQUEDA.');
-                return;
-            }
-
-            document.getElementById('seccion-tabla-historial').style.display = 'block';
-            let tbody = document.querySelector('#tabla-historial-compras tbody');
-            tbody.innerHTML = '';
-
             let filtrados = historialCompras.filter(c => {
                 let matchProv = provFiltro === "" || c.proveedor === provFiltro;
                 let matchFac = facFiltro === "" || c.factura === facFiltro;
                 return matchProv && matchFac;
             });
 
-            if (filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 15px;">No se encontraron compras con esos criterios.</td></tr>`;
-                return;
-            }
-
-            let sumaTotalDeuda = 0;
-
-            filtrados.forEach((c) => {
-                sumaTotalDeuda += c.saldo;
-                let realIdx = historialCompras.indexOf(c);
-                let fechaForm = formatearFecha(c.fecha);
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${fechaForm}</td>
-                    <td><strong>${c.proveedor}</strong></td>
-                    <td><a class="link-factura" onclick="verDetalleCompra(${realIdx})">${c.factura}</a></td>
-                    <td>S/ ${c.montoTotal.toFixed(2)}</td>
-                    <td class="text-green" style="font-weight: bold;">S/ ${c.amortizado.toFixed(2)} <br><small style="color:var(--text-secondary);">${c.medio}</small></td>
-                    <td class="${c.saldo > 0 ? 'text-red' : 'text-green'}" style="font-weight: bold;">S/ ${c.saldo.toFixed(2)}</td>
-                    <td>
-                        <a class="link-action" onclick="confirmarEditarCompra(${realIdx})">Editar</a>
-                        <a class="link-danger" onclick="confirmarEliminarCompra(${realIdx})">Eliminar</a>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            let trTotal = document.createElement('tr');
-            trTotal.style.background = "#1a2a3a";
-            trTotal.innerHTML = `
-                <td colspan="5" style="text-align: right; font-weight: bold; color: var(--green-primary); text-transform: uppercase;">MONTO TOTAL DE LA DEUDA PENDIENTE:</td>
-                <td colspan="2" class="text-red" style="font-size: 14px; font-weight: bold;">S/ ${sumaTotalDeuda.toFixed(2)}</td>
-            `;
-            tbody.appendChild(trTotal);
+            renderizarHistorialCompleto(filtrados);
         });
 
         function formatearFecha(fechaStr) {
@@ -1060,7 +1057,6 @@
                     } catch (e) { console.error(e); }
 
                     await cargarComprasServidor();
-                    document.getElementById('btn-consultar-compras').click();
                     mostrarAlerta('COMPRA ELIMINADA EXITOSAMENTE.');
                 }
             );
