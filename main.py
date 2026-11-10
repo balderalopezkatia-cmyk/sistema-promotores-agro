@@ -10,7 +10,6 @@ app.secret_key = "clave_secura_agro_jk"
 
 def obtener_conexion():
     try:
-        # Si está en Render o hay una URL de nube configurada, usa la nube
         db_url = os.environ.get("DATABASE_URL") or os.environ.get("MYSQL_ADDON_URI") or os.environ.get("SQLALCHEMY_DATABASE_URI")
         if db_url:
             if db_url.startswith("mysql+pymysql://"):
@@ -27,13 +26,14 @@ def obtener_conexion():
                 port=parsed.port or 3306
             )
         
-        # SI ESTÁS EN TU PC (LOCAL), SE CONECTA DIRECTO A TU XAMPP (agro_sistema)
+        host = os.environ.get("MYSQL_ADDON_HOST", "bbdxmfpaqjvnaoqv46uu-mysql.services.clever-cloud.com")
+        user = os.environ.get("MYSQL_ADDON_USER", "ukq046fffz9ikj3j")
+        password = os.environ.get("MYSQL_ADDON_PASSWORD", "SEP21cGpyJ2X5lW8FEIM")
+        database = os.environ.get("MYSQL_ADDON_DB", "bbdxmfpaqjvnaoqv46uu")
+        port = int(os.environ.get("MYSQL_ADDON_PORT", 3306))
+
         return mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="",
-            database="agro_sistema",
-            port=3306
+            host=host, user=user, password=password, database=database, port=port
         )
     except Exception as e:
         print("Error de conexión a la base de datos:", e)
@@ -44,6 +44,22 @@ def inicializar_base_datos():
         conexion = obtener_conexion()
         if conexion:
             cursor = conexion.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS ventas (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    comprobante VARCHAR(50) NOT NULL,
+                    cliente VARCHAR(150) NOT NULL,
+                    doc VARCHAR(50),
+                    fecha DATE NOT NULL,
+                    medio VARCHAR(100) NOT NULL,
+                    total DECIMAL(10,2) NOT NULL,
+                    abonado DECIMAL(10,2) NOT NULL,
+                    saldo DECIMAL(10,2) NOT NULL,
+                    items TEXT NOT NULL,
+                    amortizaciones TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS compras (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,6 +73,54 @@ def inicializar_base_datos():
                     items TEXT NOT NULL,
                     abonos TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS gastos (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    fecha DATE NOT NULL,
+                    recibo VARCHAR(50) NOT NULL,
+                    categoria VARCHAR(150) NOT NULL,
+                    mes VARCHAR(50),
+                    detalle TEXT,
+                    monto_total DECIMAL(10,2) NOT NULL,
+                    amortizado DECIMAL(10,2) NOT NULL,
+                    saldo DECIMAL(10,2) NOT NULL,
+                    medio VARCHAR(100) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS tesoreria (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    fecha DATE NOT NULL,
+                    tipo VARCHAR(100) NOT NULL,
+                    concepto VARCHAR(200) NOT NULL,
+                    monto DECIMAL(10,2) NOT NULL,
+                    destino VARCHAR(150) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS creditos_manuales (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    tipo_credito VARCHAR(50) NOT NULL,
+                    comprobante VARCHAR(50) NOT NULL,
+                    persona VARCHAR(150) NOT NULL,
+                    fecha DATE NOT NULL,
+                    items TEXT NOT NULL,
+                    total DECIMAL(10,2) NOT NULL,
+                    medio VARCHAR(100) NOT NULL,
+                    fecha_amort DATE,
+                    abonado DECIMAL(10,2) NOT NULL,
+                    amortizaciones TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS imagenes_productos (
+                    producto VARCHAR(150) PRIMARY KEY,
+                    url_imagen LONGTEXT NOT NULL
                 );
             """)
             conexion.commit()
@@ -73,6 +137,10 @@ def render_template_con_branding(template_name, **kwargs):
     if soup.find('title'):
         soup.find('title').string = "Promotores del Agro"
     return str(soup)
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon_simbolo.png', mimetype='image/png')
 
 @app.route('/')
 def index():
@@ -100,7 +168,60 @@ def dashboard():
     if session.get('rol') != 'gerente': return redirect(url_for('ventas'))
     return render_template_con_branding('dashboard.html')
 
-# --- API COMPRAS LISTAR (Mapeo exacto para la interfaz) ---
+# --- APIS GENERALES PARA VENTAS ---
+@app.route('/api/ventas/listar', methods=['GET'])
+def api_listar_ventas():
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify([])
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM ventas ORDER BY id DESC")
+        res = cursor.fetchall()
+        cursor.close(); conexion.close()
+        for r in res:
+            r['items'] = json.loads(r['items']) if r.get('items') else []
+            r['amortizaciones'] = json.loads(r['amortizaciones']) if r.get('amortizaciones') else []
+        return jsonify(res)
+    except Exception as e:
+        print("Error en api_listar_ventas:", e)
+        return jsonify([])
+
+@app.route('/api/ventas/guardar', methods=['POST'])
+def api_guardar_venta():
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        data = request.get_json()
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        
+        v_id = data.get('id')
+        items = json.dumps(data.get('items', []))
+        amort = json.dumps(data.get('amortizaciones', []))
+        
+        if v_id:
+            cursor.execute("""UPDATE ventas SET comprobante=%s, cliente=%s, doc=%s, fecha=%s, medio=%s, total=%s, abonado=%s, saldo=%s, items=%s, amortizaciones=%s WHERE id=%s""",
+                           (data.get('comprobante'), data.get('cliente'), data.get('doc'), data.get('fecha'), data.get('medio'), float(data.get('total',0)), float(data.get('abonado',0)), float(data.get('saldo',0)), items, amort, v_id))
+        else:
+            cursor.execute("""INSERT INTO ventas (comprobante, cliente, doc, fecha, medio, total, abonado, saldo, items, amortizaciones) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                           (data.get('comprobante'), data.get('cliente'), data.get('doc'), data.get('fecha'), data.get('medio'), float(data.get('total',0)), float(data.get('abonado',0)), float(data.get('saldo',0)), items, amort))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ventas/eliminar/<int:id>', methods=['DELETE'])
+def api_eliminar_venta(id):
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM ventas WHERE id = %s", (id,))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+# --- APIS PARA COMPRAS ---
 @app.route('/api/compras/listar', methods=['GET'])
 def api_listar_compras():
     try:
@@ -161,15 +282,211 @@ def api_eliminar_compra(id):
         return jsonify({'success': True})
     except Exception as e: return jsonify({'error': str(e)}), 500
 
+# --- APIS PARA GASTOS ---
+@app.route('/api/gastos/listar', methods=['GET'])
+def api_listar_gastos():
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify([])
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM gastos ORDER BY id DESC")
+        res = cursor.fetchall()
+        cursor.close(); conexion.close()
+        return jsonify(res)
+    except: return jsonify([])
+
+@app.route('/api/gastos/guardar', methods=['POST'])
+def api_guardar_gasto():
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        data = request.get_json()
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        g_id = data.get('id')
+        if g_id:
+            cursor.execute("""UPDATE gastos SET fecha=%s, recibo=%s, categoria=%s, mes=%s, detalle=%s, monto_total=%s, amortizado=%s, saldo=%s, medio=%s WHERE id=%s""",
+                           (data.get('fecha'), data.get('recibo'), data.get('categoria'), data.get('mes'), data.get('detalle'), float(data.get('montoTotal',0)), float(data.get('amortizado',0)), float(data.get('saldo',0)), data.get('medio'), g_id))
+        else:
+            cursor.execute("""INSERT INTO gastos (fecha, recibo, categoria, mes, detalle, monto_total, amortizado, saldo, medio) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                           (data.get('fecha'), data.get('recibo'), data.get('categoria'), data.get('mes'), data.get('detalle'), float(data.get('montoTotal',0)), float(data.get('amortizado',0)), float(data.get('saldo',0)), data.get('medio')))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+@app.route('/api/gastos/eliminar/<int:id>', methods=['DELETE'])
+def api_eliminar_gasto(id):
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM gastos WHERE id = %s", (id,))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+# --- APIS PARA TESORERÍA ---
+@app.route('/api/tesoreria/listar', methods=['GET'])
+def api_listar_tesoreria():
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify([])
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM tesoreria ORDER BY id DESC")
+        res = cursor.fetchall()
+        cursor.close(); conexion.close()
+        return jsonify(res)
+    except: return jsonify([])
+
+@app.route('/api/tesoreria/guardar', methods=['POST'])
+def api_guardar_tesoreria():
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        data = request.get_json()
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        t_id = data.get('id')
+        if t_id:
+            cursor.execute("""UPDATE tesoreria SET fecha=%s, tipo=%s, concepto=%s, monto=%s, destino=%s WHERE id=%s""",
+                           (data.get('fecha'), data.get('tipo'), data.get('concepto'), float(data.get('monto',0)), data.get('destino'), t_id))
+        else:
+            cursor.execute("""INSERT INTO tesoreria (fecha, tipo, concepto, monto, destino) VALUES (%s, %s, %s, %s, %s)""",
+                           (data.get('fecha'), data.get('tipo'), data.get('concepto'), float(data.get('monto',0)), data.get('destino')))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+@app.route('/api/tesoreria/eliminar/<int:id>', methods=['DELETE'])
+def api_eliminar_tesoreria(id):
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM tesoreria WHERE id = %s", (id,))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+# --- APIS PARA CRÉDITOS MANUALES ---
+@app.route('/api/creditos_manuales/listar', methods=['GET'])
+def api_listar_creditos_manuales():
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify([])
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM creditos_manuales ORDER BY id DESC")
+        res = cursor.fetchall()
+        cursor.close(); conexion.close()
+        for r in res:
+            r['items'] = json.loads(r['items']) if r.get('items') else []
+            r['amortizaciones'] = json.loads(r['amortizaciones']) if r.get('amortizaciones') else []
+        return jsonify(res)
+    except: return jsonify([])
+
+@app.route('/api/creditos_manuales/guardar', methods=['POST'])
+def api_guardar_credito_manual():
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        data = request.get_json()
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        cm_id = data.get('id')
+        items = json.dumps(data.get('items', []))
+        amort = json.dumps(data.get('amortizaciones', []))
+        if cm_id:
+            cursor.execute("""UPDATE creditos_manuales SET tipo_credito=%s, comprobante=%s, persona=%s, fecha=%s, items=%s, total=%s, medio=%s, fecha_amort=%s, abonado=%s, amortizaciones=%s WHERE id=%s""",
+                           (data.get('tipo_credito'), data.get('comprobante'), data.get('persona'), data.get('fecha'), items, float(data.get('total',0)), data.get('medio'), data.get('fecha_amort'), float(data.get('abonado',0)), amort, cm_id))
+        else:
+            cursor.execute("""INSERT INTO creditos_manuales (tipo_credito, comprobante, persona, fecha, items, total, medio, fecha_amort, abonado, amortizaciones) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                           (data.get('tipo_credito'), data.get('comprobante'), data.get('persona'), data.get('fecha'), items, float(data.get('total',0)), data.get('medio'), data.get('fecha_amort'), float(data.get('abonado',0)), amort))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+@app.route('/api/creditos_manuales/eliminar/<int:id>', methods=['DELETE'])
+def api_eliminar_credito_manual(id):
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        cursor.execute("DELETE FROM creditos_manuales WHERE id = %s", (id,))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+# --- APIS PARA IMÁGENES DE PRODUCTOS ---
+@app.route('/api/imagenes/listar', methods=['GET'])
+def api_listar_imagenes():
+    try:
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({})
+        cursor = conexion.cursor(dictionary=True)
+        cursor.execute("SELECT producto, url_imagen FROM imagenes_productos")
+        res = cursor.fetchall()
+        cursor.close(); conexion.close()
+        return jsonify({r['producto']: r['url_imagen'] for r in res})
+    except: return jsonify({})
+
+@app.route('/api/imagenes/guardar', methods=['POST'])
+def api_guardar_imagen():
+    if 'rol' not in session: return jsonify({'error': 'No autorizado'}), 403
+    try:
+        data = request.get_json()
+        prod = data.get('producto', '').strip().upper()
+        url_img = data.get('url_imagen', '')
+        conexion = obtener_conexion()
+        if not conexion: return jsonify({'error': 'Error BD'}), 500
+        cursor = conexion.cursor()
+        cursor.execute("""INSERT INTO imagenes_productos (producto, url_imagen) VALUES (%s, %s) ON DUPLICATE KEY UPDATE url_imagen = VALUES(url_imagen)""", (prod, url_img))
+        conexion.commit(); cursor.close(); conexion.close()
+        return jsonify({'success': True})
+    except Exception as e: return jsonify({'error': str(e)}), 500
+
+# --- NAVEGACIÓN COMPLETA DE MÓDULOS ---
+@app.route('/ventas')
+def ventas():
+    if 'rol' not in session: return redirect(url_for('index'))
+    return render_template_con_branding('ventas.html')
+
+@app.route('/amortizaciones')
+def amortizaciones():
+    if 'rol' not in session: return redirect(url_for('index'))
+    return render_template_con_branding('amortizaciones.html')
+
+@app.route('/creditos')
+def creditos():
+    if session.get('rol') != 'gerente': return redirect(url_for('ventas'))
+    return render_template_con_branding('creditos.html')
+
+@app.route('/tesoreria')
+def tesoreria():
+    if session.get('rol') != 'gerente': return redirect(url_for('ventas'))
+    return render_template_con_branding('tesoreria.html')
+
+@app.route('/gastos')
+def gastos():
+    if session.get('rol') != 'gerente': return redirect(url_for('ventas'))
+    return render_template_con_branding('gastos.html')
+
 @app.route('/compras')
 def compras():
     if session.get('rol') != 'gerente': return redirect(url_for('ventas'))
     return render_template_con_branding('compras.html')
 
-@app.route('/ventas')
-def ventas():
-    if 'rol' not in session: return redirect(url_for('index'))
-    return render_template_con_branding('ventas.html')
+@app.route('/stock')
+def stock():
+    if session.get('rol') != 'gerente': return redirect(url_for('ventas'))
+    return render_template_con_branding('stock.html')
+
+@app.route('/configuracion')
+def configuracion():
+    if session.get('rol') != 'gerente': return redirect(url_for('ventas'))
+    return render_template_con_branding('configuracion.html')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
